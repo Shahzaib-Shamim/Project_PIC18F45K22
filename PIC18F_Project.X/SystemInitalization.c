@@ -13,7 +13,7 @@ void SYSTEM_Initialization(void)
     OSCILLATOR_Init();
     PIN_MANAGER_Initialize();
 //    EUSART1_Initialize();
-    uart_init();
+    uart1_init();
     INTERRUPT_Initialize();
     ECCP1_Initialize();
     I2C1_initialize();

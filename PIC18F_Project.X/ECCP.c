@@ -1,7 +1,7 @@
 #include "ECCP.h"
 #include "GPIO.h"
 #include "TMR.h"
-#include "EUSART.h"
+#include "UART.h"
 #include "TaskRoutines.h"
 
 void ECCP1_Initialize(void)

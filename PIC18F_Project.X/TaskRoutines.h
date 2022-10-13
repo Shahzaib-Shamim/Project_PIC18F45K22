@@ -58,6 +58,13 @@ void ledBlink(void);
 void ads1115SampleData(void);
 void ds3232Timestamp(void);
 
+/**
+ * Do parsing on the receive msg
+ * @param char array
+ */
+//void process_data(char *);
+void process_data(void);
+
 
 #endif	/* TASKROUTINES_H */
 
