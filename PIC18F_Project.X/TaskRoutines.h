@@ -43,6 +43,16 @@ typedef struct
 
 extern volatile ApplicationFlags_t sysFlags;
 
+// --Defines for serial msg input-----------------------------------------------
+#define SER_MSG_FLAG_IDLE       0
+#define SER_MSG_FLAG_TIME       1
+#define SER_MSG_FLAG_DATE       2
+#define charLen     10
+#define numOfChar   8
+#define timePacketLen   5
+#define datePacketLen   6
+#define NUM_OF_INT_Data    15
+
 /**
  * Global function to initialize variables
  */
@@ -59,12 +69,14 @@ void ads1115SampleData(void);
 void ds3232Timestamp(void);
 
 /**
- * Do parsing on the receive msg
- * @param char array
+ * Do parsing on the receive msg and set flags.
  */
-//void process_data(char *);
 void process_data(void);
 
+/**
+ * CRC16
+ */
+uint16_t checksumCalculator(uint8_t *, uint16_t);
 
 #endif	/* TASKROUTINES_H */
 
