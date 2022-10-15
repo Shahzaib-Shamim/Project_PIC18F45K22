@@ -80,7 +80,7 @@ void __interrupt(low_priority) INTERRUPT_InterruptManagerLow(void)
 //        EUSART1_RxDefaultInterruptHandler();
         if(PIR1bits.RCIF)
         {
-            uart_receiver();
+            uart1_getc();
             PIR1bits.RCIF = 0;
         }
     }

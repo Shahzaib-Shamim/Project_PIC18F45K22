@@ -20,38 +20,39 @@
 // --Global variables-----------------------------------------------------------
 extern char input_line[MAX_INPUT];
 extern uint8_t uartRxFlag;
+extern bool uartProcessFlag;
 
-// --UART functions---------------------------------------------------
+// --UART functions-------------------------------------------------------------
 /**
  * Initializes UART1 module
  */
-void uart_init(void);
+void uart1_init(void);
 
 /**
  * Send one character
  * @param char
  */
 //void uart_send(char *);
-void uart_send(uint8_t);
+void uart1_putc(uint8_t);
 
 /**
  * Send string of characters
  * @param char array
  */
-void uart_puts(char *);
+void uart1_puts(char *);
 
 /**
  * Receive one character
  */
-void uart_receiver(void);
+void uart1_getc(void);
+
+/**
+ * Print newline and carriage return
+ */
+void uart1_newline(void);
+
 
 // --Global functions for serial process----------------------------------------
-/**
- * Do parsing on the reeive msg
- * @param char array
- */
-void process_data(char *);
-
 /**
  * Make string of characters until \n
  * @param char

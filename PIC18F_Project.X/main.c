@@ -1,4 +1,4 @@
-// feature/serial_interface
+// feature/testing_serial
 
 
 // --Includes-------------------------------------------------------------------
@@ -8,7 +8,6 @@
 #include "DeviceConfiguration.h"
 #include "SystemInitalization.h"
 #include "GPIO.h"
-//#include "EUSART.h"
 #include "UART.h"
 #include "Interrupt.h"
 #include "ECCP.h"
@@ -50,10 +49,9 @@ void main(void)
     TMR1_StartTimer();
     ECCP1_SetTMR1CompareCount(1000); // 1000 usec or 1 ms
 
-    __delay_ms(2000);
+    __delay_ms(1000);
 //    EUSART1_send_string((uint8_t*) "\nPIC18F Project\n\r\0");
-    uart_puts("\nPIC18F Project\n\r\0");
-    __delay_ms(100);
+    uart1_puts("\nPIC18F Project\n\r\0");
 
     // RTC time and date set
     //    DS3231_setTime(0, 13, 22);        // seconds, minutes, hours
@@ -158,6 +156,9 @@ void main(void)
         }*/
 
 
+        
+        
+        
     }// end while(true)
 
 }// end main()
