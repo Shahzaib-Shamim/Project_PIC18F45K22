@@ -1,7 +1,6 @@
 // --Includes-------------------------------------------------------------------
 #include "SystemInitalization.h"
 #include "GPIO.h"
-//#include "EUSART.h"
 #include "UART.h"
 #include "Interrupt.h"
 #include "ECCP.h"
@@ -12,7 +11,6 @@ void SYSTEM_Initialization(void)
 {
     OSCILLATOR_Init();
     PIN_MANAGER_Initialize();
-//    EUSART1_Initialize();
     uart1_init();
     INTERRUPT_Initialize();
     ECCP1_Initialize();

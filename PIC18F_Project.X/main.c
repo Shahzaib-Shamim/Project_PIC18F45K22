@@ -21,7 +21,7 @@
 #include "UART.h"
 
 // --Global variable section----------------------------------------------------
-char print_buffer[256] = {0}; //uint8_t
+char print_buffer[50] = {0}; //uint8_t
 
 //void float2Bytes(uint8_t bytes_temp[4], float float_variable)
 //{
@@ -57,7 +57,7 @@ void main(void)
     //    DS3231_setTime(0, 13, 22);        // seconds, minutes, hours
     //    DS3231_setDate(7, 10, 9, 22);      // day of week, day of month, month, year
 
-    /*LED_SetHigh();
+    LED_SetHigh();
     LCD_Init();
     __delay_ms(200);
     LED_SetLow();
@@ -72,7 +72,7 @@ void main(void)
     LCDsetCursor(0, 3);
     LCD_Write_Str("Some text4");
     __delay_ms(1000);
-    LCDclear();*/
+    LCDclear();
 
     uint8_t readBuff[4];
     uint8_t writeBuff[4];
@@ -119,45 +119,6 @@ void main(void)
         //            DS3231_setTime(second, minute, hour);
         //            DS3231_setDate(day, date, month, year);
         //        }
-
-
-
-        /*if (setTimeFlag == true)
-        {
-            calibrationRxFlag = false;
-
-            setTimeFlag = false;
-            DS3231_setTime(second, minute, hour);
-        }
-        if (setDateFlag == true)
-        {
-            setDateFlag = false;
-            DS3231_setDate(day, date, month, year);
-        }
-        if (setTemp1Flag == true)
-        {
-            setTemp1Flag = false;
-            EUSART1_send_string("Temp1\n\0");
-        }
-        if (setTemp2Flag == true)
-        {
-            setTemp2Flag = false;
-            EUSART1_send_string("Temp2\n\0");
-        }
-        if (setPres1Flag == true)
-        {
-            setPres1Flag = false;
-            EUSART1_send_string("Pres1\n\0");
-        }
-        if (setPres2Flag == true)
-        {
-            setPres2Flag = false;
-            EUSART1_send_string("Pres2\n\0");
-        }*/
-
-
-        
-        
         
     }// end while(true)
 
