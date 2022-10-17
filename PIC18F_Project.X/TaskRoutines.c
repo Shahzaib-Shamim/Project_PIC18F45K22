@@ -28,10 +28,12 @@ uint8_t dataCount = 0;
 const char delimiter[] = ",";
 char *keywordPointer;
 uint8_t integerData[NUM_OF_INT_Data];
+float floatData[NUM_OF_INT_Data];
 char *keyword[5];   // store starting 3 bytes of data to detect which serial msg is received
 bool dateFlag = false;
 bool timeFlag = false;
 bool txEnableFlag = false;
+bool calibrationEnableFlag = false;
 
 void initSysVariables(void)
 {
@@ -69,7 +71,7 @@ void initSysVariables(void)
 }
 
 char str[20];
-uint32_t counterIndex = 0;
+int counterIndex = 0;
 
 void runApplication(void)
 {
@@ -83,13 +85,9 @@ void runApplication(void)
     {
         static uint8_t counter = 0;
         sysFlags.uartTxTask = false;
-
-        ds3232Timestamp();
-
-        //        sprintf((char *) txBuffer, "\nCounter Value = %d\r\n", counter);
-        //        EUSART1_send_string((uint8_t *) txBuffer);
-        //        counter++;
-        //        ads1115SampleData();        
+        ds3232Timestamp();      
+        
+        
     }
 
     if(sysFlags.ads1115SampleTask == true)
@@ -122,7 +120,8 @@ void runApplication(void)
         LCDsetCursor(0, 0);
         LCD_Write_Str("Counter = ");
         LCDsetCursor(0, 1);
-        sprintf(str, "%lu", counterIndex);
+//        sprintf(str, "%lu", counterIndex);
+//        itoa(counterIndex, txBuff, 10);
         counterIndex++;
         LCD_Write_Str(str);
     }
@@ -170,22 +169,28 @@ void runApplication(void)
         }
         
         // Calibration mode enable
-        else if(strncmp(input_line, "C06Calibration", 14) == 0)
+        else if(strncmp(input_line, "C06CalibrationY", 15) == 0)
         {
-            // set flag;
+            uart1_puts("Calibration mode enabled\n");
+            calibrationEnableFlag = true;
+        }
+        
+        // Calibration mode disable
+        else if(strncmp(input_line, "C07CalibrationN", 15) == 0)
+        {
+            uart1_puts("Calibration mode disabled\n");
+            calibrationEnableFlag = false;
         }
         
         // Start sending data
         else if(strncmp(input_line, "C08StartTX", 10) == 0)
         {
-//            sysFlags.uartTxTask = true;
             txEnableFlag = true;
         }
         
         // Stop sending data
-        else if(strncmp(input_line, "C08StopTX", 9) == 0)
+        else if(strncmp(input_line, "C09StopTX", 9) == 0)
         {
-//            sysFlags.uartTxTask = false;
             txEnableFlag = false;
         }
 
@@ -194,7 +199,11 @@ void runApplication(void)
         {
             serialMsgFlags = SER_MSG_FLAG_IDLE;
         }
-        process_data();
+        
+        if(calibrationEnableFlag == true)
+        {
+            process_data();
+        }        
     }
 }
 
@@ -246,17 +255,22 @@ void ds3232Timestamp(void)
     Day = setDayName(ds3231_readBuff[3]);
     MonthName = setMonthName(ds3231_readBuff[5]);
 
-    sprintf(txBuffer, "\n%d:%d:%d %s %d-%s-%d\r\n\n", ds3231_readBuff[2], ds3231_readBuff[1], ds3231_readBuff[0], Day, ds3231_readBuff[4], MonthName, ds3231_readBuff[6]);
-    uart1_puts(txBuffer);
+//    sprintf(txBuffer, "\n%d:%d:%d %s %d-%s-%d\r\n\n", ds3231_readBuff[2], ds3231_readBuff[1], ds3231_readBuff[0], Day, ds3231_readBuff[4], MonthName, ds3231_readBuff[6]);
+//    uart1_puts(txBuffer);
     
-//    uart1_putc(ds3231_readBuff[2]); uart1_putc(' ');
-//    uart1_putc(ds3231_readBuff[1]); uart1_putc(' ');
-//    uart1_putc(ds3231_readBuff[0]); uart1_putc(' ');
-//    uart1_puts(Day); uart1_putc(' ');
-//    uart1_putc(ds3231_readBuff[4]); uart1_putc(' ');
-//    uart1_puts(MonthName); uart1_putc(' ');
-//    uart1_putc(ds3231_readBuff[6]); uart1_putc(' ');
-//    uart1_newline();
+    itoa(ds3231_readBuff[2], txBuff, 10);
+    uart1_puts(txBuff); uart1_putc(' ');
+    itoa(ds3231_readBuff[1], txBuff, 10);
+    uart1_puts(txBuff); uart1_putc(' ');
+    itoa(ds3231_readBuff[0], txBuff, 10);
+    uart1_puts(txBuff); uart1_putc(' ');
+    uart1_puts(Day); uart1_putc(' ');
+    itoa(ds3231_readBuff[4], txBuff, 10);
+    uart1_puts(txBuff); uart1_putc(' ');
+    uart1_puts(MonthName); uart1_putc(' ');
+    itoa(ds3231_readBuff[6], txBuff, 10);
+    uart1_puts(txBuff); uart1_putc(' ');
+    uart1_newline();
     
     if(timeFlag == true)
     {
@@ -275,11 +289,10 @@ void ds3232Timestamp(void)
 
 void process_data(void)
 {
-    // <editor-fold defaultstate="collapsed" desc="Parsing data and make seperate variable value">
     uint16_t crc = 0;
     uint8_t crc1, crc2;     // crc1 = highbyte, crc2 = lowbyte
-    
-    // --Time calibration task--------------------------------------------------
+
+    // <editor-fold defaultstate="collapsed" desc="Time calibration task">
     if(serialMsgFlags == SER_MSG_FLAG_TIME)
     {
         keyword[0] = "C00";
@@ -315,7 +328,7 @@ void process_data(void)
                     strcpy(parsedStrings[i], NULL);
                 }
             }
-            
+
             // convert ascii data into integer data           
             if(dataCount == timePacketLen)
             {
@@ -350,16 +363,16 @@ void process_data(void)
             // dataCountTime = 0;
             // serialMsgFlags = 0;
         }
-        
+
         if(crc1 == integerData[3] && crc2 == integerData[4])
         {
             timeFlag = true;
             ds3232Timestamp();
         }        
     }
-    // end Time calibration task
+    // </editor-fold>
 
-    // --Date calibration task--------------------------------------------------
+    // <editor-fold defaultstate="collapsed" desc="Date calibration task">
     if(serialMsgFlags == SER_MSG_FLAG_DATE)
     {
         keyword[1] = "C01";
@@ -394,7 +407,7 @@ void process_data(void)
                     strcpy(parsedStrings[i], NULL);
                 }
             }
-            
+
             // convert ascii data into integer data           
             if(dataCount == datePacketLen)
             {
@@ -435,14 +448,99 @@ void process_data(void)
             dateFlag = true;
             ds3232Timestamp();
         }
-    }    
+    } 
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="Pressure1 calibration task">
+    if(serialMsgFlags == SER_MSG_FLAG_PRES1)
+    {
+        keyword[2] = "C02";
+        keywordPointer = strstr(input_line, keyword[2]);
+        if(keywordPointer != NULL)
+        {
+            dataPosition = (keywordPointer - input_line) + strlen(keyword[2]);
+            dataCount = 0;
+            char *token = strtok(&input_line[dataPosition], delimiter);
+            if(token != NULL && strlen(token) < sizeof (parsedStrings[0]))
+            {
+                strncpy(parsedStrings[0], token, sizeof (parsedStrings[0]));
+                dataCount++;
+            }
+            else
+            {
+                // uart1_puts("token to big\n");
+                strcpy(parsedStrings[0], NULL);
+            }
+
+            for(uint8_t i = 1; i < 3; i++)
+            {
+                token = strtok(NULL, delimiter);
+                if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
+                {
+                    strncpy(parsedStrings[i], token, sizeof (parsedStrings[i]));
+                    dataCount++;
+                }
+                else
+                {
+                    // uart1_puts("token to big\n");
+                    strcpy(parsedStrings[i], NULL);
+                }
+            }
+
+            // convert ascii data into float data           
+            if(dataCount == 3)
+            {
+                floatData[0] = atof(parsedStrings[0]);      // pres1 value
+                integerData[0] = (uint8_t)(atoi(parsedStrings[1]));    // CRC1
+                integerData[1] = (uint8_t)(atoi(parsedStrings[2]));    // CRC2
+                for(uint8_t i = 2; i < NUM_OF_INT_Data; i++)
+                {
+                    integerData[i] = 0; 
+                }
+//                crc = checksumCalculator(integerData, 4);
+//                crc1 = (crc >> 8) & 0xff;         // high byte
+//                crc2 = (crc >> 0) & 0xff;          // low byte
+                dataCount = 0;
+                /*sprintf(txBuff, "%d, %d-%d-%d  %d %d\n", integerData[0], integerData[1], 
+                        integerData[2], integerData[3], integerData[4], integerData[5]);
+                uart1_puts(txBuff);
+                uart1_puts("--Date calib-----------------------------------------\n");*/
+                
+                sprintf(txBuff, "Float data = %.3f\n", floatData[0]);
+                uart1_puts(txBuff);
+            }
+            else if(dataCount < 3 || dataCount > 3)
+            {
+                uart1_puts("data no good\n");
+                dataCount = 0;
+                serialMsgFlags = 0;
+            }
+        }        
+        else
+        {
+            // uart1_puts("sorry no keyword\n");
+            // dataCount = 0;
+            // serialMsgFlags = 0;
+        }
+//        if(crc1 == integerData[4] && crc2 == integerData[5])
+//        {
+//            dateFlag = true;
+//            ds3232Timestamp();
+//        }
+        
+    } 
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="No task">
     else
     {
         serialMsgFlags = 0;
+//        calibrationEnableFlag = false;
     }
+    // </editor-fold>
     // end Date calibration task
 
-    // </editor-fold>
+    
 }
 
 uint16_t checksumCalculator(uint8_t *data, uint16_t length)

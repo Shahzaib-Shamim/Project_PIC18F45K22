@@ -52,11 +52,12 @@ extern volatile ApplicationFlags_t sysFlags;
 #define SER_MSG_FLAG_PRES2      5
 #define SER_MSG_FLAG_TEMP2      6
 
-#define charLen     10
-#define numOfChar   8
-#define timePacketLen   5
-#define datePacketLen   6
-#define NUM_OF_INT_Data    15
+#define charLen             10
+#define numOfChar           8
+#define timePacketLen       5
+#define datePacketLen       6
+#define NUM_OF_INT_Data     15
+#define NUM_OF_FLOAT_DATA   4
 
 /**
  * Global function to initialize variables
