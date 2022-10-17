@@ -31,6 +31,7 @@ uint8_t integerData[NUM_OF_INT_Data];
 char *keyword[5];   // store starting 3 bytes of data to detect which serial msg is received
 bool dateFlag = false;
 bool timeFlag = false;
+bool txEnableFlag = false;
 
 void initSysVariables(void)
 {
@@ -78,16 +79,17 @@ void runApplication(void)
         ledBlink();
     }
 
-    if(sysFlags.uartTxTask == true)
+    if(sysFlags.uartTxTask == true && txEnableFlag == true)
     {
         static uint8_t counter = 0;
         sysFlags.uartTxTask = false;
 
+        ds3232Timestamp();
+
         //        sprintf((char *) txBuffer, "\nCounter Value = %d\r\n", counter);
         //        EUSART1_send_string((uint8_t *) txBuffer);
         //        counter++;
-        //        ads1115SampleData();
-                ds3232Timestamp();
+        //        ads1115SampleData();        
     }
 
     if(sysFlags.ads1115SampleTask == true)
@@ -131,15 +133,60 @@ void runApplication(void)
         uartProcessFlag = false;
 
         // Time calibration
-        if(input_line[0] == 'C' && input_line[1] == '0' && input_line[2] == '0')
+//        if(input_line[0] == 'C' && input_line[1] == '0' && input_line[2] == '0')
+        if((strncmp(input_line, "C00", 3) == 0))
         {
             serialMsgFlags = SER_MSG_FLAG_TIME;
         }
 
         // Date calibration
-        else if(input_line[0] == 'C' && input_line[1] == '0' && input_line[2] == '1')
+        else if(strncmp(input_line, "C01", 3) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_DATE;
+        }
+        
+        // Pressure1 calibration
+        else if(strncmp(input_line, "C02", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_PRES1;
+        }
+        
+        // Temperature1 calibration
+        else if(strncmp(input_line, "C03", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_TEMP1;
+        }
+        
+        // Pressure2 calibration
+        else if(strncmp(input_line, "C04", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_PRES2;
+        }
+        
+        // Temperature2 calibration
+        else if(strncmp(input_line, "C05", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_TEMP2;
+        }
+        
+        // Calibration mode enable
+        else if(strncmp(input_line, "C06Calibration", 14) == 0)
+        {
+            // set flag;
+        }
+        
+        // Start sending data
+        else if(strncmp(input_line, "C08StartTX", 10) == 0)
+        {
+//            sysFlags.uartTxTask = true;
+            txEnableFlag = true;
+        }
+        
+        // Stop sending data
+        else if(strncmp(input_line, "C08StopTX", 9) == 0)
+        {
+//            sysFlags.uartTxTask = false;
+            txEnableFlag = false;
         }
 
         // Nothing to be process
@@ -154,6 +201,14 @@ void runApplication(void)
 void ledBlink(void)
 {
     LED_Toggle();
+    
+//    /* integer to ascii */
+//    static uint16_t i = 0;
+//    char buf[8];
+//    itoa(i, buf, 10);
+//    uart1_puts(buf);
+//    uart1_newline();
+//    i++;
 }
 
 void ads1115SampleData(void)
@@ -214,6 +269,8 @@ void ds3232Timestamp(void)
         dateFlag = false;
         DS3231_setDate(integerData[0], integerData[1], integerData[2], integerData[3]);
     }
+    
+    
 }
 
 void process_data(void)
@@ -400,4 +457,66 @@ uint16_t checksumCalculator(uint8_t *data, uint16_t length)
       sum2 = (sum2 + sum1) % 255;
    }
    return (uint16_t)((sum2 << 8) | sum1);
+}
+
+// Function to swap two numbers
+void swap(char *x, char *y) 
+{
+    char t = *x; *x = *y; *y = t;
+}
+ 
+// Function to reverse `buffer[i?j]`
+char* reverse(char *buffer, int i, int j)
+{
+    while(i < j)
+    {
+        swap(&buffer[i++], &buffer[j--]);
+    }
+    return buffer;
+}
+ 
+// Iterative function to implement `itoa()` function in C
+char* itoa(int value, char* buffer, int numBase)
+{
+    // invalid input
+    if (numBase < 2 || numBase > 32)
+    {
+        return buffer;
+    }
+ 
+    // consider the absolute value of the number
+    int n = abs(value);
+    int i = 0;
+    while(n)
+    {
+        int r = n % numBase;
+ 
+        if (r >= 10)
+        {
+            buffer[i++] = 65 + (r - 10);
+        }
+        else
+        {
+            buffer[i++] = 48 + r;
+        }
+        n = n / numBase;
+    }
+ 
+    // if the number is 0
+    if (i == 0)
+    {
+        buffer[i++] = '0';
+    }
+ 
+    // If the base is 10 and the value is negative, the resulting string
+    // is preceded with a minus sign (-)
+    // With any other base, value is always considered unsigned
+    if (value < 0 && numBase == 10)
+    {    
+        buffer[i++] = '-';
+    }
+    buffer[i] = '\0'; // null terminate string
+ 
+    // reverse the string and return it
+    return reverse(buffer, 0, i - 1);
 }

@@ -77,7 +77,6 @@ void ECCP1_CompareISR(void)
         sysFlags.lcdTask = true;
     }
     
-    
     // Reset timer
     if(timer1.timer1_1msCounter == 1000)
     {
