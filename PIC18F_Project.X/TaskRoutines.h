@@ -90,7 +90,7 @@ uint16_t checksumCalculator(uint8_t *, uint16_t);
 void swap(char *x, char *y);
 char* reverse(char *buffer, int i, int j);
 char* itoa(int value, char* buffer, int numBase);
-
+char* ltoa(long value, char* buffer, int numBase);
 
 #endif	/* TASKROUTINES_H */
 

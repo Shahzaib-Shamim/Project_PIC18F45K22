@@ -20,7 +20,6 @@ volatile ApplicationFlags_t sysFlags;
 bool ads1115Flag = false;
 bool ds3231Flag = false;
 
-char txBuff[40];
 uint8_t serialMsgFlags = SER_MSG_FLAG_IDLE;
 char parsedStrings[charLen][numOfChar];
 uint8_t dataPosition = 0;
@@ -32,8 +31,8 @@ float floatData[NUM_OF_INT_Data];
 char *keyword[5];   // store starting 3 bytes of data to detect which serial msg is received
 bool dateFlag = false;
 bool timeFlag = false;
-bool txEnableFlag = false;
-bool calibrationEnableFlag = false;
+bool txEnableFlag = true;       // false
+bool calibrationEnableFlag = true;  //false
 
 void initSysVariables(void)
 {
@@ -121,7 +120,7 @@ void runApplication(void)
         LCD_Write_Str("Counter = ");
         LCDsetCursor(0, 1);
 //        sprintf(str, "%lu", counterIndex);
-//        itoa(counterIndex, txBuff, 10);
+//        itoa(counterIndex, txBuffer, 10);
         counterIndex++;
         LCD_Write_Str(str);
     }
@@ -258,18 +257,18 @@ void ds3232Timestamp(void)
 //    sprintf(txBuffer, "\n%d:%d:%d %s %d-%s-%d\r\n\n", ds3231_readBuff[2], ds3231_readBuff[1], ds3231_readBuff[0], Day, ds3231_readBuff[4], MonthName, ds3231_readBuff[6]);
 //    uart1_puts(txBuffer);
     
-    itoa(ds3231_readBuff[2], txBuff, 10);
-    uart1_puts(txBuff); uart1_putc(' ');
-    itoa(ds3231_readBuff[1], txBuff, 10);
-    uart1_puts(txBuff); uart1_putc(' ');
-    itoa(ds3231_readBuff[0], txBuff, 10);
-    uart1_puts(txBuff); uart1_putc(' ');
+    itoa(ds3231_readBuff[2], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
+    itoa(ds3231_readBuff[1], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
+    itoa(ds3231_readBuff[0], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
     uart1_puts(Day); uart1_putc(' ');
-    itoa(ds3231_readBuff[4], txBuff, 10);
-    uart1_puts(txBuff); uart1_putc(' ');
+    itoa(ds3231_readBuff[4], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
     uart1_puts(MonthName); uart1_putc(' ');
-    itoa(ds3231_readBuff[6], txBuff, 10);
-    uart1_puts(txBuff); uart1_putc(' ');
+    itoa(ds3231_readBuff[6], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
     uart1_newline();
     
     if(timeFlag == true)
@@ -345,9 +344,9 @@ void process_data(void)
                 crc1 = (crc >> 8) & 0xff;         // high byte
                 crc2 = (crc >> 0) & 0xff;          // low byte
                 dataCount = 0;
-                /*sprintf(txBuff, "%d:%d:%d  %d  %d\n", integerData[0], integerData[1],
+                /*sprintf(txBuffer, "%d:%d:%d  %d  %d\n", integerData[0], integerData[1],
                         integerData[2], integerData[3], integerData[4]);
-                uart1_puts(txBuff);
+                uart1_puts(txBuffer);
                 uart1_puts("--Time calib-----------------------------------------\n");*/                             
             }
             else if(dataCount < timePacketLen || dataCount > timePacketLen)
@@ -425,9 +424,9 @@ void process_data(void)
                 crc1 = (crc >> 8) & 0xff;         // high byte
                 crc2 = (crc >> 0) & 0xff;          // low byte
                 dataCount = 0;
-                /*sprintf(txBuff, "%d, %d-%d-%d  %d %d\n", integerData[0], integerData[1], 
+                /*sprintf(txBuffer, "%d, %d-%d-%d  %d %d\n", integerData[0], integerData[1], 
                         integerData[2], integerData[3], integerData[4], integerData[5]);
-                uart1_puts(txBuff);
+                uart1_puts(txBuffer);
                 uart1_puts("--Date calib-----------------------------------------\n");*/
             }
             else if(dataCount < datePacketLen || dataCount > datePacketLen)
@@ -501,13 +500,17 @@ void process_data(void)
 //                crc1 = (crc >> 8) & 0xff;         // high byte
 //                crc2 = (crc >> 0) & 0xff;          // low byte
                 dataCount = 0;
-                /*sprintf(txBuff, "%d, %d-%d-%d  %d %d\n", integerData[0], integerData[1], 
+                /*sprintf(txBuffer, "%d, %d-%d-%d  %d %d\n", integerData[0], integerData[1], 
                         integerData[2], integerData[3], integerData[4], integerData[5]);
-                uart1_puts(txBuff);
+                uart1_puts(txBuffer);
                 uart1_puts("--Date calib-----------------------------------------\n");*/
                 
-                sprintf(txBuff, "Float data = %.3f\n", floatData[0]);
-                uart1_puts(txBuff);
+//                sprintf(txBuffer, "Float data = %.3f\n", floatData[0]);
+                unsigned long floatToLong = floatData[0] * 1000;
+                ltoa(floatToLong, txBuffer, 10);
+                uart1_puts("Float = ");
+                uart1_puts(txBuffer);
+                uart1_newline();
             }
             else if(dataCount < 3 || dataCount > 3)
             {
@@ -575,6 +578,52 @@ char* reverse(char *buffer, int i, int j)
  
 // Iterative function to implement `itoa()` function in C
 char* itoa(int value, char* buffer, int numBase)
+{
+    // invalid input
+    if (numBase < 2 || numBase > 32)
+    {
+        return buffer;
+    }
+ 
+    // consider the absolute value of the number
+    int n = abs(value);
+    int i = 0;
+    while(n)
+    {
+        int r = n % numBase;
+ 
+        if (r >= 10)
+        {
+            buffer[i++] = 65 + (r - 10);
+        }
+        else
+        {
+            buffer[i++] = 48 + r;
+        }
+        n = n / numBase;
+    }
+ 
+    // if the number is 0
+    if (i == 0)
+    {
+        buffer[i++] = '0';
+    }
+ 
+    // If the base is 10 and the value is negative, the resulting string
+    // is preceded with a minus sign (-)
+    // With any other base, value is always considered unsigned
+    if (value < 0 && numBase == 10)
+    {    
+        buffer[i++] = '-';
+    }
+    buffer[i] = '\0'; // null terminate string
+ 
+    // reverse the string and return it
+    return reverse(buffer, 0, i - 1);
+}
+
+// Iterative function to implement `itoa()` function in C
+char* ltoa(long value, char* buffer, int numBase)
 {
     // invalid input
     if (numBase < 2 || numBase > 32)
