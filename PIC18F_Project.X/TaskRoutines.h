@@ -47,11 +47,17 @@ extern volatile ApplicationFlags_t sysFlags;
 #define SER_MSG_FLAG_IDLE       0
 #define SER_MSG_FLAG_TIME       1
 #define SER_MSG_FLAG_DATE       2
-#define charLen     10
-#define numOfChar   8
-#define timePacketLen   5
-#define datePacketLen   6
-#define NUM_OF_INT_Data    15
+#define SER_MSG_FLAG_PRES1      3
+#define SER_MSG_FLAG_TEMP1      4
+#define SER_MSG_FLAG_PRES2      5
+#define SER_MSG_FLAG_TEMP2      6
+
+#define charLen             10
+#define numOfChar           8
+#define timePacketLen       5
+#define datePacketLen       6
+#define NUM_OF_INT_Data     15
+#define NUM_OF_FLOAT_DATA   4
 
 /**
  * Global function to initialize variables
@@ -77,6 +83,14 @@ void process_data(void);
  * CRC16
  */
 uint16_t checksumCalculator(uint8_t *, uint16_t);
+
+/**
+ * Functions to convert integer to ascii to send numbers over uart.
+ */
+void swap(char *x, char *y);
+char* reverse(char *buffer, int i, int j);
+char* itoa(int value, char* buffer, int numBase);
+char* ltoa(long value, char* buffer, int numBase);
 
 #endif	/* TASKROUTINES_H */
 

@@ -20,7 +20,6 @@ volatile ApplicationFlags_t sysFlags;
 bool ads1115Flag = false;
 bool ds3231Flag = false;
 
-char txBuff[40];
 uint8_t serialMsgFlags = SER_MSG_FLAG_IDLE;
 char parsedStrings[charLen][numOfChar];
 uint8_t dataPosition = 0;
@@ -28,9 +27,12 @@ uint8_t dataCount = 0;
 const char delimiter[] = ",";
 char *keywordPointer;
 uint8_t integerData[NUM_OF_INT_Data];
+float floatData[NUM_OF_INT_Data];
 char *keyword[5];   // store starting 3 bytes of data to detect which serial msg is received
 bool dateFlag = false;
 bool timeFlag = false;
+bool txEnableFlag = true;       // false
+bool calibrationEnableFlag = true;  //false
 
 void initSysVariables(void)
 {
@@ -68,7 +70,7 @@ void initSysVariables(void)
 }
 
 char str[20];
-uint32_t counterIndex = 0;
+int counterIndex = 0;
 
 void runApplication(void)
 {
@@ -78,16 +80,13 @@ void runApplication(void)
         ledBlink();
     }
 
-    if(sysFlags.uartTxTask == true)
+    if(sysFlags.uartTxTask == true && txEnableFlag == true)
     {
         static uint8_t counter = 0;
         sysFlags.uartTxTask = false;
-
-        //        sprintf((char *) txBuffer, "\nCounter Value = %d\r\n", counter);
-        //        EUSART1_send_string((uint8_t *) txBuffer);
-        //        counter++;
-        //        ads1115SampleData();
-                ds3232Timestamp();
+        ds3232Timestamp();      
+        
+        
     }
 
     if(sysFlags.ads1115SampleTask == true)
@@ -120,7 +119,8 @@ void runApplication(void)
         LCDsetCursor(0, 0);
         LCD_Write_Str("Counter = ");
         LCDsetCursor(0, 1);
-        sprintf(str, "%lu", counterIndex);
+//        sprintf(str, "%lu", counterIndex);
+//        itoa(counterIndex, txBuffer, 10);
         counterIndex++;
         LCD_Write_Str(str);
     }
@@ -131,15 +131,66 @@ void runApplication(void)
         uartProcessFlag = false;
 
         // Time calibration
-        if(input_line[0] == 'C' && input_line[1] == '0' && input_line[2] == '0')
+//        if(input_line[0] == 'C' && input_line[1] == '0' && input_line[2] == '0')
+        if((strncmp(input_line, "C00", 3) == 0))
         {
             serialMsgFlags = SER_MSG_FLAG_TIME;
         }
 
         // Date calibration
-        else if(input_line[0] == 'C' && input_line[1] == '0' && input_line[2] == '1')
+        else if(strncmp(input_line, "C01", 3) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_DATE;
+        }
+        
+        // Pressure1 calibration
+        else if(strncmp(input_line, "C02", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_PRES1;
+        }
+        
+        // Temperature1 calibration
+        else if(strncmp(input_line, "C03", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_TEMP1;
+        }
+        
+        // Pressure2 calibration
+        else if(strncmp(input_line, "C04", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_PRES2;
+        }
+        
+        // Temperature2 calibration
+        else if(strncmp(input_line, "C05", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_TEMP2;
+        }
+        
+        // Calibration mode enable
+        else if(strncmp(input_line, "C06CalibrationY", 15) == 0)
+        {
+            uart1_puts("Calibration mode enabled\n");
+            calibrationEnableFlag = true;
+        }
+        
+        // Calibration mode disable
+        else if(strncmp(input_line, "C07CalibrationN", 15) == 0)
+        {
+            uart1_puts("Calibration mode disabled\n");
+            calibrationEnableFlag = false;
+        }
+        
+        // Start sending data
+        else if(strncmp(input_line, "C08StartTX", 10) == 0)
+        {
+            txEnableFlag = true;
+        }
+        
+        // Stop sending data
+        else if(strncmp(input_line, "C09StopTX", 9) == 0)
+        {
+            txEnableFlag = false;
         }
 
         // Nothing to be process
@@ -147,13 +198,25 @@ void runApplication(void)
         {
             serialMsgFlags = SER_MSG_FLAG_IDLE;
         }
-        process_data();
+        
+        if(calibrationEnableFlag == true)
+        {
+            process_data();
+        }        
     }
 }
 
 void ledBlink(void)
 {
     LED_Toggle();
+    
+//    /* integer to ascii */
+//    static uint16_t i = 0;
+//    char buf[8];
+//    itoa(i, buf, 10);
+//    uart1_puts(buf);
+//    uart1_newline();
+//    i++;
 }
 
 void ads1115SampleData(void)
@@ -191,17 +254,22 @@ void ds3232Timestamp(void)
     Day = setDayName(ds3231_readBuff[3]);
     MonthName = setMonthName(ds3231_readBuff[5]);
 
-    sprintf(txBuffer, "\n%d:%d:%d %s %d-%s-%d\r\n\n", ds3231_readBuff[2], ds3231_readBuff[1], ds3231_readBuff[0], Day, ds3231_readBuff[4], MonthName, ds3231_readBuff[6]);
-    uart1_puts(txBuffer);
+//    sprintf(txBuffer, "\n%d:%d:%d %s %d-%s-%d\r\n\n", ds3231_readBuff[2], ds3231_readBuff[1], ds3231_readBuff[0], Day, ds3231_readBuff[4], MonthName, ds3231_readBuff[6]);
+//    uart1_puts(txBuffer);
     
-//    uart1_putc(ds3231_readBuff[2]); uart1_putc(' ');
-//    uart1_putc(ds3231_readBuff[1]); uart1_putc(' ');
-//    uart1_putc(ds3231_readBuff[0]); uart1_putc(' ');
-//    uart1_puts(Day); uart1_putc(' ');
-//    uart1_putc(ds3231_readBuff[4]); uart1_putc(' ');
-//    uart1_puts(MonthName); uart1_putc(' ');
-//    uart1_putc(ds3231_readBuff[6]); uart1_putc(' ');
-//    uart1_newline();
+    itoa(ds3231_readBuff[2], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
+    itoa(ds3231_readBuff[1], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
+    itoa(ds3231_readBuff[0], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
+    uart1_puts(Day); uart1_putc(' ');
+    itoa(ds3231_readBuff[4], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
+    uart1_puts(MonthName); uart1_putc(' ');
+    itoa(ds3231_readBuff[6], txBuffer, 10);
+    uart1_puts(txBuffer); uart1_putc(' ');
+    uart1_newline();
     
     if(timeFlag == true)
     {
@@ -214,15 +282,16 @@ void ds3232Timestamp(void)
         dateFlag = false;
         DS3231_setDate(integerData[0], integerData[1], integerData[2], integerData[3]);
     }
+    
+    
 }
 
 void process_data(void)
 {
-    // <editor-fold defaultstate="collapsed" desc="Parsing data and make seperate variable value">
     uint16_t crc = 0;
     uint8_t crc1, crc2;     // crc1 = highbyte, crc2 = lowbyte
-    
-    // --Time calibration task--------------------------------------------------
+
+    // <editor-fold defaultstate="collapsed" desc="Time calibration task">
     if(serialMsgFlags == SER_MSG_FLAG_TIME)
     {
         keyword[0] = "C00";
@@ -258,7 +327,7 @@ void process_data(void)
                     strcpy(parsedStrings[i], NULL);
                 }
             }
-            
+
             // convert ascii data into integer data           
             if(dataCount == timePacketLen)
             {
@@ -275,9 +344,9 @@ void process_data(void)
                 crc1 = (crc >> 8) & 0xff;         // high byte
                 crc2 = (crc >> 0) & 0xff;          // low byte
                 dataCount = 0;
-                /*sprintf(txBuff, "%d:%d:%d  %d  %d\n", integerData[0], integerData[1],
+                /*sprintf(txBuffer, "%d:%d:%d  %d  %d\n", integerData[0], integerData[1],
                         integerData[2], integerData[3], integerData[4]);
-                uart1_puts(txBuff);
+                uart1_puts(txBuffer);
                 uart1_puts("--Time calib-----------------------------------------\n");*/                             
             }
             else if(dataCount < timePacketLen || dataCount > timePacketLen)
@@ -293,16 +362,16 @@ void process_data(void)
             // dataCountTime = 0;
             // serialMsgFlags = 0;
         }
-        
+
         if(crc1 == integerData[3] && crc2 == integerData[4])
         {
             timeFlag = true;
             ds3232Timestamp();
         }        
     }
-    // end Time calibration task
+    // </editor-fold>
 
-    // --Date calibration task--------------------------------------------------
+    // <editor-fold defaultstate="collapsed" desc="Date calibration task">
     if(serialMsgFlags == SER_MSG_FLAG_DATE)
     {
         keyword[1] = "C01";
@@ -337,7 +406,7 @@ void process_data(void)
                     strcpy(parsedStrings[i], NULL);
                 }
             }
-            
+
             // convert ascii data into integer data           
             if(dataCount == datePacketLen)
             {
@@ -355,9 +424,9 @@ void process_data(void)
                 crc1 = (crc >> 8) & 0xff;         // high byte
                 crc2 = (crc >> 0) & 0xff;          // low byte
                 dataCount = 0;
-                /*sprintf(txBuff, "%d, %d-%d-%d  %d %d\n", integerData[0], integerData[1], 
+                /*sprintf(txBuffer, "%d, %d-%d-%d  %d %d\n", integerData[0], integerData[1], 
                         integerData[2], integerData[3], integerData[4], integerData[5]);
-                uart1_puts(txBuff);
+                uart1_puts(txBuffer);
                 uart1_puts("--Date calib-----------------------------------------\n");*/
             }
             else if(dataCount < datePacketLen || dataCount > datePacketLen)
@@ -378,14 +447,103 @@ void process_data(void)
             dateFlag = true;
             ds3232Timestamp();
         }
-    }    
+    } 
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="Pressure1 calibration task">
+    if(serialMsgFlags == SER_MSG_FLAG_PRES1)
+    {
+        keyword[2] = "C02";
+        keywordPointer = strstr(input_line, keyword[2]);
+        if(keywordPointer != NULL)
+        {
+            dataPosition = (keywordPointer - input_line) + strlen(keyword[2]);
+            dataCount = 0;
+            char *token = strtok(&input_line[dataPosition], delimiter);
+            if(token != NULL && strlen(token) < sizeof (parsedStrings[0]))
+            {
+                strncpy(parsedStrings[0], token, sizeof (parsedStrings[0]));
+                dataCount++;
+            }
+            else
+            {
+                // uart1_puts("token to big\n");
+                strcpy(parsedStrings[0], NULL);
+            }
+
+            for(uint8_t i = 1; i < 3; i++)
+            {
+                token = strtok(NULL, delimiter);
+                if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
+                {
+                    strncpy(parsedStrings[i], token, sizeof (parsedStrings[i]));
+                    dataCount++;
+                }
+                else
+                {
+                    // uart1_puts("token to big\n");
+                    strcpy(parsedStrings[i], NULL);
+                }
+            }
+
+            // convert ascii data into float data           
+            if(dataCount == 3)
+            {
+                floatData[0] = atof(parsedStrings[0]);      // pres1 value
+                integerData[0] = (uint8_t)(atoi(parsedStrings[1]));    // CRC1
+                integerData[1] = (uint8_t)(atoi(parsedStrings[2]));    // CRC2
+                for(uint8_t i = 2; i < NUM_OF_INT_Data; i++)
+                {
+                    integerData[i] = 0; 
+                }
+//                crc = checksumCalculator(integerData, 4);
+//                crc1 = (crc >> 8) & 0xff;         // high byte
+//                crc2 = (crc >> 0) & 0xff;          // low byte
+                dataCount = 0;
+                /*sprintf(txBuffer, "%d, %d-%d-%d  %d %d\n", integerData[0], integerData[1], 
+                        integerData[2], integerData[3], integerData[4], integerData[5]);
+                uart1_puts(txBuffer);
+                uart1_puts("--Date calib-----------------------------------------\n");*/
+                
+//                sprintf(txBuffer, "Float data = %.3f\n", floatData[0]);
+                unsigned long floatToLong = floatData[0] * 1000;
+                ltoa(floatToLong, txBuffer, 10);
+                uart1_puts("Float = ");
+                uart1_puts(txBuffer);
+                uart1_newline();
+            }
+            else if(dataCount < 3 || dataCount > 3)
+            {
+                uart1_puts("data no good\n");
+                dataCount = 0;
+                serialMsgFlags = 0;
+            }
+        }        
+        else
+        {
+            // uart1_puts("sorry no keyword\n");
+            // dataCount = 0;
+            // serialMsgFlags = 0;
+        }
+//        if(crc1 == integerData[4] && crc2 == integerData[5])
+//        {
+//            dateFlag = true;
+//            ds3232Timestamp();
+//        }
+        
+    } 
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="No task">
     else
     {
         serialMsgFlags = 0;
+//        calibrationEnableFlag = false;
     }
+    // </editor-fold>
     // end Date calibration task
 
-    // </editor-fold>
+    
 }
 
 uint16_t checksumCalculator(uint8_t *data, uint16_t length)
@@ -400,4 +558,112 @@ uint16_t checksumCalculator(uint8_t *data, uint16_t length)
       sum2 = (sum2 + sum1) % 255;
    }
    return (uint16_t)((sum2 << 8) | sum1);
+}
+
+// Function to swap two numbers
+void swap(char *x, char *y) 
+{
+    char t = *x; *x = *y; *y = t;
+}
+ 
+// Function to reverse `buffer[i?j]`
+char* reverse(char *buffer, int i, int j)
+{
+    while(i < j)
+    {
+        swap(&buffer[i++], &buffer[j--]);
+    }
+    return buffer;
+}
+ 
+// Iterative function to implement `itoa()` function in C
+char* itoa(int value, char* buffer, int numBase)
+{
+    // invalid input
+    if (numBase < 2 || numBase > 32)
+    {
+        return buffer;
+    }
+ 
+    // consider the absolute value of the number
+    int n = abs(value);
+    int i = 0;
+    while(n)
+    {
+        int r = n % numBase;
+ 
+        if (r >= 10)
+        {
+            buffer[i++] = 65 + (r - 10);
+        }
+        else
+        {
+            buffer[i++] = 48 + r;
+        }
+        n = n / numBase;
+    }
+ 
+    // if the number is 0
+    if (i == 0)
+    {
+        buffer[i++] = '0';
+    }
+ 
+    // If the base is 10 and the value is negative, the resulting string
+    // is preceded with a minus sign (-)
+    // With any other base, value is always considered unsigned
+    if (value < 0 && numBase == 10)
+    {    
+        buffer[i++] = '-';
+    }
+    buffer[i] = '\0'; // null terminate string
+ 
+    // reverse the string and return it
+    return reverse(buffer, 0, i - 1);
+}
+
+// Iterative function to implement `itoa()` function in C
+char* ltoa(long value, char* buffer, int numBase)
+{
+    // invalid input
+    if (numBase < 2 || numBase > 32)
+    {
+        return buffer;
+    }
+ 
+    // consider the absolute value of the number
+    int n = abs(value);
+    int i = 0;
+    while(n)
+    {
+        int r = n % numBase;
+ 
+        if (r >= 10)
+        {
+            buffer[i++] = 65 + (r - 10);
+        }
+        else
+        {
+            buffer[i++] = 48 + r;
+        }
+        n = n / numBase;
+    }
+ 
+    // if the number is 0
+    if (i == 0)
+    {
+        buffer[i++] = '0';
+    }
+ 
+    // If the base is 10 and the value is negative, the resulting string
+    // is preceded with a minus sign (-)
+    // With any other base, value is always considered unsigned
+    if (value < 0 && numBase == 10)
+    {    
+        buffer[i++] = '-';
+    }
+    buffer[i] = '\0'; // null terminate string
+ 
+    // reverse the string and return it
+    return reverse(buffer, 0, i - 1);
 }
