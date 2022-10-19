@@ -1,4 +1,4 @@
-// feature/testing_serial
+// feature/testing_ccp
 
 
 // --Includes-------------------------------------------------------------------
@@ -21,12 +21,7 @@
 #include "UART.h"
 
 // --Global variable section----------------------------------------------------
-char print_buffer[50] = {0}; //uint8_t
-
-//void float2Bytes(uint8_t bytes_temp[4], float float_variable)
-//{
-//    memcpy(bytes_temp, (uint8_t*) (&float_variable), 4);
-//}
+//char print_buffer[50] = {0}; //uint8_t
 
 volatile uint8_t rxInputBuff[20];
 uint8_t data[4];
@@ -44,13 +39,11 @@ void main(void)
     __delay_ms(500);
     LED_SetLow();
 
-
     // Timer with CCP config
     TMR1_StartTimer();
     ECCP1_SetTMR1CompareCount(1000); // 1000 usec or 1 ms
 
     __delay_ms(1000);
-//    EUSART1_send_string((uint8_t*) "\nPIC18F Project\n\r\0");
     uart1_puts("\nPIC18F Project\n\r\0");
 
     // RTC time and date set
@@ -74,12 +67,11 @@ void main(void)
     __delay_ms(1000);
     LCDclear();
 
-    uint8_t readBuff[4];
-    uint8_t writeBuff[4];
-    float _floatWrite = 3.141f;
-    float _floatRead;
-
-    uint8_t dataBuff[4];
+//    uint8_t readBuff[4];
+//    uint8_t writeBuff[4];
+//    float _floatWrite = 3.141f;
+//    float _floatRead;
+//    uint8_t dataBuff[4];
 
     // writing float data to eeprom (page 0, offset 0 -> from 0x0000h to 0x0003h)
     //    float2Bytes(writeBuff, _floatWrite);
@@ -111,14 +103,6 @@ void main(void)
         //        sprintf((char *) print_buffer, "%.3f %u %u %u %u\n\r",
         //                _floatRead, readBuff[0], readBuff[1], readBuff[2], readBuff[3]);
         //        EUSART1_send_string((uint8_t *) print_buffer);
-
-        //        if (calibrationRxFlag == true)
-        //        {
-        //            calibrationRxFlag = false;
-        //
-        //            DS3231_setTime(second, minute, hour);
-        //            DS3231_setDate(day, date, month, year);
-        //        }
         
     }// end while(true)
 

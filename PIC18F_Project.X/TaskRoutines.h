@@ -44,6 +44,7 @@ typedef struct
 extern volatile ApplicationFlags_t sysFlags;
 
 // --Defines for serial msg input-----------------------------------------------
+// Serial msg states
 #define SER_MSG_FLAG_IDLE       0
 #define SER_MSG_FLAG_TIME       1
 #define SER_MSG_FLAG_DATE       2
@@ -51,13 +52,33 @@ extern volatile ApplicationFlags_t sysFlags;
 #define SER_MSG_FLAG_TEMP1      4
 #define SER_MSG_FLAG_PRES2      5
 #define SER_MSG_FLAG_TEMP2      6
+#define SER_MSG_FLAG_EEPROMWr1  7
+#define SER_MSG_FLAG_EEPROMRd1  8
+#define SER_MSG_FLAG_EEPROMWrN  9
+#define SER_MSG_FLAG_EEPROMRdN  10
 
-#define charLen             10
-#define numOfChar           8
+// Data Packet length
 #define timePacketLen       5
 #define datePacketLen       6
+#define pres1PacketLen      3
+#define temp1PacketLen      3
+#define pres2PacketLen      3
+#define temp2PacketLen      3
+#define eepromWr1PacketLen  5
+#define eepromRd1PacketLen  4
+
+// Variable buffer size
+#define charLen             10
+#define numOfChar           8
 #define NUM_OF_INT_Data     15
 #define NUM_OF_FLOAT_DATA   4
+
+// EEPROM write/read 1 or multiple bytes
+#define eepromIdle          0
+#define eepromWr1Byte       1
+#define eepromRd1Byte       2
+#define eepromWrNByte       3
+#define eepromRdNByte       4
 
 /**
  * Global function to initialize variables
