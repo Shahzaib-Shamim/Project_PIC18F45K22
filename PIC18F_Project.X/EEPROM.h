@@ -53,7 +53,7 @@ void EEPROM_readMultipleBytes(uint8_t slaveAddr, uint8_t page, uint8_t byteOffse
 // TO DO: eepromWriteBytes, eepromReadBytes
 
 /**
- * Erase EEPROM by writing 0xFF data by given times to a given page address
+ * Erase EEPROM page by writing 0xFF data for given times to a given page address
  * Example:
  * for(uint8_t x = 0; x < 128; x++)        // x = page
  *     EEPROM_erase(EEPROM_ADDR, x, 0, 32);
