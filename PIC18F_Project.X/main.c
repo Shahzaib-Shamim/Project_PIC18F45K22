@@ -19,12 +19,14 @@
 #include "DS3231.h"
 #include "EEPROM.h"
 #include "UART.h"
+#include "EXTI.h"
+#include "TMR0.h"
 
 // --Global variable section----------------------------------------------------
-//char print_buffer[50] = {0}; //uint8_t
+char print_buffer[10] = {0}; //uint8_t
 
-volatile uint8_t rxInputBuff[20];
-uint8_t data[4];
+//volatile uint8_t rxInputBuff[20];
+//uint8_t data[4];
 
 void main(void)
 {
@@ -103,6 +105,45 @@ void main(void)
         //        sprintf((char *) print_buffer, "%.3f %u %u %u %u\n\r",
         //                _floatRead, readBuff[0], readBuff[1], readBuff[2], readBuff[3]);
         //        EUSART1_send_string((uint8_t *) print_buffer);
+        
+        
+        if(tmr0Flag == true)
+        {
+            tmr0Flag = false;
+            // INT0 RB0 button
+            if(PORTBbits.RB0 == PRESSED)
+            {
+                static uint8_t pressCount = 0;
+                pressCount++;
+                itoa(pressCount, print_buffer, 10);
+                uart1_puts("RB0 pressed debounced ");
+                uart1_puts(print_buffer);
+                uart1_newline();
+            }
+            // INT1 RB1 button
+            if(PORTBbits.RB1 == PRESSED)
+            {
+                static uint8_t pressCount = 0;
+                pressCount++;
+                itoa(pressCount, print_buffer, 10);
+                uart1_puts("debounced ");
+                uart1_puts(print_buffer);
+                uart1_newline();
+                uart1_newline();
+            }
+            // INT2 RB2 button
+            if(PORTBbits.RB2 == PRESSED)
+            {
+                static uint8_t pressCount = 0;
+                pressCount++;
+                itoa(pressCount, print_buffer, 10);
+                uart1_puts("RB2 pressed debounced ");
+                uart1_puts(print_buffer);
+                uart1_newline();
+            }
+            
+            
+        }
         
     }// end while(true)
 

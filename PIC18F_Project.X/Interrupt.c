@@ -4,6 +4,8 @@
 #include "UART.h"
 #include "ECCP.h"
 #include "I2C.h"
+#include "TMR0.h"
+#include "EXTI.h"
 
 void INTERRUPT_Initialize(void)
 {
@@ -11,6 +13,10 @@ void INTERRUPT_Initialize(void)
     RCONbits.IPEN = 1;
 
     // Assign peripheral interrupt priority vectors
+    
+    // EXTI - high priority
+    INTCON3bits.INT1IP = 1;
+    INTCON3bits.INT2IP = 1;
 
     // TXI - low priority
     IPR1bits.TX1IP = 0;
@@ -20,6 +26,9 @@ void INTERRUPT_Initialize(void)
 
     // CCPI - high priority
     IPR1bits.CCP1IP = 1;
+    
+    // TMR0 - low priority
+    INTCON2bits.TMR0IP = 0;
     
     // BCLI - low priority
 //    IPR2bits.BCL1IP = 0;    
@@ -49,6 +58,18 @@ void __interrupt(high_priority) INTERRUPT_InterruptManagerHigh(void)
     if(PIE1bits.CCP1IE == 1 && PIR1bits.CCP1IF == 1)
     {
         ECCP1_CompareISR();
+    }
+    else if(INTCONbits.INT0IE == 1 && INTCONbits.INT0IF == 1)
+    {
+        INT0_ISR();
+    }
+    else if(INTCON3bits.INT1IE == 1 && INTCON3bits.INT1IF == 1)
+    {
+        INT1_ISR();
+    }
+    else if(INTCON3bits.INT2IE == 1 && INTCON3bits.INT2IF == 1)
+    {
+        INT2_ISR();
     }
     else
     {
@@ -83,6 +104,10 @@ void __interrupt(low_priority) INTERRUPT_InterruptManagerLow(void)
             uart1_getc();
             PIR1bits.RCIF = 0;
         }
+    }
+    else if(INTCONbits.TMR0IE == 1 && INTCONbits.TMR0IF == 1)
+    {
+        TMR0_ISR();
     }
     else
     {

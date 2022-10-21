@@ -27,6 +27,10 @@ void PIN_MANAGER_Initialize(void)
     // EUSART1 pins
     TRISCbits.TRISC6 = OUTPUT;  // TX1 pin
     TRISCbits.TRISC7 = INPUT;   // RX1 pin
+    
+    TRISBbits.TRISB0 = INPUT;   // INT0
+    TRISBbits.TRISB1 = INPUT;   // INT1
+    TRISBbits.TRISB2 = INPUT;   // INT2
 
     // --GPIO mode select-------------------------------------------------------
 //    ANSELD = 0xFB;
@@ -45,6 +49,10 @@ void PIN_MANAGER_Initialize(void)
     // I2C1
     ANSELCbits.ANSC3 = DIGITAL;           // SCL1
     ANSELCbits.ANSC4 = DIGITAL;           // SDA1
+    
+    ANSELBbits.ANSB0 = DIGITAL;     // RB0
+    ANSELBbits.ANSB1 = DIGITAL;     // RB1
+    ANSELBbits.ANSB2 = DIGITAL;     // RB2
 
     // --Pullup enable/disable--------------------------------------------------
     WPUB = 0x00;
