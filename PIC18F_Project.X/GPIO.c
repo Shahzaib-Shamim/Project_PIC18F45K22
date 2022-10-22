@@ -7,7 +7,7 @@ void PIN_MANAGER_Initialize(void)
     LATD = 0x00;
 //    LATA = 0x00;
 //    LATB = 0x00;
-    LATC = 0x00;
+//    LATC = 0x00;  prev no comment
     LATCbits.LATC6 = HIGH;  // RX1 (added)
 
     // --GPIO set direction-----------------------------------------------------
@@ -31,6 +31,9 @@ void PIN_MANAGER_Initialize(void)
     TRISBbits.TRISB0 = INPUT;   // INT0
     TRISBbits.TRISB1 = INPUT;   // INT1
     TRISBbits.TRISB2 = INPUT;   // INT2
+    
+    // CCP2 pin input
+    TRISCbits.TRISC1 = 1;
 
     // --GPIO mode select-------------------------------------------------------
 //    ANSELD = 0xFB;
@@ -50,9 +53,13 @@ void PIN_MANAGER_Initialize(void)
     ANSELCbits.ANSC3 = DIGITAL;           // SCL1
     ANSELCbits.ANSC4 = DIGITAL;           // SDA1
     
+    // INTx
     ANSELBbits.ANSB0 = DIGITAL;     // RB0
     ANSELBbits.ANSB1 = DIGITAL;     // RB1
     ANSELBbits.ANSB2 = DIGITAL;     // RB2
+    
+    // CCP2
+    ANSELCbits.ANSC2 = DIGITAL;     // C2
 
     // --Pullup enable/disable--------------------------------------------------
     WPUB = 0x00;

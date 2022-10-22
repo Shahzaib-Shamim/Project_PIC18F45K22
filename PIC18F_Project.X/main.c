@@ -21,6 +21,7 @@
 #include "UART.h"
 #include "EXTI.h"
 #include "TMR0.h"
+#include "Capture.h"
 
 // --Global variable section----------------------------------------------------
 char print_buffer[10] = {0}; //uint8_t
@@ -89,6 +90,9 @@ void main(void)
     //    __delay_ms(5);
     //    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 0, writeBuff, 4);
     //    __delay_ms(10);
+    
+    uint32_t time_ccp = 0;
+    CCP2_Initialize();
 
     while (true)
     {
@@ -107,7 +111,7 @@ void main(void)
         //        EUSART1_send_string((uint8_t *) print_buffer);
         
         
-        if(tmr0Flag == true)
+        /*if(tmr0Flag == true)
         {
             tmr0Flag = false;
             // INT0 RB0 button
@@ -140,8 +144,21 @@ void main(void)
                 uart1_puts("RB2 pressed debounced ");
                 uart1_puts(print_buffer);
                 uart1_newline();
-            }
+            } 
+        }*/
+        
+        if(ccp2Flag == true)
+        {
+            ccp2Flag = false;
             
+            time_ccp = time_after_capture(cap_overflow_tmr3, &capture_value);
+            sprintf(print_buffer, "\rtime press %10lu ms", time_ccp / 1000);
+            uart1_puts(print_buffer);
+            
+            // added
+            cap_overflow_tmr3 = 0;
+            capture_value.ccpL = 0;
+            capture_value.ccpH = 0;
             
         }
         

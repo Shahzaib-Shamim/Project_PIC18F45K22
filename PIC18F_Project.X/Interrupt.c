@@ -6,6 +6,7 @@
 #include "I2C.h"
 #include "TMR0.h"
 #include "EXTI.h"
+#include "Capture.h"
 
 void INTERRUPT_Initialize(void)
 {
@@ -71,6 +72,13 @@ void __interrupt(high_priority) INTERRUPT_InterruptManagerHigh(void)
     {
         INT2_ISR();
     }
+    
+    // CCP2 callback
+    else if(PIE2bits.CCP2IE == 1 && PIR2bits.CCP2IF == 1)
+    {
+        CCP2_ISR();
+    }   
+    
     else
     {
         //Unhandled Interrupt
@@ -108,6 +116,11 @@ void __interrupt(low_priority) INTERRUPT_InterruptManagerLow(void)
     else if(INTCONbits.TMR0IE == 1 && INTCONbits.TMR0IF == 1)
     {
         TMR0_ISR();
+    }
+    
+    else if(PIE2bits.TMR3IE == 1 && PIR2bits.TMR3IF == 1)
+    {
+        TMR3_ISR();
     }
     else
     {
