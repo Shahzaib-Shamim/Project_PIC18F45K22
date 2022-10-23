@@ -40,7 +40,7 @@ void ECCP1_SetCompareCount(uint16_t compareCount)
     CCPR1H = module.ccpr1h;
 }
 
-uint8_t buff[256] = {0};
+//uint8_t buff[256] = {0};
 
 void ECCP1_CompareISR(void)
 {

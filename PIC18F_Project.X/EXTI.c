@@ -62,7 +62,7 @@ void INT1_ISR(void)
     //old stop
     
     INTCON3bits.INT1IF = 0;
-    if(INTCON2bits.INTEDG1 == EXTI_RISING_EDGE)
+    /*if(INTCON2bits.INTEDG1 == EXTI_RISING_EDGE)
     {
         uart1_puts("\nRB1 rising---\n");
         INTCON2bits.INTEDG1 = EXTI_FALLING_EDGE;
@@ -73,7 +73,7 @@ void INT1_ISR(void)
         uart1_puts("---RB1 falling\n\n");
         INTCON2bits.INTEDG1 = EXTI_RISING_EDGE;
 //        INTCON3bits.INT1IF = 0;  // clear flag before enabling interrupt
-    }
+    }*/
 }
 
 void INT2_ISR(void)

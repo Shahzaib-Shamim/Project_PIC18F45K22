@@ -1,6 +1,3 @@
-// feature/testing_ccp
-
-
 // --Includes-------------------------------------------------------------------
 #include <xc.h>
 #include <stdlib.h>
@@ -24,7 +21,7 @@
 #include "Capture.h"
 
 // --Global variable section----------------------------------------------------
-char print_buffer[10] = {0}; //uint8_t
+//char print_buffer[10] = {0}; //uint8_t
 
 void main(void)
 {

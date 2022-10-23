@@ -56,6 +56,7 @@ extern volatile ApplicationFlags_t sysFlags;
 #define SER_MSG_FLAG_EEPROMRd1  8
 #define SER_MSG_FLAG_EEPROMWrN  9
 #define SER_MSG_FLAG_EEPROMRdN  10
+#define SER_MSG_FLAG_CAL_COEF   3
 
 // Data Packet length
 #define timePacketLen       5
@@ -66,11 +67,12 @@ extern volatile ApplicationFlags_t sysFlags;
 #define temp2PacketLen      3
 #define eepromWr1PacketLen  5
 #define eepromRd1PacketLen  4
+#define floatDataPacketLen  6
 
 // Variable buffer size
-#define charLen             10
-#define numOfChar           8
-#define NUM_OF_INT_Data     15
+#define charLen             20  //10
+#define numOfChar           10
+#define NUM_OF_INT_Data     10
 #define NUM_OF_FLOAT_DATA   4
 
 // EEPROM write/read 1 or multiple bytes
@@ -79,6 +81,28 @@ extern volatile ApplicationFlags_t sysFlags;
 #define eepromRd1Byte       2
 #define eepromWrNByte       3
 #define eepromRdNByte       4
+
+// Pressure1 coefficients
+#define COEF_A_P1           1
+#define COEF_B_P1           2
+#define COEF_C_P1           3
+#define COEF_D_P1           4
+// Temperature1 coefficients
+#define COEF_A_T1           5
+#define COEF_B_T1           6
+#define COEF_C_T1           7
+#define COEF_D_T1           8
+// Pressure2 coefficients
+#define COEF_A_P2           9
+#define COEF_B_P2           10
+#define COEF_C_P2           11
+#define COEF_D_P2           12
+// Temperature2 coefficients
+#define COEF_A_T2           13
+#define COEF_B_T2           14
+#define COEF_C_T2           15
+#define COEF_D_T2           16
+
 
 /**
  * Global function to initialize variables
