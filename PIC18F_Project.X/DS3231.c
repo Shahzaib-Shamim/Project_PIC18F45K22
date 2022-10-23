@@ -224,25 +224,25 @@ char* setDayName(uint8_t nameOfDay)
     switch(nameOfDay)
     {
         case 1:
-            day = "Sunday";
+            day = "Sun";
             break;
         case 2:
-            day = "Monday";
+            day = "Mon";
             break;
         case 3:
-            day = "Tuesday";
+            day = "Tue";
             break;
         case 4:
-            day = "Wednesday";
+            day = "Wed";
             break;
         case 5:
-            day = "Thursday";
+            day = "Thu";
             break;
         case 6:
-            day = "Friday";
+            day = "Fri";
             break;
         case 7:
-            day = "Saturday";
+            day = "Sat";
             break;
     }
     return day;

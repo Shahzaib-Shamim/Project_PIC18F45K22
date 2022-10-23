@@ -26,9 +26,6 @@
 // --Global variable section----------------------------------------------------
 char print_buffer[10] = {0}; //uint8_t
 
-//volatile uint8_t rxInputBuff[20];
-//uint8_t data[4];
-
 void main(void)
 {
     SYSTEM_Initialization();
@@ -60,15 +57,18 @@ void main(void)
 
     LCDclear();
     LCDsetCursor(0, 0);
-    LCD_Write_Str("Some text1");
-    LCDsetCursor(0, 1);
-    LCD_Write_Str("Some text2");
-    LCDsetCursor(0, 2);
-    LCD_Write_Str("Some text3");
+    LCD_Write_Str("--------------------");
+    LCDsetCursor(6, 1);
+    LCD_Write_Str("Project");
+    LCDsetCursor(2, 2);
+    LCD_Write_Str("Firmware V0.10");
     LCDsetCursor(0, 3);
-    LCD_Write_Str("Some text4");
+    LCD_Write_Str("--------------------");
     __delay_ms(1000);
     LCDclear();
+//    LCDsetCursor(0, 0);
+//    LCD_Write_Str("Waiting for pulse...");
+    
 
 //    uint8_t readBuff[4];
 //    uint8_t writeBuff[4];
@@ -147,7 +147,7 @@ void main(void)
             } 
         }*/
         
-        if(ccp2Flag == true)
+        /*if(ccp2Flag == true)
         {
             ccp2Flag = false;
             
@@ -160,7 +160,7 @@ void main(void)
             capture_value.ccpL = 0;
             capture_value.ccpH = 0;
             
-        }
+        }*/
         
     }// end while(true)
 

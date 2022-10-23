@@ -40,10 +40,12 @@ bool txEnableFlag = true;       // false
 bool eepromFlag = false;
 uint8_t eepromStateFlags = 0;
 bool calibrationEnableFlag = true;  //false
-float pres1Factor = 0.0f;
-float pres2Factor = 0.0f;
-float temp1Factor = 0.0f;
-float temp2Factor = 0.0f;
+float pres1Factor = 1.0f;
+float pres2Factor = 1.0f;
+float temp1Factor = 1.0f;
+float temp2Factor = 1.0f;
+float voltage[4];
+uint8_t ds3231_readBuff[7];
 
 void initSysVariables(void)
 {
@@ -85,11 +87,11 @@ int counterIndex = 0;
 
 void runApplication(void)
 {
-    if(sysFlags.ledBlinkTask == true)
-    {
-        sysFlags.ledBlinkTask = false;
-        ledBlink();
-    }
+//    if(sysFlags.ledBlinkTask == true)
+//    {
+//        sysFlags.ledBlinkTask = false;
+//        ledBlink();
+//    }
 
     if(sysFlags.uartTxTask == true && txEnableFlag == true)
     {
@@ -102,13 +104,14 @@ void runApplication(void)
     if(sysFlags.ads1115SampleTask == true && txEnableFlag == true)
     {
         sysFlags.ads1115SampleTask = false;
-//                ads1115SampleData();
+        ads1115SampleData();
     }
 
-    if(sysFlags.ds3231Task == true && serialMsgFlags == txEnableFlag == true)
+//    if(sysFlags.ds3231Task == true && serialMsgFlags == txEnableFlag == true)
+    if(sysFlags.ds3231Task == true && txEnableFlag == true)
     {
         sysFlags.ds3231Task = false;
-        //        ds3232Timestamp();
+        ds3232Timestamp();
     }
 
     if(sysFlags.eepromTask == true)
@@ -126,13 +129,73 @@ void runApplication(void)
     {
         sysFlags.lcdTask = false;
 
+//        LCDsetCursor(0, 0);
+//        LCD_Write_Str("Counter = ");
+//        LCDsetCursor(0, 1);
+////        sprintf(str, "%lu", counterIndex);
+//        ltoa(counterIndex, txBuffer, 10);
+//        counterIndex++;
+//        LCD_Write_Str(txBuffer);
+        
+        int adcData[4];
+        
+        LCDclear();
         LCDsetCursor(0, 0);
-        LCD_Write_Str("Counter = ");
+        LCD_Write_Str("Pulsetime=");
+                
+//        LCDclear();
         LCDsetCursor(0, 1);
-//        sprintf(str, "%lu", counterIndex);
-        ltoa(counterIndex, txBuffer, 10);
-        counterIndex++;
+        LCD_Write_Str("P1=");
+        adcData[0] = (voltage[0] * 1000) * pres1Factor;
+        itoa(adcData[0], txBuffer, 10);
+        LCDsetCursor(3, 1);
         LCD_Write_Str(txBuffer);
+        
+//        LCDclear();
+        LCDsetCursor(0, 2);
+        LCD_Write_Str("T1=");
+        adcData[1] = (voltage[1] * 1000) * temp1Factor;
+        itoa(adcData[1], txBuffer, 10);
+        LCDsetCursor(3, 2);
+        LCD_Write_Str(txBuffer);
+        
+//        LCDclear();
+        LCDsetCursor(11, 1);
+        LCD_Write_Str("P2=");
+        adcData[2] = (voltage[2] * 1000) * pres2Factor;
+        itoa(adcData[2], txBuffer, 10);
+        LCDsetCursor(14, 1);
+        LCD_Write_Str(txBuffer);
+        
+//        LCDclear();
+        LCDsetCursor(11, 2);
+        LCD_Write_Str("T2=");
+        adcData[3] = (voltage[3] * 1000) * temp2Factor;
+        itoa(adcData[3], txBuffer, 10);
+        LCDsetCursor(14, 2);
+        LCD_Write_Str(txBuffer);
+        
+        // time write
+        LCDsetCursor(0, 3);
+        itoa(ds3231_readBuff[2], txBuffer, 10); LCD_Write_Str(txBuffer);
+        LCDsetCursor(2, 3); LCD_Write_Str(":");
+        LCDsetCursor(3, 3);
+        itoa(ds3231_readBuff[1], txBuffer, 10); LCD_Write_Str(txBuffer);
+        LCD_Write_Str(":");
+        itoa(ds3231_readBuff[0], txBuffer, 10); LCD_Write_Str(txBuffer);
+    
+        // date write
+        LCDsetCursor(9, 3);
+        itoa(ds3231_readBuff[4], txBuffer, 10); LCD_Write_Str(txBuffer);
+        LCDsetCursor(11, 3); LCD_Write_Str("-");
+        LCDsetCursor(12, 3);
+        char *MonthName = "";
+        MonthName = setDayName(ds3231_readBuff[3]);
+        strncpy(txBuffer, MonthName, 3);
+        /*itoa(ds3231_readBuff[5], txBuffer, 10);*/ LCD_Write_Str(txBuffer);
+        LCDsetCursor(15, 3); LCD_Write_Str("-");
+        LCDsetCursor(16, 3);
+        itoa(ds3231_readBuff[6], txBuffer, 10); LCD_Write_Str(txBuffer);
     }
 
     // --Serial Msg process-----------------------------------------------------
@@ -235,8 +298,8 @@ void ledBlink(void)
 
 void ads1115SampleData(void)
 {
-    float voltage[4];
-    static uint8_t count = 0;
+//    float voltage[4];
+//    static uint8_t count = 0;
 
     if(myADC.isPresent == 1)
     {
@@ -254,14 +317,17 @@ void ads1115SampleData(void)
         uart1_newline();*/
         
         int adcData[4];
+        float calArr[4] = {pres1Factor, temp1Factor, pres2Factor, temp2Factor};
         for(uint8_t i = 0; i < 4; i++)
         {
-            adcData[i] = voltage[i] * 1000;
+            adcData[i] = (voltage[i] * 1000) * calArr[i];
             itoa(adcData[i], txBuffer, 10);
             uart1_puts(txBuffer);
             uart1_puts(" ");
         }
         uart1_newline(); 
+        
+        
     }
 }
 
@@ -269,7 +335,7 @@ void ds3232Timestamp(void)
 {
     char *Day = "";
     char *MonthName = "";
-    uint8_t ds3231_readBuff[7];
+//    uint8_t ds3231_readBuff[7];
     DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
     DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
     Day = setDayName(ds3231_readBuff[3]);
@@ -279,17 +345,17 @@ void ds3232Timestamp(void)
 //    uart1_puts(txBuffer);
     
     itoa(ds3231_readBuff[2], txBuffer, 10);
-    uart1_puts(txBuffer); uart1_putc(' ');
+    uart1_puts(txBuffer); uart1_putc(':');
     itoa(ds3231_readBuff[1], txBuffer, 10);
-    uart1_puts(txBuffer); uart1_putc(' ');
+    uart1_puts(txBuffer); uart1_putc(':');
     itoa(ds3231_readBuff[0], txBuffer, 10);
     uart1_puts(txBuffer); uart1_putc(' ');
-    uart1_puts(Day); uart1_putc(' ');
+    uart1_puts(Day); uart1_putc(',');
     itoa(ds3231_readBuff[4], txBuffer, 10);
-    uart1_puts(txBuffer); uart1_putc(' ');
-    uart1_puts(MonthName); uart1_putc(' ');
+    uart1_puts(txBuffer); uart1_putc('/');
+    uart1_puts(MonthName); uart1_putc('/');
     itoa(ds3231_readBuff[6], txBuffer, 10);
-    uart1_puts(txBuffer); uart1_putc(' ');
+    uart1_puts(txBuffer);
     uart1_newline();
     
     if(timeFlag == true)
@@ -302,7 +368,49 @@ void ds3232Timestamp(void)
     {
         dateFlag = false;
         DS3231_setDate(integerData[0], integerData[1], integerData[2], integerData[3]);
-    }    
+    }
+
+////        LCDclear();
+//        LCDsetCursor(0, 1);
+//        LCD_Write_Str("P1=");
+//        adcData[0] = voltage[0] * 1000;
+//        itoa(adcData[0], txBuffer, 10);
+//        LCDsetCursor(3, 1);
+//        LCD_Write_Str(txBuffer);  
+    
+    
+//    uart1_puts(txBuffer); uart1_putc(' ');
+//    itoa(ds3231_readBuff[1], txBuffer, 10);
+//    uart1_puts(txBuffer); uart1_putc(' ');
+//    itoa(ds3231_readBuff[0], txBuffer, 10);
+//    uart1_puts(txBuffer); uart1_putc(' ');
+//    uart1_puts(Day); uart1_putc(' ');
+//    itoa(ds3231_readBuff[4], txBuffer, 10);
+//    uart1_puts(txBuffer); uart1_putc(' ');
+//    uart1_puts(MonthName); uart1_putc(' ');
+//    itoa(ds3231_readBuff[6], txBuffer, 10);
+//    uart1_puts(txBuffer); uart1_putc(' ');
+//    uart1_newline();
+    
+    
+//    LCDsetCursor(0, 3);
+//    // time write
+//    itoa(ds3231_readBuff[2], txBuffer, 10); LCD_Write_Str(txBuffer);
+//    LCDsetCursor(2, 3); LCD_Write_Str(":");
+//    LCDsetCursor(3, 3);
+//    itoa(ds3231_readBuff[1], txBuffer, 10); LCD_Write_Str(txBuffer);
+//    LCD_Write_Str(":");
+//    itoa(ds3231_readBuff[0], txBuffer, 10); LCD_Write_Str(txBuffer);
+//    
+//    LCDsetCursor(9, 3);
+//    // date write
+//    itoa(ds3231_readBuff[4], txBuffer, 10); LCD_Write_Str(txBuffer);
+//    LCDsetCursor(11, 3); LCD_Write_Str("-");
+//    LCDsetCursor(12, 3);
+//    itoa(ds3231_readBuff[5], txBuffer, 10); LCD_Write_Str(txBuffer);
+//    LCDsetCursor(15, 3); LCD_Write_Str("-");
+//    LCDsetCursor(16, 3);
+//    itoa(ds3231_readBuff[6], txBuffer, 10); LCD_Write_Str(txBuffer);
 }
 
 void process_data(void)
