@@ -13,14 +13,13 @@ volatile TIMER1_t timer1 = {
 
 ADS1115_Object_t myADC;
 char txBuffer[50] = {0};
-//uint8_t readBuff[32];
 
 volatile ApplicationFlags_t sysFlags;
-
 uint8_t serialMsgFlags = SER_MSG_FLAG_IDLE;
 uint8_t serialMsgErrorFlag = false;
 uint8_t integerData[NUM_OF_INT_Data];
-char *keyword[NUM_OF_SER_MSG];
+//char *keyword[NUM_OF_SER_MSG];
+char *keyword;
 bool dateFlag = false;
 bool timeFlag = false;
 bool pres1Flag = false;
@@ -92,6 +91,11 @@ void loadPres1_Coef(void)
     pres1.coefC = EEPROM_byteToFloat(eepromReadBuff); 
     EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 12, eepromReadBuff, 4);
     pres1.coefD = EEPROM_byteToFloat(eepromReadBuff);
+}
+
+void loadTemp1_Coef(void)
+{
+    uint8_t eepromReadBuff[4];
     
     EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 0, eepromReadBuff, 4);
     temp1.coefA = EEPROM_byteToFloat(eepromReadBuff);
@@ -101,6 +105,11 @@ void loadPres1_Coef(void)
     temp1.coefC = EEPROM_byteToFloat(eepromReadBuff); 
     EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 12, eepromReadBuff, 4);
     temp1.coefD = EEPROM_byteToFloat(eepromReadBuff);
+}
+
+void loadPres2_Coef(void)
+{
+    uint8_t eepromReadBuff[4];
     
     EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 0, eepromReadBuff, 4);
     pres2.coefA = EEPROM_byteToFloat(eepromReadBuff);
@@ -110,6 +119,11 @@ void loadPres1_Coef(void)
     pres2.coefC = EEPROM_byteToFloat(eepromReadBuff); 
     EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 12, eepromReadBuff, 4);
     pres2.coefD = EEPROM_byteToFloat(eepromReadBuff);
+}
+
+void loadTemp2_Coef(void)
+{
+    uint8_t eepromReadBuff[4];
     
     EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 0, eepromReadBuff, 4);
     temp2.coefA = EEPROM_byteToFloat(eepromReadBuff);
@@ -119,6 +133,67 @@ void loadPres1_Coef(void)
     temp2.coefC = EEPROM_byteToFloat(eepromReadBuff); 
     EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 12, eepromReadBuff, 4);
     temp2.coefD = EEPROM_byteToFloat(eepromReadBuff);
+}
+
+void storeLastCalibRTC(void)
+{
+    uint8_t readBuff[7];
+//    uint8_t writeBuff[4];
+    
+//     Store Time
+//    DS3231_getTime(&readBuff[0], &readBuff[1], &readBuff[2]);
+//    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 4, readBuff, 3);
+//    // Store Date
+//    DS3231_getDate(&readBuff[3], &readBuff[4], &readBuff[5], &readBuff[6]);
+//    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 7, &readBuff[3], 4);
+    
+    
+    
+    DS3231_getData(&readBuff[0], &readBuff[1], &readBuff[2],
+                   &readBuff[3], &readBuff[4], &readBuff[5], &readBuff[6]);
+    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 4, readBuff, 7);
+    uart1_puts("To EEPROM\n");
+}
+
+void getLastCalibRTC(void)
+{
+    uint8_t readBuff[7];
+//    DS3231_getData(&readBuff[0], &readBuff[1], &readBuff[2],
+//                   &readBuff[3], &readBuff[4], &readBuff[5], &readBuff[6]);
+    
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 0, 4, readBuff, 7);
+    
+    itoa(readBuff[2], txBuffer, 10);
+    uart1_puts(txBuffer);
+    uart1_putc(':');
+    itoa(readBuff[1], txBuffer, 10);
+    uart1_puts(txBuffer);
+    uart1_putc(':');
+    itoa(readBuff[0], txBuffer, 10);
+    uart1_puts(txBuffer);
+    uart1_putc(' ');
+    
+    itoa(readBuff[3], txBuffer, 10);
+    uart1_puts(txBuffer);     //Day
+    uart1_putc(',');
+    itoa(readBuff[4], txBuffer, 10);
+    uart1_puts(txBuffer);
+    uart1_putc('/');
+    itoa(readBuff[5], txBuffer, 10);
+    uart1_puts(txBuffer);   //MonthName
+    uart1_putc('/');
+    itoa(readBuff[6], txBuffer, 10);
+    uart1_puts(txBuffer);
+    uart1_newline();
+    uart1_puts("From EEPROM\n");
+}
+
+void startInitialization(void)
+{
+    loadPres1_Coef();
+    loadTemp1_Coef();
+    loadPres2_Coef();
+    loadTemp2_Coef();
 }
 
 void runApplication(void)
@@ -131,11 +206,19 @@ void runApplication(void)
 
     if(sysFlags.uartTxTask == true && txEnableFlag == true)
     {
-        static uint8_t counter = 0;
+//        static uint8_t counter = 0;
         sysFlags.uartTxTask = false;
-        uart1_newline();
-//        ds3232Timestamp();        // tested        
-        ads1115SampleData();
+//        uart1_newline();
+        
+        static uint8_t i = 0;
+        i++;
+        if(i == 4)
+        {
+            i = 0;
+            ds3232Timestamp();        // tested        
+//        ads1115SampleData();
+        }
+        
     }
 
     if(sysFlags.ads1115SampleTask == true && txEnableFlag == true)
@@ -240,6 +323,7 @@ void runApplication(void)
     {
         uartProcessFlag = false;
 
+        // <editor-fold defaultstate="collapsed" desc="Serial msg states">
         // Time calibration
         //        if(input_line[0] == 'C' && input_line[1] == '0' && input_line[2] == '0')
         if((strncmp(input_line, "C00", 3) == 0))
@@ -257,100 +341,100 @@ void runApplication(void)
         else if(strncmp(input_line, "C02A", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C02A";
+            keyword = "C02A";
         }
         // Pressure1 calibration coefB
         else if(strncmp(input_line, "C02B", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C02B";
+            keyword = "C02B";
         }
         // Pressure1 calibration coefA
         else if(strncmp(input_line, "C02C", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C02C";
+            keyword = "C02C";
         }
         // Pressure1 calibration coefD
         else if(strncmp(input_line, "C02D", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C02D";
+            keyword = "C02D";
         }
 
         // Temperature1 calibration coefA
         else if(strncmp(input_line, "C03A", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C03A";
+            keyword = "C03A";
         }
         // Temperature1 calibration coefB
         else if(strncmp(input_line, "C03B", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C03B";
+            keyword = "C03B";
         }
         // Temperature1 calibration coefC
         else if(strncmp(input_line, "C03C", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C03C";
+            keyword = "C03C";
         }
         // Temperature1 calibration coefD
         else if(strncmp(input_line, "C03D", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C03D";
+            keyword = "C03D";
         }
 
         // Pressure2 calibration coefA
         else if(strncmp(input_line, "C04A", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C04A";
+            keyword = "C04A";
         }
         // Pressure2 calibration coefB
         else if(strncmp(input_line, "C04B", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C04B";
+            keyword = "C04B";
         }
         // Pressure2 calibration coefC
         else if(strncmp(input_line, "C04C", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C04C";
+            keyword = "C04C";
         }
         // Pressure1 calibration coefD
         else if(strncmp(input_line, "C04D", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C04D";
+            keyword = "C04D";
         }
 
         // Temperature2 calibration coefA
         else if(strncmp(input_line, "C05A", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C05A";
+            keyword = "C05A";
         }
         // Temperature1 calibration coefB
         else if(strncmp(input_line, "C05B", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C05B";
+            keyword = "C05B";
         }
         // Temperature1 calibration coefC
         else if(strncmp(input_line, "C05C", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C05C";
+            keyword = "C05C";
         }
         // Temperature1 calibration coefD
         else if(strncmp(input_line, "C05D", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
-            keyword[2] = "C05D";
+            keyword = "C05D";
         }
 
         // Calibration mode enable
@@ -402,6 +486,23 @@ void runApplication(void)
         {
             serialMsgFlags = SER_MSG_FLAG_EEPROMRdN;
         }
+        
+        // Store Time & Date to EEPROM
+        else if(strncmp(input_line, "C14StoreRTC", 11) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_RTC_W;
+            if(calibrationEnableFlag == true)
+            {
+                storeLastCalibRTC();
+            }
+        }
+        
+        // Get Time & Date from EEPROM (last calib time and date)
+        else if(strncmp(input_line, "C15GetRTC", 9) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_RTC_R;
+            getLastCalibRTC();            
+        }
 
         // Nothing to be process
         else
@@ -413,6 +514,7 @@ void runApplication(void)
         {
             process_data();
         }
+        // </editor-fold>
     }
 }
 
@@ -424,7 +526,6 @@ void ledBlink(void)
 void ads1115SampleData(void)
 {
     float voltage[4];
-    //    static uint8_t count = 0;
 
     if(myADC.isPresent == 1)
     {
@@ -434,10 +535,12 @@ void ads1115SampleData(void)
             // __delay_us(10);
         }
 
-        int adcData[4];
-        float x[4];        
-        float nonCalibData[4];
+//        int adcData;
+        uint16_t adcData;
+//        float x[4];        
+//        float nonCalibData[4];
         float calibData[4];
+        uint8_t i;
         
 //        if(calibrationEnableFlag == true)       // send calibrated data
 //        {
@@ -474,24 +577,24 @@ void ads1115SampleData(void)
         calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
                 (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + (temp2.coefD);
 
-        adcData[0] = calibData[0] * 1000;
-        adcData[1] = calibData[1] * 1000;
-        adcData[2] = calibData[2] * 1000;
-        adcData[3] = calibData[3] * 1000;
-        for(uint8_t i = 0; i < 4; i++)
+//        adcData[0] = calibData[0] * 1000;
+//        adcData[1] = calibData[1] * 1000;
+//        adcData[2] = calibData[2] * 1000;
+//        adcData[3] = calibData[3] * 1000;
+        for(i = 0; i < 4; i++)
         {
-            itoa(adcData[i], txBuffer, 10);
+            adcData = calibData[i] * 1000;
+            itoa(adcData, txBuffer, 10);
             uart1_puts(txBuffer);
             uart1_puts(" ");
         }
         uart1_newline();
 
-
         uart1_puts("\nRaw data\n");
-        for(uint8_t i = 0; i < 4; i++)
+        for(i = 0; i < 4; i++)
         {
-            adcData[i] = voltage[i] * 1000;
-            itoa(adcData[i], txBuffer, 10);
+            adcData = voltage[i] * 1000;
+            itoa(adcData, txBuffer, 10);
             uart1_puts(txBuffer);
             uart1_puts(" ");
         }
@@ -524,12 +627,12 @@ void ds3232Timestamp(void)
     itoa(ds3231_readBuff[0], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_putc(' ');
-    uart1_puts(Day);
+    uart1_puts(Day);     //Day
     uart1_putc(',');
     itoa(ds3231_readBuff[4], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_putc('/');
-    uart1_puts(MonthName);
+    uart1_puts(MonthName); //MonthName
     uart1_putc('/');
     itoa(ds3231_readBuff[6], txBuffer, 10);
     uart1_puts(txBuffer);
@@ -594,21 +697,23 @@ void process_data(void)
 {
     uint16_t crc = 0;
     uint8_t crc1, crc2; // crc1 = highbyte, crc2 = lowbyte
-    char parsedStrings[charLen][numOfChar];
+//    char parsedStrings[charLen][numOfChar];
+    char parsedStrings[numOfChar][charLen];
     uint8_t dataPosition = 0;
     uint8_t dataCount = 0;
     const char delimiter[] = ",";
     char *keywordPointer;
-//    char *keyword[NUM_OF_SER_MSG];
+    uint8_t i;
 
     // <editor-fold defaultstate="collapsed" desc="Time calibration task">
     if(serialMsgFlags == SER_MSG_FLAG_TIME)
     {
-        keyword[0] = "C00";
-        keywordPointer = strstr(input_line, keyword[0]);
+//        keyword[0] = "C00";
+        keyword = "C00";
+        keywordPointer = strstr(input_line, keyword);
         if(keywordPointer != NULL)
         {
-            dataPosition = (keywordPointer - input_line) + strlen(keyword[0]);
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
             dataCount = 0;
 
             char *token = strtok(&input_line[dataPosition], delimiter);
@@ -623,7 +728,7 @@ void process_data(void)
                 strcpy(parsedStrings[0], NULL);
             }
 
-            for(uint8_t i = 1; i < timePacketLen; i++) // +2
+            for(i = 1; i < timePacketLen; i++)
             {
                 token = strtok(NULL, delimiter);
                 if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
@@ -646,7 +751,7 @@ void process_data(void)
                 integerData[2] = (uint8_t) (atoi(parsedStrings[2])); // second
                 integerData[3] = (uint8_t) (atoi(parsedStrings[3])); // CRC1
                 integerData[4] = (uint8_t) (atoi(parsedStrings[4])); // CRC2
-                for(uint8_t i = 5; i < NUM_OF_INT_Data; i++)
+                for(i = 5; i < NUM_OF_INT_Data; i++)
                 {
                     integerData[i] = 0;
                 }
@@ -680,11 +785,11 @@ void process_data(void)
     // <editor-fold defaultstate="collapsed" desc="Date calibration task">
     if(serialMsgFlags == SER_MSG_FLAG_DATE)
     {
-        keyword[1] = "C01";
-        keywordPointer = strstr(input_line, keyword[1]);
+        keyword = "C01";
+        keywordPointer = strstr(input_line, keyword);
         if(keywordPointer != NULL)
         {
-            dataPosition = (keywordPointer - input_line) + strlen(keyword[1]);
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
             dataCount = 0;
             char *token = strtok(&input_line[dataPosition], delimiter);
             if(token != NULL && strlen(token) < sizeof (parsedStrings[0]))
@@ -698,7 +803,7 @@ void process_data(void)
                 strcpy(parsedStrings[0], NULL);
             }
 
-            for(uint8_t i = 1; i < datePacketLen; i++)
+            for(i = 1; i < datePacketLen; i++)
             {
                 token = strtok(NULL, delimiter);
                 if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
@@ -722,7 +827,7 @@ void process_data(void)
                 integerData[3] = (uint8_t) (atoi(parsedStrings[3])); // year
                 integerData[4] = (uint8_t) (atoi(parsedStrings[4])); // CRC1
                 integerData[5] = (uint8_t) (atoi(parsedStrings[5])); // CRC2
-                for(uint8_t i = 6; i < NUM_OF_INT_Data; i++)
+                for(i = 6; i < NUM_OF_INT_Data; i++)
                 {
                     integerData[i] = 0;
                 }
@@ -755,10 +860,10 @@ void process_data(void)
     // <editor-fold defaultstate="collapsed" desc="Calibration coefficients task">
     if(serialMsgFlags == SER_MSG_FLAG_CAL_COEF)
     {
-        keywordPointer = strstr(input_line, keyword[2]);
+        keywordPointer = strstr(input_line, keyword);
         if(keywordPointer != NULL)
         {
-            dataPosition = (keywordPointer - input_line) + strlen(keyword[2]);
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
             dataCount = 0;
             char *token = strtok(&input_line[dataPosition], delimiter);
             if(token != NULL && strlen(token) < sizeof (parsedStrings[0]))
@@ -772,7 +877,7 @@ void process_data(void)
                 strcpy(parsedStrings[0], NULL);
             }
 
-            for(uint8_t i = 1; i < floatDataPacketLen; i++)
+            for(i = 1; i < floatDataPacketLen; i++)
             {
                 token = strtok(NULL, delimiter);
                 if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
@@ -796,7 +901,7 @@ void process_data(void)
                 integerData[3] = (uint8_t) (atoi(parsedStrings[3])); // byte4
                 integerData[4] = (uint8_t) (atoi(parsedStrings[4])); // CRC1
                 integerData[5] = (uint8_t) (atoi(parsedStrings[5])); // CRC2
-                for(uint8_t i = 6; i < NUM_OF_INT_Data; i++)
+                for(i = 6; i < NUM_OF_INT_Data; i++)
                 {
                     integerData[i] = 0;
                 }
@@ -809,189 +914,207 @@ void process_data(void)
                 // if(crc1 == integerData[3] && crc2 == integerData[4])  // below line will replaced by this line 
                 if(integerData[4] == 1 && integerData[5] == 1) // for now, not checking crc
                 {
-                    unsigned long floatToLong;
+//                    unsigned long floatToLong;
                     float floatData = 0.0f;
+                    uint8_t eepromWriteBuff[4];
                     floatData = EEPROM_byteToFloat(integerData); // coef byte to float conversion
-                
+                    EEPROM_floatToByte(floatData, eepromWriteBuff);
+                    
                     // <editor-fold defaultstate="collapsed" desc="Pressure1 coef">
-                    if(keyword[2] == "C02A")
+                    if(keyword == "C02A")
                     {
                         pres1.coefA = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefA_P1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 0, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefA_P1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                        pres1Flag = true;
                     }
-                    else if(keyword[2] == "C02B")        
+                    else if(keyword == "C02B")        
                     {
                         pres1.coefB = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefB_P1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 4, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefB_P1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                        pres1Flag = true;
                     }
 
-                    else if(keyword[2] == "C02C")
+                    else if(keyword == "C02C")
                     {
                         pres1.coefC = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefC_P1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 8, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefC_P1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres1Flag = true;
                     }
 
-                    else if(keyword[2] == "C02D")
+                    else if(keyword == "C02D")
                     {
                         pres1.coefD = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefD_P1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 12, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefD_P1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres1Flag = true;
                     }
                     // </editor-fold>
 
                     // <editor-fold defaultstate="collapsed" desc="Temperature1 coef">
-                    else if(keyword[2] == "C03A")
+                    else if(keyword == "C03A")
                     {
                         temp1.coefA = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefA_T1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 0, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefA_T1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp1Flag = true;
                     }
 
-                    else if(keyword[2] == "C03B")
+                    else if(keyword == "C03B")
                     {
                         temp1.coefB = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefB_T1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 4, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefB_T1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp1Flag = true;
                     }
 
-                    else if(keyword[2] == "C03C")
+                    else if(keyword == "C03C")
                     {
                         temp1.coefC = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefC_T1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 8, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefC_T1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp1Flag = true;
                     }
                     
-                    else if(keyword[2] == "C03D")
+                    else if(keyword == "C03D")
                     {
                         temp1.coefD = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefD_T1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 12, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefD_T1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp1Flag = true;
                     }
                     // </editor-fold>
                     
                     // <editor-fold defaultstate="collapsed" desc="Pressure2 coef">
-                    else if(keyword[2] == "C04A")
+                    else if(keyword == "C04A")
                     {
                         pres2.coefA = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefA_P2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 0, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefA_P2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres2Flag = true;
                     }
 
-                    else if(keyword[2] == "C04B")
+                    else if(keyword == "C04B")
                     {
                         pres2.coefB = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefB_P2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 4, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefB_P2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres2Flag = true;
                     }
 
-                    else if(keyword[2] == "C04C")
+                    else if(keyword == "C04C")
                     {
                         pres2.coefC = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefC_P2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 8, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefC_P2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres2Flag = true;
                     }
 
-                    else if(keyword[2] == "C04D")
+                    else if(keyword == "C04D")
                     {
                         pres2.coefD = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefD_P2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 12, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefD_P2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres2Flag = true;
                     }
                     // </editor-fold>
 
                     // <editor-fold defaultstate="collapsed" desc="Temperature2 coef">
-                    else if(keyword[2] == "C05A")
+                    else if(keyword == "C05A")
                     {
                         temp2.coefA = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefA_T2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 0, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefA_T2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp2Flag = true;
                     }
 
-                    else if(keyword[2] == "C05B")
+                    else if(keyword == "C05B")
                     {
                         temp2.coefB = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefB_T2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 4, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefB_T2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp2Flag = true;
                     }
 
-                    else if(keyword[2] == "C05C")
+                    else if(keyword == "C05C")
                     {
                         temp2.coefC = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefC_T2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 8, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefC_T2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp2Flag = true;
                     }
 
-                    else if(keyword[2] == "C05D")
+                    else if(keyword == "C05D")
                     {
                         temp2.coefD = floatData;
-                        floatToLong = floatData * 1000;
-                        ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefD_T2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 12, eepromWriteBuff, 4);
+//                        floatToLong = floatData * 1000;
+//                        ltoa(floatToLong, txBuffer, 10);
+//                        uart1_puts("CoefD_T2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp2Flag = true;
                     }
                     // </editor-fold>
@@ -1022,11 +1145,11 @@ void process_data(void)
     // <editor-fold defaultstate="collapsed" desc="EEPROM write 1 byte task">
     if(serialMsgFlags == SER_MSG_FLAG_EEPROMWr1)
     {
-        keyword[3] = "C10";
-        keywordPointer = strstr(input_line, keyword[3]);
+        keyword = "C10";
+        keywordPointer = strstr(input_line, keyword);
         if(keywordPointer != NULL)
         {
-            dataPosition = (keywordPointer - input_line) + strlen(keyword[3]);
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
             dataCount = 0;
 
             char *token = strtok(&input_line[dataPosition], delimiter);
@@ -1041,7 +1164,7 @@ void process_data(void)
                 strcpy(parsedStrings[0], NULL);
             }
 
-            for(uint8_t i = 1; i < eepromWr1PacketLen; i++)
+            for(i = 1; i < eepromWr1PacketLen; i++)
             {
                 token = strtok(NULL, delimiter);
                 if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
@@ -1064,7 +1187,7 @@ void process_data(void)
                 integerData[2] = (uint8_t) (atoi(parsedStrings[2])); // data byte to write
                 integerData[3] = (uint8_t) (atoi(parsedStrings[3])); // CRC1
                 integerData[4] = (uint8_t) (atoi(parsedStrings[4])); // CRC2
-                for(uint8_t i = 5; i < NUM_OF_INT_Data; i++)
+                for(i = 5; i < NUM_OF_INT_Data; i++)
                 {
                     integerData[i] = 0;
                 }
@@ -1078,7 +1201,7 @@ void process_data(void)
                 {
                     //            eepromFlag = true;
                     //            eepromStateFlags = eepromWr1Byte;
-                    uart1_puts("EEPROM write done\n");
+//                    uart1_puts("EEPROM write done\n");
                     EEPROM_write1ByteToPage(EEPROM_ADDR, integerData[0], integerData[1], integerData[2]);
                 }
             }
@@ -1101,11 +1224,11 @@ void process_data(void)
     // <editor-fold defaultstate="collapsed" desc="EEPROM read 1 byte task">
     if(serialMsgFlags == SER_MSG_FLAG_EEPROMRd1)
     {
-        keyword[4] = "C11";
-        keywordPointer = strstr(input_line, keyword[4]);
+        keyword = "C11";
+        keywordPointer = strstr(input_line, keyword);
         if(keywordPointer != NULL)
         {
-            dataPosition = (keywordPointer - input_line) + strlen(keyword[4]);
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
             dataCount = 0;
 
             char *token = strtok(&input_line[dataPosition], delimiter);
@@ -1120,7 +1243,7 @@ void process_data(void)
                 strcpy(parsedStrings[0], NULL);
             }
 
-            for(uint8_t i = 1; i < eepromRd1PacketLen; i++)
+            for(i = 1; i < eepromRd1PacketLen; i++)
             {
                 token = strtok(NULL, delimiter);
                 if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
@@ -1140,7 +1263,7 @@ void process_data(void)
             {
                 integerData[0] = (uint8_t) (atoi(parsedStrings[0])); // page
                 integerData[1] = (uint8_t) (atoi(parsedStrings[1])); // offset
-                for(uint8_t i = 2; i < NUM_OF_INT_Data; i++)
+                for(i = 2; i < NUM_OF_INT_Data; i++)
                 {
                     integerData[i] = 0;
                 }
@@ -1151,7 +1274,7 @@ void process_data(void)
                 uint8_t readByte = EEPROM_read1ByteFromPage(EEPROM_ADDR, integerData[0], integerData[1]);
                 itoa(readByte, txBuffer, 10);
                 uart1_puts(txBuffer);
-                uart1_puts("  EEPROM read done\n");
+//                uart1_puts("  EEPROM read done\n");
             }
             else if(dataCount < eepromRd1PacketLen || dataCount > eepromRd1PacketLen)
             {
@@ -1172,11 +1295,11 @@ void process_data(void)
     // <editor-fold defaultstate="collapsed" desc="EEPROM write 4 bytes task">
     if(serialMsgFlags == SER_MSG_FLAG_EEPROMWrN)
     {
-        keyword[5] = "C12";
-        keywordPointer = strstr(input_line, keyword[5]);
+        keyword = "C12";
+        keywordPointer = strstr(input_line, keyword);
         if(keywordPointer != NULL)
         {
-            dataPosition = (keywordPointer - input_line) + strlen(keyword[5]);
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
             dataCount = 0;
 
             char *token = strtok(&input_line[dataPosition], delimiter);
@@ -1191,7 +1314,7 @@ void process_data(void)
                 strcpy(parsedStrings[0], NULL);
             }
 
-            for(uint8_t i = 1; i < eepromWrNPacketLen; i++)
+            for(i = 1; i < eepromWrNPacketLen; i++)
             {
                 token = strtok(NULL, delimiter);
                 if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
@@ -1217,13 +1340,13 @@ void process_data(void)
                 integerData[5] = (uint8_t) (atoi(parsedStrings[5])); // data byte4 to write
                 integerData[6] = (uint8_t) (atoi(parsedStrings[6])); // CRC1
                 integerData[7] = (uint8_t) (atoi(parsedStrings[7])); // CRC2
-                for(uint8_t i = 8; i < NUM_OF_INT_Data; i++)
+                for(i = 8; i < NUM_OF_INT_Data; i++)
                 {
                     integerData[i] = 0;
                 }
                 crc = checksumCalculator(integerData, 6);
-                crc1 = (crc >> 8) & 0xff; // high byte
-                crc2 = (crc >> 0) & 0xff; // low byte
+                crc1 = (crc >> 8) & 0xff;
+                crc2 = (crc >> 0) & 0xff;
                 dataCount = 0;
                 
                 // if(crc1 == integerData[3] && crc2 == integerData[4])  // below line will replaced by this line
@@ -1253,11 +1376,11 @@ void process_data(void)
     // <editor-fold defaultstate="collapsed" desc="EEPROM read 4 byte task">
     if(serialMsgFlags == SER_MSG_FLAG_EEPROMRdN)
     {
-        keyword[6] = "C13";
-        keywordPointer = strstr(input_line, keyword[6]);
+        keyword = "C13";
+        keywordPointer = strstr(input_line, keyword);
         if(keywordPointer != NULL)
         {
-            dataPosition = (keywordPointer - input_line) + strlen(keyword[6]);
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
             dataCount = 0;
 
             char *token = strtok(&input_line[dataPosition], delimiter);
@@ -1292,7 +1415,7 @@ void process_data(void)
             {
                 integerData[0] = (uint8_t) (atoi(parsedStrings[0])); // page
                 integerData[1] = (uint8_t) (atoi(parsedStrings[1])); // offset
-                for(uint8_t i = 2; i < NUM_OF_INT_Data; i++)
+                for(i = 2; i < NUM_OF_INT_Data; i++)
                 {
                     integerData[i] = 0;
                 }
@@ -1301,11 +1424,11 @@ void process_data(void)
                 uint8_t readBytes[4];
                 EEPROM_readMultipleBytes(EEPROM_ADDR, integerData[0], integerData[1], readBytes, 4);
 
-                for(uint8_t i = 0; i < 4; i++)
+                for(i = 0; i < 4; i++)
                 {
                     itoa(readBytes, txBuffer, 10);
                     uart1_puts(txBuffer);
-                    uart1_puts("  EEPROM readN done\n");
+//                    uart1_puts("  EEPROM readN done\n");
                 }
             }
             else if(dataCount < eepromRdNPacketLen || dataCount > eepromRdNPacketLen)
@@ -1331,7 +1454,7 @@ void process_data(void)
         if(serialMsgErrorFlag == true)
         {
             serialMsgErrorFlag = false;
-            uart1_puts("data no good\n");
+            uart1_puts("Data no good\n");
         }
     }
     // </editor-fold>

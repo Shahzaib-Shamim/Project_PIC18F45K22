@@ -26,40 +26,33 @@ void LCD_Init(void)
     _numlines = LCD_MAX_ROWS;
 
     // Ensure supply rails are up before config sequence
-//    DelayMicroseconds(50000);
     __delay_us(50000);
 
     // Set all control and data lines low. D4 - D7, En (High=1), Rw (Low = 0 or Write), Rs (Control/Instruction) (Low = 0 or Control)
     LCD_i2cWriteSingle(LCD_PCF8574_ADDR, LCD_INIT); // Backlight off (Bit 3 = 0)
-//    DelayMicroseconds(100);
     __delay_us(100);
 
     // Sequence to put the LCD into 4 bit mode this is according to the hitachi HD44780 datasheet page 109
 
     // we start in 8bit mode
-    LCDwrite4bits(LCD_8BIT_INIT);
-//    DelayMicroseconds(4500); // wait more than 4.1ms
-    __delay_us(4500);
+    LCDwrite4bits(LCD_8BIT_INIT); 
+    __delay_us(4500);   // wait more than 4.1ms
 
     // second write
-    LCDwrite4bits(LCD_8BIT_INIT);
-//    DelayMicroseconds(150); // wait > 100us
-    __delay_us(150);
+    LCDwrite4bits(LCD_8BIT_INIT); 
+    __delay_us(150);    // wait > 100us
 
     // third write
     LCDwrite4bits(LCD_8BIT_INIT);
-//    DelayMicroseconds(150);
     __delay_us(150);
 
     // now set to 4-bit interface
     LCDwrite4bits(LCD_4BIT_INIT);
-//    DelayMicroseconds(150);
     __delay_us(150);
 
     // set # lines, font size, etc.
     _functionset = LCD_INTF4BITS | LCD_TWO_LINES | LCD_FONT_5_7;
     LCDcommandWrite(LCD_FUNCTION_SET | _functionset);
-    //DelayMicroseconds(150);
     __delay_us(150);
 
     _displayfunction = LCD_DISPLAY_OFF | LCD_CURSOR_OFF | LCD_BLINKING_OFF;
@@ -108,8 +101,7 @@ void LCDclear(void)
     {
     };
 #else
-//    DelayMicroseconds(30000); // this command takes a long time!
-    __delay_us(30000);
+    __delay_us(30000);  // this command takes a long time!
 #endif
 }
 
@@ -120,9 +112,8 @@ void LCDhome(void)
     while(LCDbusy())
     {
     };
-#else
-//    DelayMicroseconds(30000); // this command takes a long time!
-    __delay_us(30000);
+#else 
+    __delay_us(30000);  // this command takes a long time!
 #endif
 }
 
@@ -351,22 +342,18 @@ static unsigned char LCDread4bits(unsigned char RsEnMode)
 static void LCDpulseEnableNeg(unsigned char _data)
 {
     LCDwritePCF8574(_data | En); // En high
-//    DelayMicroseconds(1); // enable pulse must be >450ns
-    __delay_us(1);
+    __delay_us(1);  // enable pulse must be >450ns
 
     LCDwritePCF8574(_data & ~En); // En low
-//    DelayMicroseconds(50); // commands need > 37us to settle
     __delay_us(50);
 }
 
 static void LCDpulseEnablePos(unsigned char _data)
 {
     LCDwritePCF8574(_data & ~En); // En low
-//    DelayMicroseconds(1); // enable pulse must be >450ns
     __delay_us(1);
 
     LCDwritePCF8574(_data | En); // En high
-//    DelayMicroseconds(50); // commands need > 37us to settle
     __delay_us(50);
 }
 
@@ -382,9 +369,7 @@ static unsigned char LCDreadPCF8574(void)
 
 void LCD_i2cWriteSingle(unsigned char device, unsigned char info)
 {
-    unsigned char data = info;
-//    I2C1_WriteNBytes(device, &data, 1);
-    
+    unsigned char data = info;    
     I2C1_start(I2C_START_CMD);
     I2C1_write((device << 1) & I2C_WRITE);
     I2C1_write(info);
@@ -394,10 +379,7 @@ void LCD_i2cWriteSingle(unsigned char device, unsigned char info)
 
 unsigned char LCD_i2cRead(unsigned char device)
 {
-    unsigned char data = 0;
-
-//    I2C1_ReadNBytes(device, &data, 1);
-    
+    unsigned char data = 0;    
     I2C1_start(I2C_START_CMD);
     I2C1_write((uint8_t)( (device << 1) | I2C_READ) );
     data = I2C1_read();

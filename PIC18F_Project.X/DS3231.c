@@ -1,8 +1,8 @@
 #include "DS3231.h"
 #include "I2C.h"
 
-uint8_t rtcWrite_Buff[10];
-uint8_t rtcRead_Buff[10];
+//uint8_t rtcWrite_Buff[10];
+uint8_t rtcRead_Buff[8];
 
 static uint8_t decToBCD(uint8_t value)
 {

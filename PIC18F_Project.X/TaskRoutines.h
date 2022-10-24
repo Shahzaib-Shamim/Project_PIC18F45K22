@@ -49,10 +49,12 @@ extern volatile ApplicationFlags_t sysFlags;
 #define SER_MSG_FLAG_TIME       1
 #define SER_MSG_FLAG_DATE       2
 #define SER_MSG_FLAG_CAL_COEF   3
-#define SER_MSG_FLAG_EEPROMWr1  7
-#define SER_MSG_FLAG_EEPROMRd1  8
-#define SER_MSG_FLAG_EEPROMWrN  9
-#define SER_MSG_FLAG_EEPROMRdN  10
+#define SER_MSG_FLAG_EEPROMWr1  4       //7
+#define SER_MSG_FLAG_EEPROMRd1  5       //8
+#define SER_MSG_FLAG_EEPROMWrN  6       //9
+#define SER_MSG_FLAG_EEPROMRdN  7       //10
+#define SER_MSG_FLAG_RTC_W      8
+#define SER_MSG_FLAG_RTC_R      9
 
 
 // Data Packet length
@@ -60,15 +62,14 @@ extern volatile ApplicationFlags_t sysFlags;
 #define datePacketLen       6
 #define floatDataPacketLen  6
 #define eepromWr1PacketLen  5
-#define eepromRd1PacketLen  2       //4
+#define eepromRd1PacketLen  2
 #define eepromWrNPacketLen  8
 #define eepromRdNPacketLen  2
 
 // Variable buffer size
-#define charLen             10
 #define numOfChar           10
+#define charLen             4
 #define NUM_OF_INT_Data     10
-#define NUM_OF_FLOAT_DATA   4
 #define NUM_OF_SER_MSG      15
 
 // EEPROM write/read 1 or multiple bytes
@@ -92,6 +93,11 @@ void loadTemp1_Coef(void);
 void loadPres2_Coef(void);
 void loadTemp2_Coef(void);
 
+/**
+ * Initialization sequence
+ */
+void startInitialization(void);
+
 
 /**
  * Global function to run main application code for different tasks
@@ -102,6 +108,16 @@ void runApplication(void);
 void ledBlink(void);
 void ads1115SampleData(void);
 void ds3232Timestamp(void);
+
+/**
+ * Store last calibration timestamp in EEPROM
+ */
+void storeLastCalibRTC(void);
+
+/**
+ * Get last calibration timestamp from EEPROM
+ */
+void getLastCalibRTC(void);
 
 /**
  * Do parsing on the receive msg and set flags.

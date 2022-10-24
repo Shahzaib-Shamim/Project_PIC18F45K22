@@ -1,8 +1,6 @@
 #include "Interrupt.h"
-#include "GPIO.h"
 #include "UART.h"
 #include "ECCP.h"
-#include "I2C.h"
 #include "TMR0.h"
 #include "EXTI.h"
 #include "Capture.h"
