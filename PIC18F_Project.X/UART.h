@@ -19,7 +19,7 @@
 
 // --Global variables-----------------------------------------------------------
 extern char input_line[MAX_INPUT];
-extern uint8_t uartRxFlag;
+//extern uint8_t uartRxFlag;
 extern bool uartProcessFlag;
 
 // --UART functions-------------------------------------------------------------

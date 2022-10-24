@@ -12,30 +12,15 @@ void ADS1115_init(ADS1115_Object_t *instance)
     
     uint8_t buff[2];
 
-//    I2C1_start();
-//    I2C1_sendbyte(ADS1115_ADDR_WR);
-//    I2C1_sendbyte(REGISTER_CONFIG);
-//    I2C1_sendbyte(HIGH_BYTE(instance->config.value));
-//    I2C1_sendbyte(LOW_BYTE(instance->config.value));
-//    I2C1_stop();
     I2C1_start(I2C_START_CMD);
     I2C1_write((instance->address << 1) & 0xFE);
     I2C1_write(REGISTER_CONFIG);
     I2C1_write(HIGH_BYTE(instance->config.value));
     I2C1_write(LOW_BYTE(instance->config.value));
-//    I2C1_master_ack(I2C_DATA_ACK);
     I2C1_stop();
     
     __delay_us(10000);
 
-//    I2C1_start();
-//    I2C1_sendbyte(ADS1115_ADDR_WR);
-//    I2C1_sendbyte(REGISTER_CONFIG);
-//    I2C1_restart();
-//    I2C1_sendbyte(ADS1115_ADDR_RD);
-//    buff[0] = I2C1_recvbyte(0);      //ACK
-//    buff[1] = I2C1_recvbyte(1);      //NACK
-//    I2C1_stop();
     I2C1_start(I2C_START_CMD);
     I2C1_write((uint8_t)( (instance->address << 1) & 0xFE) );
     I2C1_write(REGISTER_CONFIG);
@@ -89,20 +74,12 @@ float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
             break;
         }
     }
-
-//    I2C1_start();
-//    I2C1_sendbyte(ADS1115_ADDR_WR);
-//    I2C1_sendbyte(REGISTER_CONFIG);
-//    I2C1_sendbyte(HIGH_BYTE(instance->config.value));
-//    I2C1_sendbyte(LOW_BYTE(instance->config.value));
-//    I2C1_stop();
     
     I2C1_start(I2C_START_CMD);
     I2C1_write((uint8_t)( (instance->address << 1) & 0xFE) );
     I2C1_write(REGISTER_CONFIG);
     I2C1_write(HIGH_BYTE(instance->config.value));
     I2C1_write(LOW_BYTE(instance->config.value));
-//    I2C1_master_ack(I2C_DATA_ACK);
     I2C1_stop();
     
     while(!conversionComplete(instance));
@@ -113,15 +90,6 @@ static uint16_t getLastConversion(ADS1115_Object_t *instance)
 {
     uint16_t value;
     uint8_t buff[2];
-    
-//    I2C1_start();
-//    I2C1_sendbyte(ADS1115_ADDR_WR);
-//    I2C1_sendbyte(REGISTER_CONVERSION);
-//    I2C1_restart();
-//    I2C1_sendbyte(ADS1115_ADDR_RD);
-//    buff[0] = I2C1_recvbyte(0);      //ACK
-//    buff[1] = I2C1_recvbyte(1);      //NACK
-//    I2C1_stop();
     
     I2C1_start(I2C_START_CMD);
     I2C1_write((uint8_t)( (instance->address << 1) & 0xFE) );
@@ -148,15 +116,6 @@ static uint16_t conversionComplete(ADS1115_Object_t *instance)
     uint8_t buff[2];
     config.value = 0;
     config.os = 1;
-
-//    I2C1_start();
-//    I2C1_sendbyte(ADS1115_ADDR_WR);
-//    I2C1_sendbyte(REGISTER_CONFIG);
-//    I2C1_restart();
-//    I2C1_sendbyte(ADS1115_ADDR_RD);
-//    buff[0] = I2C1_recvbyte(0);      //ACK
-//    buff[1] = I2C1_recvbyte(1);      //NACK
-//    I2C1_stop();
     
     I2C1_start(I2C_START_CMD);
     I2C1_write((uint8_t)( (instance->address << 1) & 0xFE) );

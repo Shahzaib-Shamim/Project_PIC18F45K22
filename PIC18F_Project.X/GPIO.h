@@ -8,8 +8,6 @@
 #ifndef GPIO_H
 #define	GPIO_H
 
-
-
 // --Includes-------------------------------------------------------------------
 #include <xc.h>
 #include "main.h"
@@ -24,8 +22,8 @@
 #define ANALOG      1
 #define DIGITAL     0
 
-#define PULL_UP_ENABLED      1
-#define PULL_UP_DISABLED     0
+#define PULL_UP_ENABLED      0
+#define PULL_UP_DISABLED     1
 
 #define ENABLE    1
 #define DISABLE   0

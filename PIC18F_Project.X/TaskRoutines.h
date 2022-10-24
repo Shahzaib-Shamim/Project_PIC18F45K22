@@ -48,32 +48,28 @@ extern volatile ApplicationFlags_t sysFlags;
 #define SER_MSG_FLAG_IDLE       0
 #define SER_MSG_FLAG_TIME       1
 #define SER_MSG_FLAG_DATE       2
-#define SER_MSG_FLAG_PRES1      3
-#define SER_MSG_FLAG_TEMP1      4
-#define SER_MSG_FLAG_PRES2      5
-#define SER_MSG_FLAG_TEMP2      6
+#define SER_MSG_FLAG_CAL_COEF   3
 #define SER_MSG_FLAG_EEPROMWr1  7
 #define SER_MSG_FLAG_EEPROMRd1  8
 #define SER_MSG_FLAG_EEPROMWrN  9
 #define SER_MSG_FLAG_EEPROMRdN  10
-#define SER_MSG_FLAG_CAL_COEF   3
+
 
 // Data Packet length
 #define timePacketLen       5
 #define datePacketLen       6
-#define pres1PacketLen      3
-#define temp1PacketLen      3
-#define pres2PacketLen      3
-#define temp2PacketLen      3
-#define eepromWr1PacketLen  5
-#define eepromRd1PacketLen  4
 #define floatDataPacketLen  6
+#define eepromWr1PacketLen  5
+#define eepromRd1PacketLen  2       //4
+#define eepromWrNPacketLen  8
+#define eepromRdNPacketLen  2
 
 // Variable buffer size
-#define charLen             20  //10
+#define charLen             10
 #define numOfChar           10
 #define NUM_OF_INT_Data     10
 #define NUM_OF_FLOAT_DATA   4
+#define NUM_OF_SER_MSG      15
 
 // EEPROM write/read 1 or multiple bytes
 #define eepromIdle          0
@@ -82,32 +78,20 @@ extern volatile ApplicationFlags_t sysFlags;
 #define eepromWrNByte       3
 #define eepromRdNByte       4
 
-// Pressure1 coefficients
-#define COEF_A_P1           1
-#define COEF_B_P1           2
-#define COEF_C_P1           3
-#define COEF_D_P1           4
-// Temperature1 coefficients
-#define COEF_A_T1           5
-#define COEF_B_T1           6
-#define COEF_C_T1           7
-#define COEF_D_T1           8
-// Pressure2 coefficients
-#define COEF_A_P2           9
-#define COEF_B_P2           10
-#define COEF_C_P2           11
-#define COEF_D_P2           12
-// Temperature2 coefficients
-#define COEF_A_T2           13
-#define COEF_B_T2           14
-#define COEF_C_T2           15
-#define COEF_D_T2           16
-
 
 /**
  * Global function to initialize variables
  */
 void initSysVariables(void);
+
+/**
+ * Load variables from EEPROm
+ */
+void loadPres1_Coef(void);
+void loadTemp1_Coef(void);
+void loadPres2_Coef(void);
+void loadTemp2_Coef(void);
+
 
 /**
  * Global function to run main application code for different tasks

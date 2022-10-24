@@ -28,6 +28,8 @@ void TMR0_Initialize(void)
     // Load TMR0 value to the 16-bit reload variable
     timer0ReloadVal = (uint16_t)((TMR0H << 8) | TMR0L);
     
+    INTCON2bits.TMR0IP = 0;
+    
     // Clear Interrupt flag before enabling the interrupt
     INTCONbits.TMR0IF = 0;
 

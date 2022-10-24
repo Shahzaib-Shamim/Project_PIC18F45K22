@@ -1,7 +1,4 @@
 #include "ECCP.h"
-#include "GPIO.h"
-#include "TMR.h"
-#include "UART.h"
 #include "TaskRoutines.h"
 
 void ECCP1_Initialize(void)
@@ -18,6 +15,9 @@ void ECCP1_Initialize(void)
 
     // CCPR1L 16, initial compare value (may set to 0) 
     CCPR1L = 0xC8;
+    
+    // Interrupt priority
+    IPR1bits.CCP1IP = 1;
 
     // Clear the ECCP1 interrupt flag
     PIR1bits.CCP1IF = 0;
@@ -39,8 +39,6 @@ void ECCP1_SetCompareCount(uint16_t compareCount)
     CCPR1L = module.ccpr1l;
     CCPR1H = module.ccpr1h;
 }
-
-//uint8_t buff[256] = {0};
 
 void ECCP1_CompareISR(void)
 {

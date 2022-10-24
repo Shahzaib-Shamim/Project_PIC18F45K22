@@ -1,21 +1,7 @@
 #include "UART.h"
 
-//#define charLen     10
-//#define numOfChar   8
-
-//#define timePacketLen   5
-//#define datePacketLen   6
-
 bool uartProcessFlag = false;
 char input_line[MAX_INPUT];
-//char txBuff[40];
-//uint8_t serialMsgFlags = 0;
-//char parsedStrings[charLen][numOfChar];
-//uint8_t dataPosition = 0;
-//uint8_t dataCount = 0;
-//const char delimiter[] = ",";
-//char *keywordPointer;
-//uint8_t integerData[15];
 
 void uart1_init(void)
 {
@@ -39,7 +25,7 @@ void uart1_init(void)
     RCSTA1bits.CREN = 1; // enable receiver
     RCSTA1bits.SPEN = 1; // enable UART1
 
-    IPR1bits.RC1IP = 1; // set receiver interrupt for high priority
+    IPR1bits.RC1IP = 0; // set receiver interrupt for high priority
     IPR1bits.TX1IP = 0; // set transmitter interrupt for low priority
     PIE1bits.RC1IE = 1; // enable receiver interrupts
     PIE1bits.TX1IE = 0; // disable transmitter interrupts

@@ -1,6 +1,6 @@
 // --Includes-------------------------------------------------------------------
 #include <xc.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include "main.h"
 #include "DeviceConfiguration.h"
 #include "SystemInitalization.h"
@@ -89,7 +89,9 @@ void main(void)
     //    __delay_ms(10);
     
     uint32_t time_ccp = 0;
-    CCP2_Initialize();
+//    CCP2_Initialize();
+    
+    loadPres1_Coef();
 
     while (true)
     {
