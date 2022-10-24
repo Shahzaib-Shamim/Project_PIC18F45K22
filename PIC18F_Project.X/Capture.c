@@ -23,7 +23,7 @@ void CCP2_Initialize(void)
     T3CONbits.T3RD16 = 0;       // timer read write operation in 8bit
     //    T3CONbits.T3CCP2 = 0;       // TODO
     //    T3CONbits.T3CCP1 = 1;       // TODO
-    CCPTMRS0bits.C2TSEL = 0x02;
+    CCPTMRS0bits.C2TSEL = 0x01; //0x02
 
     T3CONbits.T3CKPS = 1;       // 1:2 prescalar
     T3CONbits.TMR3CS = 0;       // timer3 clock source is Fosc/4

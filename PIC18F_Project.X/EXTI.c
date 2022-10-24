@@ -25,7 +25,7 @@ void EXTI0_Initialize(void)
 void EXTI1_Initialize(void)
 {
     INTCON2bits.INTEDG1 = EXTI_RISING_EDGE; //EXTI_FALLING_EDGE
-    INTCON3bits.INT1IP = 1;
+    INTCON3bits.INT1IP = 0;
     INTCON3bits.INT1IF = 0; // clear flag before enabling interrupt
     INTCON3bits.INT1IE = EXTI_ENABLE;
 }
@@ -33,7 +33,7 @@ void EXTI1_Initialize(void)
 void EXTI2_Initialize(void)
 {
     INTCON2bits.INTEDG2 = EXTI_RISING_EDGE; //EXTI_FALLING_EDGE
-    INTCON3bits.INT2IP = 1;
+    INTCON3bits.INT2IP = 0;
     INTCON3bits.INT2IF = 0; // clear flag before enabling interrupt
     INTCON3bits.INT2IE = EXTI_ENABLE;
 }
