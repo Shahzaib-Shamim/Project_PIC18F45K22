@@ -22,8 +22,8 @@
 #define EXTI_FALLING_EDGE   0
 #define EXTI_ENABLE         1
 #define EXTI_DISABLE        0
-#define PRESSED             0       // active low
-#define NOT_PRESSED         1       // active low (pullup)
+#define PRESSED             1       // active low
+#define NOT_PRESSED         0       // active low (pullup)
 
 extern volatile bool int0Flag;
 extern volatile bool int1Flag;

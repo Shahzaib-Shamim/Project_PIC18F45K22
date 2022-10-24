@@ -20,6 +20,7 @@
 #include "Capture.h"
 
 // --Global variable section----------------------------------------------------
+char uartBuff[20] = {0};
 
 void main(void)
 {
@@ -66,41 +67,45 @@ void main(void)
     {
         runApplication();
 
-        /*if(tmr0Flag == true)
+        if(int1Flag == true && tmr0Flag == true)
         {
             tmr0Flag = false;
-            // INT0 RB0 button
-            if(PORTBbits.RB0 == PRESSED)
-            {
-                static uint8_t pressCount = 0;
-                pressCount++;
-                itoa(pressCount, print_buffer, 10);
-                uart1_puts("RB0 pressed debounced ");
-                uart1_puts(print_buffer);
-                uart1_newline();
-            }
-            // INT1 RB1 button
+            int1Flag = false;
+            
+//            uart1_puts("Main1\n");
+            tmr0Flag = false;
+
             if(PORTBbits.RB1 == PRESSED)
             {
+//                uart1_puts("INT1_main\n");
                 static uint8_t pressCount = 0;
                 pressCount++;
-                itoa(pressCount, print_buffer, 10);
-                uart1_puts("debounced ");
-                uart1_puts(print_buffer);
-                uart1_newline();
+                itoa(pressCount, uartBuff, 10);
+                uart1_puts("RB1 pressed ");
+                uart1_puts(uartBuff);
                 uart1_newline();
             }
-            // INT2 RB2 button
+        }
+        
+        else if(int2Flag == true && tmr0Flag == true)
+        {
+            tmr0Flag = false;
+            int2Flag = false;
+            
+//            uart1_puts("Main2\n");
+            tmr0Flag = false;
+
             if(PORTBbits.RB2 == PRESSED)
             {
+//                uart1_puts("INT2_main\n");
                 static uint8_t pressCount = 0;
                 pressCount++;
-                itoa(pressCount, print_buffer, 10);
-                uart1_puts("RB2 pressed debounced ");
-                uart1_puts(print_buffer);
+                itoa(pressCount, uartBuff, 10);
+                uart1_puts("RB2 pressed ");
+                uart1_puts(uartBuff);
                 uart1_newline();
-            } 
-        }*/
+            }
+        }
         
         /*if(ccp2Flag == true)
         {

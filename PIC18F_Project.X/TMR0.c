@@ -82,7 +82,8 @@ volatile uint8_t state = 0;
 
 void TMR0_ISR(void)
 {
-//    tmr0Flag = true;
+//    uart1_puts("TMR0\n");
+    tmr0Flag = true;
     /*if(INTCON2bits.INTEDG1 == EXTI_FALLING_EDGE)
     {
         uart1_puts("RB1 falling---\n");
@@ -94,10 +95,10 @@ void TMR0_ISR(void)
         uart1_puts("---RB1 rising\n");
         INTCON2bits.INTEDG1 = EXTI_FALLING_EDGE;
         INTCON3bits.INT1IF = 0;  // clear flag before enabling interrupt
-    }
+    }*/
     // clear the TMR0 interrupt flag
     INTCONbits.TMR0IF = 0;
-    INTCONbits.TMR0IE = 0;*/
+    INTCONbits.TMR0IE = 0;
 
     // reload TMR0
     // Write to the Timer0 register

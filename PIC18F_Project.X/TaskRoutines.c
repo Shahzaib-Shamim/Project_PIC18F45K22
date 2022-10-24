@@ -198,27 +198,24 @@ void startInitialization(void)
 
 void runApplication(void)
 {
-    //    if(sysFlags.ledBlinkTask == true)
-    //    {
-    //        sysFlags.ledBlinkTask = false;
-    //        ledBlink();
-    //    }
+    if(sysFlags.ledBlinkTask == true)
+    {
+        sysFlags.ledBlinkTask = false;
+        ledBlink();
+    }
 
     if(sysFlags.uartTxTask == true && txEnableFlag == true)
     {
-//        static uint8_t counter = 0;
         sysFlags.uartTxTask = false;
-//        uart1_newline();
         
         static uint8_t i = 0;
         i++;
         if(i == 4)
         {
             i = 0;
-            ds3232Timestamp();        // tested        
-//        ads1115SampleData();
-        }
-        
+//            ds3232Timestamp();
+//            ads1115SampleData();
+        }        
     }
 
     if(sysFlags.ads1115SampleTask == true && txEnableFlag == true)
