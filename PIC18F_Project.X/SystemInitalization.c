@@ -20,6 +20,7 @@ void SYSTEM_Initialization(void)
 //    EXTI0_Initialize();
     EXTI1_Initialize();
     EXTI2_Initialize();
+    IOC_Initialize();
     TMR0_Initialize();
     TMR1_Initialize();
 }

@@ -83,6 +83,10 @@ void __interrupt(low_priority) INTERRUPT_InterruptManagerLow(void)
     {
         TMR3_ISR();
     }
+    else if(INTCONbits.RBIF == 1 && INTCONbits.RBIE == 1)
+    {
+        IOC_ISR();
+    }
     else
     {
         //Unhandled Interrupt

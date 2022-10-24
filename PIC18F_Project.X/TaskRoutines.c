@@ -5,6 +5,8 @@
 #include "DS3231.h"
 #include "EEPROM.h"
 #include "LCD_HD44780_20x4.h"
+#include "EXTI.h"
+#include "TMR0.h"
 
 volatile TIMER1_t timer1 = {
     .timer1_1msFlag = false,
@@ -513,6 +515,80 @@ void runApplication(void)
         }
         // </editor-fold>
     }
+    
+    // <editor-fold defaultstate="collapsed" desc="Button reading task">
+    if(int1Flag == true && tmr0Flag == true)
+    {
+        tmr0Flag = false;
+        int1Flag = false;
+        if(PORTBbits.RB1 == PRESSED)
+        {
+            static uint8_t pressCount = 0;
+            pressCount++;
+            itoa(pressCount, txBuffer, 10);
+            uart1_puts("RB1 pressed ");
+            uart1_puts(txBuffer);
+            uart1_newline();
+        }
+    }
+    else if(int2Flag == true && tmr0Flag == true)
+    {
+        tmr0Flag = false;
+        int2Flag = false;
+        if(PORTBbits.RB2 == PRESSED)
+        {
+            static uint8_t pressCount = 0;
+            pressCount++;
+            itoa(pressCount, txBuffer, 10);
+            uart1_puts("RB2 pressed ");
+            uart1_puts(txBuffer);
+            uart1_newline();
+        }
+    }
+    else if(rb4Flag == true && tmr0Flag == true)
+    {
+        tmr0Flag = false;
+        rb4Flag = false;
+        if(PORTBbits.RB4 == PRESSED)
+        {
+            static uint8_t pressCount = 0;
+            pressCount++;
+            itoa(pressCount, txBuffer, 10);
+            uart1_puts("RB4 pressed ");
+            uart1_puts(txBuffer);
+            uart1_newline();
+        }
+
+    }
+    else if(rb5Flag == true && tmr0Flag == true)
+    {
+        tmr0Flag = false;
+        rb5Flag = false;
+        if(PORTBbits.RB5 == PRESSED)
+        {
+            static uint8_t pressCount = 0;
+            pressCount++;
+            itoa(pressCount, txBuffer, 10);
+            uart1_puts("RB5 pressed ");
+            uart1_puts(txBuffer);
+            uart1_newline();
+        }
+    }
+    else if(rb6Flag == true && tmr0Flag == true)
+    {
+        tmr0Flag = false;
+        rb6Flag = false;
+        if(PORTBbits.RB6 == PRESSED)
+        {
+            static uint8_t pressCount = 0;
+            pressCount++;
+            itoa(pressCount, txBuffer, 10);
+            uart1_puts("RB6 pressed ");
+            uart1_puts(txBuffer);
+            uart1_newline();
+        }
+    }
+    // </editor-fold>
 }
 
 void ledBlink(void)

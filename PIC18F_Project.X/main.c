@@ -20,7 +20,7 @@
 #include "Capture.h"
 
 // --Global variable section----------------------------------------------------
-char uartBuff[20] = {0};
+//char uartBuff[20] = {0};
 
 void main(void)
 {
@@ -67,45 +67,66 @@ void main(void)
     {
         runApplication();
 
-        if(int1Flag == true && tmr0Flag == true)
-        {
-            tmr0Flag = false;
-            int1Flag = false;
-            
-//            uart1_puts("Main1\n");
-            tmr0Flag = false;
-
-            if(PORTBbits.RB1 == PRESSED)
-            {
-//                uart1_puts("INT1_main\n");
-                static uint8_t pressCount = 0;
-                pressCount++;
-                itoa(pressCount, uartBuff, 10);
-                uart1_puts("RB1 pressed ");
-                uart1_puts(uartBuff);
-                uart1_newline();
-            }
-        }
-        
-        else if(int2Flag == true && tmr0Flag == true)
-        {
-            tmr0Flag = false;
-            int2Flag = false;
-            
-//            uart1_puts("Main2\n");
-            tmr0Flag = false;
-
-            if(PORTBbits.RB2 == PRESSED)
-            {
-//                uart1_puts("INT2_main\n");
-                static uint8_t pressCount = 0;
-                pressCount++;
-                itoa(pressCount, uartBuff, 10);
-                uart1_puts("RB2 pressed ");
-                uart1_puts(uartBuff);
-                uart1_newline();
-            }
-        }
+//        if(int1Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            int1Flag = false;
+//            if(PORTBbits.RB1 == PRESSED)
+//            {
+//                static uint8_t pressCount = 0;
+//                pressCount++;
+//                itoa(pressCount, uartBuff, 10);
+//                uart1_puts("RB1 pressed ");
+//                uart1_puts(uartBuff);
+//                uart1_newline();
+//            }
+//        }
+//        
+//        else if(int2Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            int2Flag = false;
+//            if(PORTBbits.RB2 == PRESSED)
+//            {
+//                static uint8_t pressCount = 0;
+//                pressCount++;
+//                itoa(pressCount, uartBuff, 10);
+//                uart1_puts("RB2 pressed ");
+//                uart1_puts(uartBuff);
+//                uart1_newline();
+//            }
+//        }
+//        
+//        else if(rb4Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            rb4Flag = false;
+//            if(PORTBbits.RB4 == PRESSED)
+//            {
+//                uart1_puts("RB4 pressed\n");
+//            }
+//            
+//        }
+//        
+//        else if(rb5Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            rb5Flag = false;
+//            if(PORTBbits.RB5 == PRESSED)
+//            {
+//                uart1_puts("RB5 pressed\n");
+//            }
+//        }
+//        
+//        else if(rb6Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            rb6Flag = false;
+//            if(PORTBbits.RB6 == PRESSED)
+//            {
+//                uart1_puts("RB6 pressed\n");
+//            }
+//        }
         
         /*if(ccp2Flag == true)
         {

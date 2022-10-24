@@ -38,6 +38,13 @@ void PIN_MANAGER_Initialize(void)
     ANSELBbits.ANSB1 = DIGITAL;
     ANSELBbits.ANSB2 = DIGITAL;
     
+    // IOC pins (RB4, RB5, RB6)
+    TRISBbits.TRISB4 = INPUT;
+    TRISBbits.TRISB5 = INPUT;
+    TRISBbits.TRISB6 = INPUT;
+    ANSELBbits.ANSB4 = DIGITAL;
+    ANSELBbits.ANSB5 = DIGITAL;
+    
     // CCP2 pin input
     TRISCbits.TRISC1 = INPUT;
     
