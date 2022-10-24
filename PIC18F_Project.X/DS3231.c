@@ -1,8 +1,8 @@
 #include "DS3231.h"
 #include "I2C.h"
 
-uint8_t rtcWrite_Buff[10];
-uint8_t rtcRead_Buff[10];
+//uint8_t rtcWrite_Buff[10];
+uint8_t rtcRead_Buff[8];
 
 static uint8_t decToBCD(uint8_t value)
 {
@@ -14,71 +14,8 @@ static uint8_t bcdToDEC(uint8_t value)
     return((value / 16 * 10) + (value % 16));
 }
 
-//static void setTime(uint8_t second, uint8_t minute, uint8_t hour, uint8_t dayOfWeek,
-//                   uint8_t dayOfMonth, uint8_t month, uint8_t year)
-//{
-//    rtcWrite_Buff[0] = decToBCD(second); // set seconds
-//    rtcWrite_Buff[1] = decToBCD(minute); // set minutes
-//    rtcWrite_Buff[2] = decToBCD(hour); // set hours
-//    rtcWrite_Buff[3] = decToBCD(dayOfWeek); // set day (1 = sunday, 7 = saturday)
-//    rtcWrite_Buff[4] = decToBCD(dayOfMonth); // set date (1 to 31)
-//    rtcWrite_Buff[5] = decToBCD(month); // set month (1 to 12))
-//    rtcWrite_Buff[6] = decToBCD(year); // set year (0 to 99)
-//
-//    I2C1_Write1ByteRegister(DS3231_ADDR, 0x00, rtcWrite_Buff[0]);
-//    I2C1_Write1ByteRegister(DS3231_ADDR, 0x01, rtcWrite_Buff[1]);
-//    I2C1_Write1ByteRegister(DS3231_ADDR, 0x02, rtcWrite_Buff[2]);
-//    I2C1_Write1ByteRegister(DS3231_ADDR, 0x03, rtcWrite_Buff[3]);
-//    I2C1_Write1ByteRegister(DS3231_ADDR, 0x04, rtcWrite_Buff[4]);
-//    I2C1_Write1ByteRegister(DS3231_ADDR, 0x05, rtcWrite_Buff[5]);
-//    I2C1_Write1ByteRegister(DS3231_ADDR, 0x06, rtcWrite_Buff[6]);
-//}
-
-//static void setTime_2(uint8_t second, uint8_t minute, uint8_t hour, uint8_t dayOfWeek,
-//                     uint8_t dayOfMonth, uint8_t month, uint8_t year)
-//{
-//    rtcWrite_Buff[0] = decToBCD(second); // set seconds
-//    rtcWrite_Buff[1] = decToBCD(minute); // set minutes
-//    rtcWrite_Buff[2] = decToBCD(hour); // set hours
-//    rtcWrite_Buff[3] = decToBCD(dayOfWeek); // set day (1 = sunday, 7 = saturday)
-//    rtcWrite_Buff[4] = decToBCD(dayOfMonth); // set date (1 to 31)
-//    rtcWrite_Buff[5] = decToBCD(month); // set month (1 to 12))
-//    rtcWrite_Buff[6] = decToBCD(year); // set year (0 to 99)
-//
-//    I2C1_WriteNBytes(DS3231_ADDR, rtcWrite_Buff, 7);
-//}
-
-//static void setTime_3(uint8_t second, uint8_t minute, uint8_t hour, uint8_t dayOfWeek,
-//                     uint8_t dayOfMonth, uint8_t month, uint8_t year)
-//{
-//    uint8_t writeDataBuff[14];
-//
-//    writeDataBuff[0] = 0x00;
-//    writeDataBuff[1] = decToBCD(second); // set seconds
-//    writeDataBuff[2] = 0x01;
-//    writeDataBuff[3] = decToBCD(minute); // set minutes
-//    writeDataBuff[4] = 0x02;
-//    writeDataBuff[5] = decToBCD(hour); // set hour
-//    writeDataBuff[6] = 0x03;
-//    writeDataBuff[7] = decToBCD(dayOfWeek); // set day (1 = sunday, 7 = saturday)
-//    writeDataBuff[8] = 0x04;
-//    writeDataBuff[9] = decToBCD(dayOfMonth); // set date (1 to 31)
-//    writeDataBuff[10] = 0x05;
-//    writeDataBuff[11] = decToBCD(month); // set month (1 to 12))
-//    writeDataBuff[12] = 0x06;
-//    writeDataBuff[13] = decToBCD(year); // set year (0 to 99)           
-//
-//    I2C1_WriteNBytes(DS3231_ADDR, writeDataBuff, 14);
-//}
-
 static void setSeconds(uint8_t second)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(SECONDS_REG);
-//    I2C1_sendbyte(decToBCD(second));
-//    I2C1_stop();
-    
+{    
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(SECONDS_REG);
@@ -88,11 +25,6 @@ static void setSeconds(uint8_t second)
 
 static void setMinutes(uint8_t minute)
 {
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(MINUTES_REG);
-//    I2C1_sendbyte(decToBCD(minute));
-//    I2C1_stop();
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(MINUTES_REG);
@@ -101,13 +33,7 @@ static void setMinutes(uint8_t minute)
 }
 
 static void setHours(uint8_t hour)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(HOURS_REG);
-//    I2C1_sendbyte(decToBCD(hour));
-//    I2C1_stop();
-    
+{    
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(HOURS_REG);
@@ -117,11 +43,6 @@ static void setHours(uint8_t hour)
 
 static void setWeekDay(uint8_t dayOfWeek)
 {
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(DAY_OF_WEEK_REG);
-//    I2C1_sendbyte(decToBCD(dayOfWeek));
-//    I2C1_stop();
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(DAY_OF_WEEK_REG);
@@ -131,11 +52,6 @@ static void setWeekDay(uint8_t dayOfWeek)
 
 static void setDate(uint8_t date)
 {
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(DAY_OF_MONTH_REG);
-//    I2C1_sendbyte(decToBCD(date));
-//    I2C1_stop();
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(DAY_OF_MONTH_REG);
@@ -144,13 +60,7 @@ static void setDate(uint8_t date)
 }
 
 static void setMonth(uint8_t month)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(MONTH_REG);
-//    I2C1_sendbyte(decToBCD(month));
-//    I2C1_stop();
-    
+{    
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(MONTH_REG);
@@ -159,13 +69,7 @@ static void setMonth(uint8_t month)
 }
 
 static void setYear(uint8_t year)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(YEAR_REG);
-//    I2C1_sendbyte(decToBCD(year));
-//    I2C1_stop();
-    
+{   
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(YEAR_REG);
@@ -224,25 +128,25 @@ char* setDayName(uint8_t nameOfDay)
     switch(nameOfDay)
     {
         case 1:
-            day = "Sunday";
+            day = "Sun";
             break;
         case 2:
-            day = "Monday";
+            day = "Mon";
             break;
         case 3:
-            day = "Tuesday";
+            day = "Tue";
             break;
         case 4:
-            day = "Wednesday";
+            day = "Wed";
             break;
         case 5:
-            day = "Thursday";
+            day = "Thu";
             break;
         case 6:
-            day = "Friday";
+            day = "Fri";
             break;
         case 7:
-            day = "Saturday";
+            day = "Sat";
             break;
     }
     return day;
@@ -320,15 +224,7 @@ void DS3231_getData(uint8_t *second, uint8_t *minute, uint8_t *hour, uint8_t *da
 }
 
 void DS3231_getHours(uint8_t* hours)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(HOURS_REG);
-//    I2C1_restart();
-//    I2C1_sendbyte(DS3231_ADDR_RD);
-//    *hours = I2C1_recvbyte(1);      //NACK
-//    I2C1_stop();
-    
+{    
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(HOURS_REG);
@@ -340,15 +236,7 @@ void DS3231_getHours(uint8_t* hours)
 }
 
 void DS3231_getMinutes(uint8_t* minutes)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(MINUTES_REG);
-//    I2C1_restart();
-//    I2C1_sendbyte(DS3231_ADDR_RD);
-//    *minutes = I2C1_recvbyte(1);      //NACK
-//    I2C1_stop();
-    
+{  
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(MINUTES_REG);
@@ -360,15 +248,7 @@ void DS3231_getMinutes(uint8_t* minutes)
 }
 
 void DS3231_getSeconds(uint8_t* seconds)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(SECONDS_REG);
-//    I2C1_restart();
-//    I2C1_sendbyte(DS3231_ADDR_RD);
-//    *seconds = I2C1_recvbyte(1);      //NACK
-//    I2C1_stop();
-    
+{   
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(SECONDS_REG);
@@ -380,15 +260,7 @@ void DS3231_getSeconds(uint8_t* seconds)
 }
 
 void DS3231_getDayOfWeek(uint8_t* dayOfWeek)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(DAY_OF_WEEK_REG);
-//    I2C1_restart();
-//    I2C1_sendbyte(DS3231_ADDR_RD);
-//    *dayOfWeek = I2C1_recvbyte(1);      //NACK
-//    I2C1_stop();
-    
+{   
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(DAY_OF_WEEK_REG);
@@ -399,15 +271,7 @@ void DS3231_getDayOfWeek(uint8_t* dayOfWeek)
     I2C1_stop();
 }
 void DS3231_getDayOfMonth(uint8_t* dayOfMonth)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(DAY_OF_MONTH_REG);
-//    I2C1_restart();
-//    I2C1_sendbyte(DS3231_ADDR_RD);
-//    *dayOfMonth = I2C1_recvbyte(1);      //NACK
-//    I2C1_stop();
-    
+{   
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(DAY_OF_MONTH_REG);
@@ -419,15 +283,7 @@ void DS3231_getDayOfMonth(uint8_t* dayOfMonth)
 }
 
 void DS3231_getMonth(uint8_t* month)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(MONTH_REG);
-//    I2C1_restart();
-//    I2C1_sendbyte(DS3231_ADDR_RD);
-//    *month = I2C1_recvbyte(1); //NACK
-//    I2C1_stop();
-    
+{  
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(MONTH_REG);
@@ -439,15 +295,7 @@ void DS3231_getMonth(uint8_t* month)
 }
 
 void DS3231_getYear(uint8_t* year)
-{
-//    I2C1_start();
-//    I2C1_sendbyte(DS3231_ADDR_WR);
-//    I2C1_sendbyte(YEAR_REG);
-//    I2C1_restart();
-//    I2C1_sendbyte(DS3231_ADDR_RD);
-//    *year = I2C1_recvbyte(1); //NACK
-//    I2C1_stop();
-    
+{    
     I2C1_start(I2C_START_CMD);
     I2C1_write(DS3231_ADDR_WR);
     I2C1_write(YEAR_REG);

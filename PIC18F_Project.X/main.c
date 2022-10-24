@@ -1,9 +1,5 @@
-// feature/testing_ccp
-
-
 // --Includes-------------------------------------------------------------------
 #include <xc.h>
-#include <stdlib.h>
 #include "main.h"
 #include "DeviceConfiguration.h"
 #include "SystemInitalization.h"
@@ -19,12 +15,12 @@
 #include "DS3231.h"
 #include "EEPROM.h"
 #include "UART.h"
+#include "EXTI.h"
+#include "TMR0.h"
+#include "Capture.h"
 
 // --Global variable section----------------------------------------------------
-//char print_buffer[50] = {0}; //uint8_t
-
-volatile uint8_t rxInputBuff[20];
-uint8_t data[4];
+//char uartBuff[20] = {0};
 
 void main(void)
 {
@@ -32,24 +28,14 @@ void main(void)
 
     // Initialize system variables
     initSysVariables();
-
-    LED_SetDigitalOutput();
-    LED_SetLow();
-    LED_SetHigh();
-    __delay_ms(500);
-    LED_SetLow();
-
-    // Timer with CCP config
-    TMR1_StartTimer();
-    ECCP1_SetTMR1CompareCount(1000); // 1000 usec or 1 ms
+    
+    // Start boot sequence
+    startInitialization();
 
     __delay_ms(1000);
     uart1_puts("\nPIC18F Project\n\r\0");
 
-    // RTC time and date set
-    //    DS3231_setTime(0, 13, 22);        // seconds, minutes, hours
-    //    DS3231_setDate(7, 10, 9, 22);      // day of week, day of month, month, year
-
+    LED_SetDigitalOutput();
     LED_SetHigh();
     LCD_Init();
     __delay_ms(200);
@@ -57,52 +43,105 @@ void main(void)
 
     LCDclear();
     LCDsetCursor(0, 0);
-    LCD_Write_Str("Some text1");
-    LCDsetCursor(0, 1);
-    LCD_Write_Str("Some text2");
-    LCDsetCursor(0, 2);
-    LCD_Write_Str("Some text3");
+    LCD_Write_Str("--------------------");
+    LCDsetCursor(6, 1);
+    LCD_Write_Str("Project");
+    LCDsetCursor(2, 2);
+    LCD_Write_Str("Firmware V0.10");
     LCDsetCursor(0, 3);
-    LCD_Write_Str("Some text4");
+    LCD_Write_Str("--------------------");
     __delay_ms(1000);
     LCDclear();
-
-//    uint8_t readBuff[4];
-//    uint8_t writeBuff[4];
-//    float _floatWrite = 3.141f;
-//    float _floatRead;
-//    uint8_t dataBuff[4];
-
-    // writing float data to eeprom (page 0, offset 0 -> from 0x0000h to 0x0003h)
-    //    float2Bytes(writeBuff, _floatWrite);
-
-    //    EEPROM_floatToByte(_floatWrite, writeBuff);
-    //    EEPROM_write1ByteToPage(EEPROM_ADDR, 0, 0, writeBuff[0]);
-    //    __delay_ms(5);
-    //    EEPROM_write1ByteToPage(EEPROM_ADDR, 0, 1, writeBuff[1]);
-    //    __delay_ms(5);
-    //    EEPROM_write1ByteToPage(EEPROM_ADDR, 0, 2, writeBuff[2]);
-    //    __delay_ms(5);
-    //    EEPROM_write1ByteToPage(EEPROM_ADDR, 0, 3, writeBuff[3]);
-    //    __delay_ms(5);
-    //    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 0, writeBuff, 4);
-    //    __delay_ms(10);
+    LCDsetCursor(0, 0);
+    LCD_Write_Str("Waiting for pulse...");
+    
+    
+//    uint32_t time_ccp = 0;
+//    CCP2_Initialize();
+    
+    // Timer with CCP config
+    TMR1_StartTimer();
+    ECCP1_SetTMR1CompareCount(1000); // 1000 usec or 1 ms
 
     while (true)
     {
         runApplication();
 
-        // reading float data from eeprom
-        //        readBuff[0] = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 0);
-        //        readBuff[1] = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 1);
-        //        readBuff[2] = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 2);
-        //        readBuff[3] = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 3);
-        //        EEPROM_readMultipleBytes(EEPROM_ADDR, 0, 0, readBuff, 4);
-        //        _floatRead = EEPROM_byteToFloat(readBuff);
-        //
-        //        sprintf((char *) print_buffer, "%.3f %u %u %u %u\n\r",
-        //                _floatRead, readBuff[0], readBuff[1], readBuff[2], readBuff[3]);
-        //        EUSART1_send_string((uint8_t *) print_buffer);
+//        if(int1Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            int1Flag = false;
+//            if(PORTBbits.RB1 == PRESSED)
+//            {
+//                static uint8_t pressCount = 0;
+//                pressCount++;
+//                itoa(pressCount, uartBuff, 10);
+//                uart1_puts("RB1 pressed ");
+//                uart1_puts(uartBuff);
+//                uart1_newline();
+//            }
+//        }
+//        
+//        else if(int2Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            int2Flag = false;
+//            if(PORTBbits.RB2 == PRESSED)
+//            {
+//                static uint8_t pressCount = 0;
+//                pressCount++;
+//                itoa(pressCount, uartBuff, 10);
+//                uart1_puts("RB2 pressed ");
+//                uart1_puts(uartBuff);
+//                uart1_newline();
+//            }
+//        }
+//        
+//        else if(rb4Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            rb4Flag = false;
+//            if(PORTBbits.RB4 == PRESSED)
+//            {
+//                uart1_puts("RB4 pressed\n");
+//            }
+//            
+//        }
+//        
+//        else if(rb5Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            rb5Flag = false;
+//            if(PORTBbits.RB5 == PRESSED)
+//            {
+//                uart1_puts("RB5 pressed\n");
+//            }
+//        }
+//        
+//        else if(rb6Flag == true && tmr0Flag == true)
+//        {
+//            tmr0Flag = false;
+//            rb6Flag = false;
+//            if(PORTBbits.RB6 == PRESSED)
+//            {
+//                uart1_puts("RB6 pressed\n");
+//            }
+//        }
+        
+        /*if(ccp2Flag == true)
+        {
+            ccp2Flag = false;
+            
+            time_ccp = time_after_capture(cap_overflow_tmr3, &capture_value);
+            sprintf(print_buffer, "\rtime press %10lu ms", time_ccp / 1000);
+            uart1_puts(print_buffer);
+            
+            // added
+            cap_overflow_tmr3 = 0;
+            capture_value.ccpL = 0;
+            capture_value.ccpH = 0;
+            
+        }*/
         
     }// end while(true)
 

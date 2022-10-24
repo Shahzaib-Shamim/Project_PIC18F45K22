@@ -26,9 +26,6 @@
 #define MONTH_REG           0x05
 #define YEAR_REG            0x06
 
-//extern uint8_t rtcWrite_Buff[10];
-//extern uint8_t rtcRead_Buff[10];
-
 // --Local functions-----------------------------------------------------------
 // Convert normal decimal numbers to binary coded decimal
 static uint8_t decToBCD(uint8_t);

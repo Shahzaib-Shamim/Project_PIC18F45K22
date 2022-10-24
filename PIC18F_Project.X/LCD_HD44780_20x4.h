@@ -174,8 +174,6 @@ unsigned char LCDreadDDRam(unsigned char address);
 unsigned char LCDreadCGRam(unsigned char address);
 
 // --LCD I2C functions----------------------------------------------------------
-//void I2C_Write_Byte_Single_Reg(unsigned char device, unsigned char info);
-//unsigned char I2C_Read_Byte_Single_Reg(unsigned char device);
 void LCD_i2cWriteSingle(unsigned char device, unsigned char info);
 unsigned char LCD_i2cRead(unsigned char device);
 

@@ -15,11 +15,11 @@
 // --Defines--------------------------------------------------------------------
 #define BAUD_RATE 115200
 
-#define MAX_INPUT 50
+#define MAX_INPUT 30
 
 // --Global variables-----------------------------------------------------------
 extern char input_line[MAX_INPUT];
-extern uint8_t uartRxFlag;
+//extern uint8_t uartRxFlag;
 extern bool uartProcessFlag;
 
 // --UART functions-------------------------------------------------------------

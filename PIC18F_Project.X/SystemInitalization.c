@@ -6,6 +6,8 @@
 #include "ECCP.h"
 #include "TMR.h"
 #include "I2C.h"
+#include "EXTI.h"
+#include "TMR0.h"
 
 void SYSTEM_Initialization(void)
 {
@@ -15,6 +17,11 @@ void SYSTEM_Initialization(void)
     INTERRUPT_Initialize();
     ECCP1_Initialize();
     I2C1_initialize();
+//    EXTI0_Initialize();
+    EXTI1_Initialize();
+    EXTI2_Initialize();
+    IOC_Initialize();
+    TMR0_Initialize();
     TMR1_Initialize();
 }
 
