@@ -5,23 +5,21 @@
 #include "SystemInitalization.h"
 #include "GPIO.h"
 #include "UART.h"
-#include "Interrupt.h"
+//#include "Interrupt.h"
 #include "ECCP.h"
 #include "TMR.h"
-#include "I2C.h"
-#include "ADS1115.h"
+//#include "I2C.h"
+//#include "ADS1115.h"
 #include "TaskRoutines.h"
 #include "LCD_HD44780_20x4.h"
-#include "DS3231.h"
-#include "EEPROM.h"
-#include "UART.h"
-#include "EXTI.h"
-#include "TMR0.h"
-#include "Capture.h"
+//#include "DS3231.h"
+//#include "EEPROM.h"
+//#include "EXTI.h"
+//#include "TMR0.h"
+//#include "Capture.h"
 
 // --Global variable section----------------------------------------------------
-char uartBuff[20] = {0};
-uint32_t time_ccp = 0;
+//char uartBuff[20] = {0};
 
 void main(void)
 {
@@ -59,32 +57,10 @@ void main(void)
     // Timer with CCP config
     TMR1_StartTimer();
     ECCP1_SetTMR1CompareCount(1000); // 1000 usec or 1 ms
-
+    
     while (true)
     {
         runApplication();
-        
-        if(ccp2Flag == true)
-        {
-            ccp2Flag = false;
-            
-            time_ccp = time_after_capture(cap_overflow_tmr3, &capture_value);
-            ltoa(time_ccp/1000, uartBuff, 10);
-            uart1_puts("Pulsetime/1000=");
-            uart1_puts(uartBuff);
-            uart1_newline();
-            
-            ltoa(time_ccp, uartBuff, 10);
-            uart1_puts("Pulsetime=");
-            uart1_puts(uartBuff);
-            uart1_newline();
-            
-            // added
-            cap_overflow_tmr3 = 0;
-            capture_value.ccpL = 0;
-            capture_value.ccpH = 0;
-            
-        }
         
     }// end while(true)
 

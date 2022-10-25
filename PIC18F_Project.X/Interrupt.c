@@ -43,6 +43,16 @@ void __interrupt(high_priority) INTERRUPT_InterruptManagerHigh(void)
     {
         CCP2_ISR();
     }    
+    //TMR3
+    else if(PIE2bits.TMR3IE == 1 && PIR2bits.TMR3IF == 1)
+    {
+        TMR3_ISR();
+    }
+    //TMR5
+//    else if(PIE5bits.TMR5IE == 1 && PIR5bits.TMR5IF == 1)
+//    {
+//        TMR5_ISR();
+//    }
     else
     {
         //Unhandled Interrupt
@@ -78,10 +88,6 @@ void __interrupt(low_priority) INTERRUPT_InterruptManagerLow(void)
     else if(INTCONbits.TMR0IE == 1 && INTCONbits.TMR0IF == 1)
     {
         TMR0_ISR();
-    }    
-    else if(PIE2bits.TMR3IE == 1 && PIR2bits.TMR3IF == 1)
-    {
-        TMR3_ISR();
     }
     else if(INTCONbits.RBIF == 1 && INTCONbits.RBIE == 1)
     {

@@ -7,6 +7,7 @@
 #include "LCD_HD44780_20x4.h"
 #include "EXTI.h"
 #include "TMR0.h"
+#include "Capture.h"
 
 volatile TIMER1_t timer1 = {
     .timer1_1msFlag = false,
@@ -33,6 +34,7 @@ bool eepromFlag = false;
 uint8_t eepromStateFlags = 0;
 bool calibrationEnableFlag = true; //false
 uint8_t ds3231_readBuff[7];
+uint32_t time_ccp = 0;
 
 typedef struct
 {
@@ -515,6 +517,29 @@ void runApplication(void)
         }
         // </editor-fold>
     }
+    
+    // <editor-fold defaultstate="collapsed" desc="CCP2 task">
+    if(ccp2Flag == true)
+    {
+        ccp2Flag = false;
+
+        time_ccp = time_after_capture(cap_overflow_tmr3, &capture_value);
+        ltoa(time_ccp/1000, txBuffer, 10);
+        uart1_puts("Pulsetime/1000=");
+        uart1_puts(txBuffer);
+        uart1_newline();
+
+        ltoa(time_ccp, txBuffer, 10);
+        uart1_puts("Pulsetime=");
+        uart1_puts(txBuffer);
+        uart1_newline();
+
+//            cap_overflow_tmr3 = 0;
+//            capture_value.ccpL = 0;
+//            capture_value.ccpH = 0;
+
+    }
+    // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="Button reading task">
     if(int1Flag == true && tmr0Flag == true)

@@ -23,7 +23,7 @@
  * Start value = 65535 - ((req. seconds * (Fosc * 4)) / (4 * PSC))
  * 
  * 
- * Fosc = actual crystal value i.e. 16MHz
+ * Note: Here, Fosc = actual crystal value i.e. 16MHz
  */
 
 // --Macro Declarations---------------------------------------------------------
