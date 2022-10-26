@@ -16,7 +16,7 @@ volatile TIMER1_t timer1 = {
 
 ADS1115_Object_t myADC;
 char txBuffer[50] = {0};
-
+char lcdBuff[8] = {0};
 volatile ApplicationFlags_t sysFlags;
 uint8_t serialMsgFlags = SER_MSG_FLAG_IDLE;
 uint8_t serialMsgErrorFlag = false;
@@ -35,6 +35,9 @@ uint8_t eepromStateFlags = 0;
 bool calibrationEnableFlag = true; //false
 uint8_t ds3231_readBuff[7];
 uint32_t time_ccp = 0;
+uint8_t lcdStates = 0;
+float voltage[4];
+uint16_t adcData[4];
 
 typedef struct
 {
@@ -192,6 +195,25 @@ void getLastCalibRTC(void)
     uart1_puts("From EEPROM\n");
 }
 
+void getFWInfo(void)
+{
+//    uint8_t readBuff[4];
+//    EEPROM_readMultipleBytes(EEPROM_ADDR, 0, 0, readBuff, 4);
+//    uint16_t fw = EEPROM_byteToFloat(readBuff) * 100;
+//    uart1_puts("FW info = ");
+//    itoa(fw, txBuffer, 10);
+//    uart1_puts(txBuffer);
+//    uart1_newline();
+    
+    
+    uint8_t readBuff;
+    readBuff = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 0);
+    uart1_puts("FW info = ");
+    itoa(readBuff, txBuffer, 10);
+    uart1_puts(txBuffer);
+    uart1_newline();
+}
+
 void startInitialization(void)
 {
     loadPres1_Coef();
@@ -214,7 +236,7 @@ void runApplication(void)
         
         static uint8_t i = 0;
         i++;
-        if(i == 4)
+        if(i == 1)
         {
             i = 0;
 //            ds3232Timestamp();
@@ -232,91 +254,75 @@ void runApplication(void)
     if(sysFlags.ds3231Task == true && txEnableFlag == true)
     {
         sysFlags.ds3231Task = false;
-        //        ds3232Timestamp();
+//                ds3232Timestamp();
     }
 
-    if(sysFlags.eepromTask == true)
-    {
-        sysFlags.eepromTask = false;
-
-        // added
-        //        EEPROM_readMultipleBytes(EEPROM_ADDR, 0, 0, readBuff, 32);
-        //        sprintf((char *) txBuffer, "%u %u %u %u\n\r",
-        //                readBuff[0], readBuff[1], readBuff[2], readBuff[3]);
-        //        EUSART1_send_string((uint8_t *) txBuffer);
-    }
+//    if(sysFlags.eepromTask == true)
+//    {
+//        sysFlags.eepromTask = false;
+//    }
 
     if(sysFlags.lcdTask == true)
     {
         sysFlags.lcdTask = false;
+        uint8_t readBuffRTC[7];
+        char *MonthName = "";
+        
+        // <editor-fold defaultstate="collapsed" desc="LCD Idle mode">
+        if(lcdStates == LCD_IDLE)
+        {
+            DS3231_getTime(&readBuffRTC[0], &readBuffRTC[1], &readBuffRTC[2]);
+            DS3231_getDate(&readBuffRTC[3], &readBuffRTC[4], &readBuffRTC[5], &readBuffRTC[6]);
 
-        //        LCDsetCursor(0, 0);
-        //        LCD_Write_Str("Counter = ");
-        //        LCDsetCursor(0, 1);
-        ////        sprintf(str, "%lu", counterIndex);
-        //        ltoa(counterIndex, txBuffer, 10);
-        //        counterIndex++;
-        //        LCD_Write_Str(txBuffer);
-
-        //        int adcData[4];
-        //        
-        //        LCDclear();
-        //        LCDsetCursor(0, 0);
-        //        LCD_Write_Str("Pulsetime=");
-        //                
-        ////        LCDclear();
-        //        LCDsetCursor(0, 1);
-        //        LCD_Write_Str("P1=");
-        //        adcData[0] = (voltage[0] * 1000) * pres1Factor;
-        //        itoa(adcData[0], txBuffer, 10);
-        //        LCDsetCursor(3, 1);
-        //        LCD_Write_Str(txBuffer);
-        //        
-        ////        LCDclear();
-        //        LCDsetCursor(0, 2);
-        //        LCD_Write_Str("T1=");
-        //        adcData[1] = (voltage[1] * 1000) * temp1Factor;
-        //        itoa(adcData[1], txBuffer, 10);
-        //        LCDsetCursor(3, 2);
-        //        LCD_Write_Str(txBuffer);
-        //        
-        ////        LCDclear();
-        //        LCDsetCursor(11, 1);
-        //        LCD_Write_Str("P2=");
-        //        adcData[2] = (voltage[2] * 1000) * pres2Factor;
-        //        itoa(adcData[2], txBuffer, 10);
-        //        LCDsetCursor(14, 1);
-        //        LCD_Write_Str(txBuffer);
-        //        
-        ////        LCDclear();
-        //        LCDsetCursor(11, 2);
-        //        LCD_Write_Str("T2=");
-        //        adcData[3] = (voltage[3] * 1000) * temp2Factor;
-        //        itoa(adcData[3], txBuffer, 10);
-        //        LCDsetCursor(14, 2);
-        //        LCD_Write_Str(txBuffer);
-        //        
-        //        // time write
-        //        LCDsetCursor(0, 3);
-        //        itoa(ds3231_readBuff[2], txBuffer, 10); LCD_Write_Str(txBuffer);
-        //        LCDsetCursor(2, 3); LCD_Write_Str(":");
-        //        LCDsetCursor(3, 3);
-        //        itoa(ds3231_readBuff[1], txBuffer, 10); LCD_Write_Str(txBuffer);
-        //        LCD_Write_Str(":");
-        //        itoa(ds3231_readBuff[0], txBuffer, 10); LCD_Write_Str(txBuffer);
-        //    
-        //        // date write
-        //        LCDsetCursor(9, 3);
-        //        itoa(ds3231_readBuff[4], txBuffer, 10); LCD_Write_Str(txBuffer);
-        //        LCDsetCursor(11, 3); LCD_Write_Str("-");
-        //        LCDsetCursor(12, 3);
-        //        char *MonthName = "";
-        //        MonthName = setDayName(ds3231_readBuff[3]);
-        //        strncpy(txBuffer, MonthName, 3);
-        //        /*itoa(ds3231_readBuff[5], txBuffer, 10);*/ LCD_Write_Str(txBuffer);
-        //        LCDsetCursor(15, 3); LCD_Write_Str("-");
-        //        LCDsetCursor(16, 3);
-        //        itoa(ds3231_readBuff[6], txBuffer, 10); LCD_Write_Str(txBuffer);
+            LCDclear();
+            
+            LCDsetCursor(0, 0);
+            LCD_Write_Str("Idle...");
+            LCDsetCursor(0, 1);
+            LCD_Write_Str("Waiting for command");
+                    
+            LCDsetCursor(0, 3);
+            itoa(readBuffRTC[2], lcdBuff, 10); LCD_Write_Str(lcdBuff); LCD_Write_Str(":");
+            itoa(readBuffRTC[1], lcdBuff, 10); LCD_Write_Str(lcdBuff); LCD_Write_Str(":");
+            itoa(readBuffRTC[0], lcdBuff, 10); LCD_Write_Str(lcdBuff);        
+            LCDsetCursor(9, 3);
+            itoa(readBuffRTC[4], lcdBuff, 10); LCD_Write_Str(lcdBuff); LCD_Write_Str("-");
+            MonthName = setMonthName(readBuffRTC[5]);
+            itoa(readBuffRTC[5], lcdBuff, 10); LCD_Write_Str(MonthName); LCD_Write_Str("-");
+            itoa(readBuffRTC[6], lcdBuff, 10); LCD_Write_Str(lcdBuff);
+        }
+        // </editor-fold>
+        
+        // <editor-fold defaultstate="collapsed" desc="LCD Normal mode">
+        if(lcdStates == LCD_NORMAL_MODE)
+        {
+            LCDclear();
+            
+            LCDsetCursor(0, 0);
+            LCD_Write_Str("Pulse=");
+            ltoa(time_ccp / 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
+            LCDsetCursor(16, 0);
+            LCD_Write_Str("ms");
+            
+            ads1115SampleData();
+            LCDsetCursor(0, 1);
+            LCD_Write_Str("P1=");
+            itoa(adcData[0], lcdBuff, 10); LCD_Write_Str(lcdBuff);
+            LCDsetCursor(16, 1);
+            LCD_Write_Str("PSI");
+            
+            LCDsetCursor(0, 2);
+            LCD_Write_Str("T1=");
+            itoa(adcData[1], lcdBuff, 10); LCD_Write_Str(lcdBuff);
+            LCDsetCursor(16, 2);
+            LCD_Write_Str("degC");
+            
+            LCDsetCursor(0, 3);
+            LCD_Write_Str("Relay#12345=");
+            LCDsetCursor(15, 3);
+            itoa(25, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+        }
+        // </editor-fold>
     }
 
     // --Serial Msg process-----------------------------------------------------
@@ -456,12 +462,14 @@ void runApplication(void)
         else if(strncmp(input_line, "C08StartTX", 10) == 0)
         {
             txEnableFlag = true;
+            lcdStates = LCD_NORMAL_MODE;
         }
 
         // Stop sending data
         else if(strncmp(input_line, "C09StopTX", 9) == 0)
         {
             txEnableFlag = false;
+            lcdStates = LCD_IDLE;
         }
 
         // Write 1 byte to EEPROM
@@ -503,6 +511,18 @@ void runApplication(void)
         {
             serialMsgFlags = SER_MSG_FLAG_RTC_R;
             getLastCalibRTC();            
+        }
+        
+        // Store FW info to EEPROM
+        else if(strncmp(input_line, "C16", 3) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_FW_W;
+        }
+        
+        // Get FW info from EEPROM
+        else if(strncmp(input_line, "C17GetFW", 8) == 0)
+        {
+            getFWInfo();
         }
 
         // Nothing to be process
@@ -623,7 +643,7 @@ void ledBlink(void)
 
 void ads1115SampleData(void)
 {
-    float voltage[4];
+//    float voltage[4];
 
     if(myADC.isPresent == 1)
     {
@@ -633,36 +653,25 @@ void ads1115SampleData(void)
             // __delay_us(10);
         }
 
-//        int adcData;
-        uint16_t adcData;
-//        float x[4];        
-//        float nonCalibData[4];
+        //        int adcData;
+        //        uint16_t adcData;
+        //        float x[4];        
+        //        float nonCalibData[4];
         float calibData[4];
         uint8_t i;
         
-//        if(calibrationEnableFlag == true)       // send calibrated data
-//        {
-            /* y = ax3 + bx2 + cx + d */
-            /*x[0] = voltage[0] * 1000;
-            adcData[0] = (pres1.coefA * x[0] * x[0] * x[0]) + (pres1.coefB * x[0] * x[0]) + (pres1.coefC * x[0]) + (pres1.coefD);
+        // send calibrated data             /* y = ax3 + bx2 + cx + d */
+        /*if(calibrationEnableFlag == true)       
+        {
             
-            x[1] = voltage[1] * 1000;
-            adcData[1] = (temp1.coefA * x[1] * x[1] * x[1]) + (temp1.coefB * x[1] * x[1]) + (temp1.coefC * x[1]) + (temp1.coefD);
-            
-            x[2] = voltage[2] * 1000;
-            adcData[2] = (pres2.coefA * x[2] * x[2] * x[2]) + (pres2.coefB * x[2] * x[2]) + (pres2.coefC * x[2]) + (pres2.coefD);
-            
-            x[3] = voltage[3] * 1000;
-            adcData[3] = (temp2.coefA * x[3] * x[3] * x[3]) + (temp2.coefB * x[3] * x[3]) + (temp2.coefC * x[3]) + (temp2.coefD);*/
-            
-            
-//        }
-        
-//        else if(calibrationEnableFlag == false)     // send raw data
-//        {
+        }
+        // send raw data
+        else if(calibrationEnableFlag == false)     
+        {
                        
-//        }
-        uart1_puts("Calibrated data\n");
+        }*/
+            
+//        uart1_puts("Calibrated data\n");
         calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
                 (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + (pres1.coefD);
 
@@ -675,30 +684,30 @@ void ads1115SampleData(void)
         calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
                 (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + (temp2.coefD);
 
-//        adcData[0] = calibData[0] * 1000;
-//        adcData[1] = calibData[1] * 1000;
-//        adcData[2] = calibData[2] * 1000;
-//        adcData[3] = calibData[3] * 1000;
-        for(i = 0; i < 4; i++)
+        adcData[0] = calibData[0] * 1000;
+        adcData[1] = calibData[1] * 1000;
+        adcData[2] = calibData[2] * 1000;
+        adcData[3] = calibData[3] * 1000;
+        /*for(i = 0; i < 4; i++)
         {
             adcData = calibData[i] * 1000;
             itoa(adcData, txBuffer, 10);
             uart1_puts(txBuffer);
             uart1_puts(" ");
-        }
-        uart1_newline();
+         }
+//        uart1_newline();*/
 
-        uart1_puts("\nRaw data\n");
+//        uart1_puts("\nRaw data\n");
         for(i = 0; i < 4; i++)
         {
-            adcData = voltage[i] * 1000;
-            itoa(adcData, txBuffer, 10);
-            uart1_puts(txBuffer);
-            uart1_puts(" ");
+            adcData[i] = voltage[i] * 1000;
+//            itoa(adcData[i], txBuffer, 10);
+//            uart1_puts(txBuffer);
+//            uart1_puts(" ");
         }
-        uart1_newline();
-        uart1_newline();
-        uart1_newline();
+//        uart1_newline();
+//        uart1_newline();
+//        uart1_newline();
         
     }
 }
@@ -716,7 +725,19 @@ void ds3232Timestamp(void)
     //    sprintf(txBuffer, "\n%d:%d:%d %s %d-%s-%d\r\n\n", ds3231_readBuff[2], ds3231_readBuff[1], ds3231_readBuff[0], Day, ds3231_readBuff[4], MonthName, ds3231_readBuff[6]);
     //    uart1_puts(txBuffer);
 
-    itoa(ds3231_readBuff[2], txBuffer, 10);
+    if(timeFlag == true)
+    {
+        timeFlag = false;
+        DS3231_setTime(integerData[2], integerData[1], integerData[0]);
+    }
+
+    if(dateFlag == true)
+    {
+        dateFlag = false;
+        DS3231_setDate(integerData[0], integerData[1], integerData[2], integerData[3]);
+    }
+    
+    /*itoa(ds3231_readBuff[2], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_putc(':');
     itoa(ds3231_readBuff[1], txBuffer, 10);
@@ -734,19 +755,9 @@ void ds3232Timestamp(void)
     uart1_putc('/');
     itoa(ds3231_readBuff[6], txBuffer, 10);
     uart1_puts(txBuffer);
-    uart1_newline();
+    uart1_newline();*/
 
-    if(timeFlag == true)
-    {
-        timeFlag = false;
-        DS3231_setTime(integerData[2], integerData[1], integerData[0]);
-    }
-
-    if(dateFlag == true)
-    {
-        dateFlag = false;
-        DS3231_setDate(integerData[0], integerData[1], integerData[2], integerData[3]);
-    }
+    
 
     ////        LCDclear();
     //        LCDsetCursor(0, 1);
@@ -802,6 +813,7 @@ void process_data(void)
     const char delimiter[] = ",";
     char *keywordPointer;
     uint8_t i;
+//    float floatData = 0.0f;
 
     // <editor-fold defaultstate="collapsed" desc="Time calibration task">
     if(serialMsgFlags == SER_MSG_FLAG_TIME)
@@ -872,7 +884,8 @@ void process_data(void)
             // serialMsgFlags = 0;
         }
 
-        if(crc1 == integerData[3] && crc2 == integerData[4])
+//        if(crc1 == integerData[3] && crc2 == integerData[4])  // disable for testing
+        if(integerData[3] == 1 && integerData[4] == 1)
         {
             timeFlag = true;
             ds3232Timestamp();
@@ -947,7 +960,8 @@ void process_data(void)
             // dataCount = 0;
             // serialMsgFlags = 0;
         }
-        if(crc1 == integerData[4] && crc2 == integerData[5])
+//        if(crc1 == integerData[4] && crc2 == integerData[5])  // disable for testing
+        if(integerData[4] == 1 && integerData[5] == 1)
         {
             dateFlag = true;
             ds3232Timestamp();
@@ -1530,6 +1544,171 @@ void process_data(void)
                 }
             }
             else if(dataCount < eepromRdNPacketLen || dataCount > eepromRdNPacketLen)
+            {
+                serialMsgErrorFlag = true; // uart1_puts("data no good\n");
+                dataCount = 0;
+                serialMsgFlags = 0;
+            }
+        }
+        else
+        {
+            // uart1_puts("sorry no keyword\n");
+            // dataCountTime = 0;
+            // serialMsgFlags = 0;
+        }
+    }
+    // </editor-fold>
+    
+    /*// <editor-fold defaultstate="collapsed" desc="FW info write task">
+    if(serialMsgFlags == SER_MSG_FLAG_FW_W)
+    {
+        uint8_t writeBytes[4];
+        keyword = "C16";
+        keywordPointer = strstr(input_line, keyword);
+        if(keywordPointer != NULL)
+        {
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
+            dataCount = 0;
+
+            char *token = strtok(&input_line[dataPosition], delimiter);
+            if(token != NULL && strlen(token) < sizeof (parsedStrings[0]))
+            {
+                strncpy(parsedStrings[0], token, sizeof (parsedStrings[0]));
+                dataCount++;
+            }
+            else
+            {
+                // uart_puts("token to big1\n");
+                strcpy(parsedStrings[0], NULL);
+            }
+
+            for(uint8_t i = 1; i < fwInfoWePacketLen; i++)
+            {
+                token = strtok(NULL, delimiter);
+                if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
+                {
+                    strncpy(parsedStrings[i], token, sizeof (parsedStrings[i]));
+                    dataCount++;
+                }
+                else
+                {
+                    // uart_puts("token to big2\n");
+                    strcpy(parsedStrings[i], NULL);
+                }
+            }
+
+            // convert ascii data into integer data           
+            if(dataCount == fwInfoWePacketLen)
+            {
+                floatData = atof(parsedStrings[0]);                 // fw number
+                integerData[0] = (uint8_t)(atoi(parsedStrings[1])); // CRC1
+                integerData[1] = (uint8_t)(atoi(parsedStrings[2])); // CRC2
+                for(i = 2; i < NUM_OF_INT_Data; i++)
+                {
+                    integerData[i] = 0;
+                }
+                dataCount = 0;
+                EEPROM_floatToByte(floatData, writeBytes);
+                crc = checksumCalculator(writeBytes, 4);
+                crc1 = (crc >> 8) & 0xff;
+                crc2 = (crc >> 0) & 0xff;
+                
+//                if(crc1 == integerData[0] && crc2 == integerData[1])
+                if(integerData[0] == 1 && integerData[1] == 2)
+                {
+                    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 0, writeBytes, 4);
+                    uart1_puts("FW stored\n");
+                }
+                else
+                {
+//                    serialMsgErrorFlag = true; // uart1_puts("data no good\n");
+//                    serialMsgFlags = 0;
+                }
+            }
+            else if(dataCount < fwInfoWePacketLen || dataCount > fwInfoWePacketLen)
+            {
+                serialMsgErrorFlag = true; // uart1_puts("data no good\n");
+                dataCount = 0;
+                serialMsgFlags = 0;
+            }
+        }
+        else
+        {
+            // uart1_puts("sorry no keyword\n");
+            // dataCountTime = 0;
+            // serialMsgFlags = 0;
+        }
+    }
+    // </editor-fold>*/
+    
+    // <editor-fold defaultstate="collapsed" desc="FW info write (in 1byte) task">
+    if(serialMsgFlags == SER_MSG_FLAG_FW_W)
+    {
+        uint8_t writeBytes[4];
+        keyword = "C16";
+        keywordPointer = strstr(input_line, keyword);
+        if(keywordPointer != NULL)
+        {
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
+            dataCount = 0;
+
+            char *token = strtok(&input_line[dataPosition], delimiter);
+            if(token != NULL && strlen(token) < sizeof (parsedStrings[0]))
+            {
+                strncpy(parsedStrings[0], token, sizeof (parsedStrings[0]));
+                dataCount++;
+            }
+            else
+            {
+                // uart_puts("token to big1\n");
+                strcpy(parsedStrings[0], NULL);
+            }
+
+            for(uint8_t i = 1; i < fwInfoWePacketLen; i++)
+            {
+                token = strtok(NULL, delimiter);
+                if(token != NULL && strlen(token) < sizeof (parsedStrings[i]))
+                {
+                    strncpy(parsedStrings[i], token, sizeof (parsedStrings[i]));
+                    dataCount++;
+                }
+                else
+                {
+                    // uart_puts("token to big2\n");
+                    strcpy(parsedStrings[i], NULL);
+                }
+            }
+
+            // convert ascii data into integer data           
+            if(dataCount == fwInfoWePacketLen)
+            {
+                integerData[0] = (uint8_t)(atoi(parsedStrings[0])); // FW info
+                integerData[1] = (uint8_t)(atoi(parsedStrings[1])); // CRC1
+                integerData[2] = (uint8_t)(atoi(parsedStrings[2])); // CRC2
+                for(i = 3; i < NUM_OF_INT_Data; i++)
+                {
+                    integerData[i] = 0;
+                }
+                dataCount = 0;
+                
+                crc = checksumCalculator(integerData[0], 1);
+                crc1 = (crc >> 8) & 0xff;
+                crc2 = (crc >> 0) & 0xff;
+                
+//                if(crc1 == integerData[0] && crc2 == integerData[1])
+                if(integerData[1] == 1 && integerData[2] == 2)
+                {
+//                    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 0, integerData[0], 1);
+                    EEPROM_write1ByteToPage(EEPROM_ADDR, 0, 0, integerData[0]);
+                    uart1_puts("FW stored\n");
+                }
+                else
+                {
+                    serialMsgErrorFlag = true; // uart1_puts("data no good\n");
+                    serialMsgFlags = 0;
+                }
+            }
+            else if(dataCount < fwInfoWePacketLen || dataCount > fwInfoWePacketLen)
             {
                 serialMsgErrorFlag = true; // uart1_puts("data no good\n");
                 dataCount = 0;

@@ -12,6 +12,7 @@
 //#include "ADS1115.h"
 #include "TaskRoutines.h"
 #include "LCD_HD44780_20x4.h"
+#include "EEPROM.h"
 //#include "DS3231.h"
 //#include "EEPROM.h"
 //#include "EXTI.h"
@@ -19,7 +20,8 @@
 //#include "Capture.h"
 
 // --Global variable section----------------------------------------------------
-//char uartBuff[20] = {0};
+char uartBuff[10] = {0};
+uint8_t intData[4];
 
 void main(void)
 {
@@ -31,7 +33,7 @@ void main(void)
     // Start boot sequence
     startInitialization();
 
-    __delay_ms(1000);
+    __delay_ms(2000);
     uart1_puts("\nPIC18F Project\n\r\0");
 
     LED_SetDigitalOutput();
@@ -40,19 +42,25 @@ void main(void)
     __delay_ms(200);
     LED_SetLow();
 
+    // <editor-fold defaultstate="collapsed" desc="LCD Startup">
     LCDclear();
     LCDsetCursor(0, 0);
     LCD_Write_Str("--------------------");
     LCDsetCursor(6, 1);
     LCD_Write_Str("Project");
     LCDsetCursor(2, 2);
-    LCD_Write_Str("Firmware V0.10");
+    LCD_Write_Str("Firmware V");
+    intData[0] = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 0);
+    itoa(intData[0] / 100, uartBuff, 10);
+    LCD_Write_Str(uartBuff);
+    LCD_Write_Str(".");
+    itoa(intData[0] % 100, uartBuff, 10);
+    LCD_Write_Str(uartBuff);
     LCDsetCursor(0, 3);
     LCD_Write_Str("--------------------");
     __delay_ms(1000);
-    LCDclear();
-    LCDsetCursor(0, 0);
-    LCD_Write_Str("Waiting for pulse...");
+    lcdStates = LCD_IDLE;
+    // </editor-fold>
     
     // Timer with CCP config
     TMR1_StartTimer();
