@@ -47,6 +47,7 @@ void PIN_MANAGER_Initialize(void)
     
     // CCP2 pin input
     TRISCbits.TRISC1 = INPUT;
+    TRISCbits.TRISC1 = DIGITAL;
     
     // --PORTB Pullups----------------------------------------------------------
     WPUB = 0x00;        // PORTB pullup disable

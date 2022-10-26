@@ -8,6 +8,7 @@
 #include "I2C.h"
 #include "EXTI.h"
 #include "TMR0.h"
+#include "Capture.h"
 
 void SYSTEM_Initialization(void)
 {
@@ -17,6 +18,7 @@ void SYSTEM_Initialization(void)
     INTERRUPT_Initialize();
     ECCP1_Initialize();
     I2C1_initialize();
+    CCP2_Initialize();
 //    EXTI0_Initialize();
     EXTI1_Initialize();
     EXTI2_Initialize();

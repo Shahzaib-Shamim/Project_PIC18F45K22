@@ -21,6 +21,8 @@
  * x = 3.69 ms (on scope = 7.39 ms)
  * OR
  * Start value = 65535 - ((req. seconds * (Fosc * 4)) / (4 * PSC))
+ * 
+ * Note: Here, Fosc = actual crystal value i.e. 16MHz
  */
 
 // --Macro Declarations---------------------------------------------------------

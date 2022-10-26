@@ -27,7 +27,7 @@ void __interrupt(high_priority) INTERRUPT_InterruptManagerHigh(void)
     {
         ECCP1_CompareISR();
     }
-    else if(INTCONbits.INT0IE == 1 && INTCONbits.INT0IF == 1)
+    /*else if(INTCONbits.INT0IE == 1 && INTCONbits.INT0IF == 1)
     {
         INT0_ISR();
     }
@@ -38,11 +38,21 @@ void __interrupt(high_priority) INTERRUPT_InterruptManagerHigh(void)
     else if(INTCON3bits.INT2IE == 1 && INTCON3bits.INT2IF == 1)
     {
         INT2_ISR();
-    }    
+    }*/   
     else if(PIE2bits.CCP2IE == 1 && PIR2bits.CCP2IF == 1)
     {
         CCP2_ISR();
     }    
+    //TMR3
+    else if(PIE2bits.TMR3IE == 1 && PIR2bits.TMR3IF == 1)
+    {
+        TMR3_ISR();
+    }
+    //TMR5
+//    else if(PIE5bits.TMR5IE == 1 && PIR5bits.TMR5IF == 1)
+//    {
+//        TMR5_ISR();
+//    }
     else
     {
         //Unhandled Interrupt
@@ -78,14 +88,18 @@ void __interrupt(low_priority) INTERRUPT_InterruptManagerLow(void)
     else if(INTCONbits.TMR0IE == 1 && INTCONbits.TMR0IF == 1)
     {
         TMR0_ISR();
-    }    
-    else if(PIE2bits.TMR3IE == 1 && PIR2bits.TMR3IF == 1)
-    {
-        TMR3_ISR();
     }
     else if(INTCONbits.RBIF == 1 && INTCONbits.RBIE == 1)
     {
         IOC_ISR();
+    }
+    else if(INTCON3bits.INT1IE == 1 && INTCON3bits.INT1IF == 1)
+    {
+        INT1_ISR();
+    }
+    else if(INTCON3bits.INT2IE == 1 && INTCON3bits.INT2IF == 1)
+    {
+        INT2_ISR();
     }
     else
     {

@@ -42,6 +42,7 @@ typedef struct
 } ApplicationFlags_t;
 
 extern volatile ApplicationFlags_t sysFlags;
+extern uint8_t lcdStates;
 
 // --Defines for serial msg input-----------------------------------------------
 // Serial msg states
@@ -55,6 +56,8 @@ extern volatile ApplicationFlags_t sysFlags;
 #define SER_MSG_FLAG_EEPROMRdN  7       //10
 #define SER_MSG_FLAG_RTC_W      8
 #define SER_MSG_FLAG_RTC_R      9
+#define SER_MSG_FLAG_FW_W       10
+#define SER_MSG_FLAG_FW_R       11
 
 
 // Data Packet length
@@ -65,6 +68,7 @@ extern volatile ApplicationFlags_t sysFlags;
 #define eepromRd1PacketLen  2
 #define eepromWrNPacketLen  8
 #define eepromRdNPacketLen  2
+#define fwInfoWePacketLen   3
 
 // Variable buffer size
 #define numOfChar           10
@@ -79,6 +83,13 @@ extern volatile ApplicationFlags_t sysFlags;
 #define eepromWrNByte       3
 #define eepromRdNByte       4
 
+// LCD States
+#define LCD_IDLE            0
+#define LCD_STARTUP         1
+#define LCD_BOOTINIT        2
+#define LCD_CAL_MODE        3
+#define LCD_NORMAL_MODE     4
+#define LCD_SHUTDOWN        5
 
 /**
  * Global function to initialize variables
@@ -118,6 +129,12 @@ void storeLastCalibRTC(void);
  * Get last calibration timestamp from EEPROM
  */
 void getLastCalibRTC(void);
+
+/**
+ * Store and get firmware info into/from eeprom
+ */
+void storeFWInfo(float);
+void getFWInfo(void);
 
 /**
  * Do parsing on the receive msg and set flags.
