@@ -45,8 +45,8 @@ void ADS1115_init(ADS1115_Object_t *instance)
     }
 }
 
-// change float to uint16_t
-float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
+//float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
+void ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel, float* floatVar)
 {
     instance->config.os = OS_START_SINGLE_CONVERSION;
     switch(channel)
@@ -84,7 +84,8 @@ float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
     I2C1_stop();
     
     while(!conversionComplete(instance));
-    return computeVoltage(instance, getLastConversion(instance));
+//    return computeVoltage(instance, getLastConversion(instance));
+    *floatVar = computeVoltage(instance, getLastConversion(instance));
 }
 
 static uint16_t getLastConversion(ADS1115_Object_t *instance)

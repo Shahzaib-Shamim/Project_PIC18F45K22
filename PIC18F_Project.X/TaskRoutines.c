@@ -94,13 +94,17 @@ void loadPres1_Coef(void)
     uint8_t eepromReadBuff[4];
     
     EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 0, eepromReadBuff, 4);
-    pres1.coefA = EEPROM_byteToFloat(eepromReadBuff);
+//    pres1.coefA = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &pres1.coefA);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 4, eepromReadBuff, 4);
-    pres1.coefB = EEPROM_byteToFloat(eepromReadBuff);
+//    pres1.coefB = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &pres1.coefB);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 8, eepromReadBuff, 4);
-    pres1.coefC = EEPROM_byteToFloat(eepromReadBuff); 
+//    pres1.coefC = EEPROM_byteToFloat(eepromReadBuff); 
+    EEPROM_byteToFloat(eepromReadBuff, &pres1.coefC);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 12, eepromReadBuff, 4);
-    pres1.coefD = EEPROM_byteToFloat(eepromReadBuff);
+//    pres1.coefD = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &pres1.coefD);
 }
 
 void loadTemp1_Coef(void)
@@ -108,13 +112,17 @@ void loadTemp1_Coef(void)
     uint8_t eepromReadBuff[4];
     
     EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 0, eepromReadBuff, 4);
-    temp1.coefA = EEPROM_byteToFloat(eepromReadBuff);
+//    temp1.coefA = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &temp1.coefA);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 4, eepromReadBuff, 4);
-    temp1.coefB = EEPROM_byteToFloat(eepromReadBuff);
+//    temp1.coefB = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &temp1.coefB);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 8, eepromReadBuff, 4);
-    temp1.coefC = EEPROM_byteToFloat(eepromReadBuff); 
+//    temp1.coefC = EEPROM_byteToFloat(eepromReadBuff); 
+    EEPROM_byteToFloat(eepromReadBuff, &temp1.coefC);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 12, eepromReadBuff, 4);
-    temp1.coefD = EEPROM_byteToFloat(eepromReadBuff);
+//    temp1.coefD = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &temp1.coefD);
 }
 
 void loadPres2_Coef(void)
@@ -122,13 +130,17 @@ void loadPres2_Coef(void)
     uint8_t eepromReadBuff[4];
     
     EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 0, eepromReadBuff, 4);
-    pres2.coefA = EEPROM_byteToFloat(eepromReadBuff);
+//    pres2.coefA = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &pres2.coefD);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 4, eepromReadBuff, 4);
-    pres2.coefB = EEPROM_byteToFloat(eepromReadBuff);
+//    pres2.coefB = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &pres2.coefD);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 8, eepromReadBuff, 4);
-    pres2.coefC = EEPROM_byteToFloat(eepromReadBuff); 
+//    pres2.coefC = EEPROM_byteToFloat(eepromReadBuff); 
+    EEPROM_byteToFloat(eepromReadBuff, &pres2.coefD);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 12, eepromReadBuff, 4);
-    pres2.coefD = EEPROM_byteToFloat(eepromReadBuff);
+//    pres2.coefD = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &pres2.coefD);
 }
 
 void loadTemp2_Coef(void)
@@ -136,13 +148,17 @@ void loadTemp2_Coef(void)
     uint8_t eepromReadBuff[4];
     
     EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 0, eepromReadBuff, 4);
-    temp2.coefA = EEPROM_byteToFloat(eepromReadBuff);
+//    temp2.coefA = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 4, eepromReadBuff, 4);
-    temp2.coefB = EEPROM_byteToFloat(eepromReadBuff);
+//    temp2.coefB = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 8, eepromReadBuff, 4);
-    temp2.coefC = EEPROM_byteToFloat(eepromReadBuff); 
+//    temp2.coefC = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
     EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 12, eepromReadBuff, 4);
-    temp2.coefD = EEPROM_byteToFloat(eepromReadBuff);
+//    temp2.coefD = EEPROM_byteToFloat(eepromReadBuff);
+    EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
 }
 
 void storeLastCalibRTC(void)
@@ -308,18 +324,21 @@ void runApplication(void)
             ltoa(time_ccp / 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 0);
             LCD_Write_Str("ms");
+//            ltoa(time_ccp / 1000, lcdBuff, 10);
+//            uart1_puts(lcdBuff);
+//            uart1_puts("ms\n");
 //            
             ads1115SampleData();
             *adcData = calibData;
             LCDsetCursor(0, 1);
             LCD_Write_Str("P1=");
-            itoa(*(adcData + 0) * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
+            itoa(*(calibData + 0) * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 1);
             LCD_Write_Str("PSI");
             
             LCDsetCursor(0, 2);
             LCD_Write_Str("T1=");
-            itoa(*(adcData + 1) * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
+            itoa(*(calibData + 1) * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 2);
             LCD_Write_Str("degC");
             
@@ -550,15 +569,16 @@ void runApplication(void)
         ccp2Flag = false;
 
         time_ccp = time_after_capture(cap_overflow_tmr3, &capture_value);
-        ltoa(time_ccp/1000, txBuffer, 10);  //1000
-        uart1_puts("Pulsetime/1000=");
-        uart1_puts(txBuffer);
-        uart1_newline();
-
-        ltoa(time_ccp, txBuffer, 10);
+        ltoa(time_ccp/1000, txBuffer, 10);
         uart1_puts("Pulsetime=");
         uart1_puts(txBuffer);
         uart1_newline();
+
+        // not correct
+//        ltoa(time_ccp, txBuffer, 10);
+//        uart1_puts("Pulsetime=");
+//        uart1_puts(txBuffer);
+//        uart1_newline();
 
 //            cap_overflow_tmr3 = 0;
 //            capture_value.ccpL = 0;
@@ -649,11 +669,14 @@ void ledBlink(void)
 
 void ads1115SampleData(void)
 {
+    float *pfloatData = voltage;
+    
     if(myADC.isPresent == 1)
     {
         for(uint8_t i = 0; i < 4; i++)
         {
-            voltage[i] = ADS1115_readSingleEnded(&myADC, i);
+//            voltage[i] = ADS1115_readSingleEnded(&myADC, i);
+            ADS1115_readSingleEnded(&myADC, i, &voltage[i]);
             // __delay_us(10);
         }
 
@@ -675,22 +698,21 @@ void ads1115SampleData(void)
             calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
                     (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
             calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
-                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
-
+                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;            
         }
         
         // send calibrated data only
-        else if(calibrationEnableFlag == false)     
-        {
-            calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
-                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
-            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
-                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
-            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
-                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
-            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
-                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
-        }
+//        else if(calibrationEnableFlag == false)     
+//        {
+//            calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
+//                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
+//            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
+//                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
+//            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
+//                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
+//            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
+//                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
+//        }
         
         for(i = 0; i < 4; i++)
         {
@@ -957,7 +979,8 @@ void process_data(void)
                     unsigned long floatToLong;
                     float floatData;
 //                    uint8_t eepromWriteBuff[4];
-                    floatData = EEPROM_byteToFloat(integerData); // coef byte to float conversion
+//                    floatData = EEPROM_byteToFloat(integerData); // coef byte to float conversion
+                    EEPROM_byteToFloat(integerData, &floatData);
 //                    EEPROM_floatToByte(floatData, eepromWriteBuff);
 //                    EEPROM_floatToByte(floatData, integerData);
                     
