@@ -25,6 +25,7 @@ void SYSTEM_Initialization(void)
     IOC_Initialize();
     TMR0_Initialize();
     TMR1_Initialize();
+    __delay_ms(2000);
 }
 
 static void OSCILLATOR_Init(void)

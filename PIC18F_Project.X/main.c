@@ -21,7 +21,7 @@
 
 // --Global variable section----------------------------------------------------
 char uartBuff[10] = {0};
-uint8_t intData[4];
+uint8_t intData;
 
 void main(void)
 {
@@ -33,7 +33,6 @@ void main(void)
     // Start boot sequence
     startInitialization();
 
-    __delay_ms(2000);
     uart1_puts("\nPIC18F Project\n\r\0");
 
     LED_SetDigitalOutput();
@@ -50,11 +49,11 @@ void main(void)
     LCD_Write_Str("Project");
     LCDsetCursor(2, 2);
     LCD_Write_Str("Firmware V");
-    intData[0] = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 0);
-    itoa(intData[0] / 100, uartBuff, 10);
+    intData = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 0);
+    itoa(intData / 100, uartBuff, 10);
     LCD_Write_Str(uartBuff);
     LCD_Write_Str(".");
-    itoa(intData[0] % 100, uartBuff, 10);
+    itoa(intData % 100, uartBuff, 10);
     LCD_Write_Str(uartBuff);
     LCDsetCursor(0, 3);
     LCD_Write_Str("--------------------");

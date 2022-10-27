@@ -45,6 +45,7 @@ void ADS1115_init(ADS1115_Object_t *instance)
     }
 }
 
+// change float to uint16_t
 float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
 {
     instance->config.os = OS_START_SINGLE_CONVERSION;
@@ -171,5 +172,4 @@ static float computeVoltage(ADS1115_Object_t *instance, const uint16_t value)
 
     return((float) value * (range / 32768.0f));
 }
-
 
