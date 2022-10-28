@@ -19,7 +19,7 @@
 
 // --Macro Declarations---------------------------------------------------------
 #define REGISTER_CONVERSION					0x00
-#define REGISTER_CONFIG             0x01
+#define REGISTER_CONFIG                     0x01
 #define REGISTER_LO_THRESH					0x02
 #define REGISTER_HI_THRESH					0x03
 

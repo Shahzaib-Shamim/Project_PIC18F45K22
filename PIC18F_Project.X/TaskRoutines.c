@@ -40,7 +40,43 @@ float voltage[4];
 float calibData[4];
 uint16_t *adcData;
 
+//typedef union
+//{
+//    struct
+//    {
+//        unsigned button1 : 1;
+//        unsigned button2 : 1;
+//        unsigned button3 : 1;
+//        unsigned button4 : 1;
+//        unsigned button5 : 1;
+//        unsigned : 1;
+//        unsigned : 1;
+//        unsigned : 1;
+//    };
+//    uint8_t relay;
+//} RelayState_t;
+union RelayState_u
+{
+    struct
+    {
+        unsigned button1 : 1;
+        unsigned button2 : 1;
+        unsigned button3 : 1;
+        unsigned button4 : 1;
+        unsigned button5 : 1;
+        unsigned : 1;
+        unsigned : 1;
+        unsigned : 1;
+    };
+    uint8_t relay;
+};
+union RelayState_u relayStatus;
 
+//typedef union{
+//    float a;
+//    char b[4];
+//} my_union_t;
+    
 typedef struct
 {
     float coefA;
@@ -255,7 +291,7 @@ void runApplication(void)
         
         static uint8_t i = 0;
         i++;
-        if(i == 1)
+        if(i == 40)
         {
             i = 0;
 //            ds3232Timestamp();
@@ -286,6 +322,7 @@ void runApplication(void)
         sysFlags.lcdTask = false;
 //        uint8_t readBuffRTC[7];
         char *MonthName = "";
+//        static uint8_t buttonsState = 0;
         
         // <editor-fold defaultstate="collapsed" desc="LCD Idle mode">
         if(lcdStates == LCD_IDLE)
@@ -344,8 +381,22 @@ void runApplication(void)
             
             LCDsetCursor(0, 3);
             LCD_Write_Str("Relay#12345=");
+//            LCDsetCursor(15, 3);
+            
+            LCDsetCursor(19, 3);
+            itoa(relayStatus.button1, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            
+            LCDsetCursor(18, 3);
+            itoa(relayStatus.button2, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            
+            LCDsetCursor(17, 3);
+            itoa(relayStatus.button3, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            
+            LCDsetCursor(16, 3);
+            itoa(relayStatus.button4, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            
             LCDsetCursor(15, 3);
-            itoa(25, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
         }
         // </editor-fold>
     }
@@ -594,10 +645,14 @@ void runApplication(void)
         int1Flag = false;
         if(PORTBbits.RB1 == PRESSED)
         {
-            static uint8_t pressCount = 0;
-            pressCount++;
-            itoa(pressCount, txBuffer, 10);
-            uart1_puts("RB1 pressed ");
+//            static uint8_t pressCount = 0;
+//            pressCount++;
+//            itoa(pressCount, txBuffer, 10);
+//            uart1_puts("RB1 pressed ");
+//            uart1_puts(txBuffer);
+//            uart1_newline();
+            relayStatus.button1 ^= 1;
+            itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
             uart1_newline();
         }
@@ -608,10 +663,14 @@ void runApplication(void)
         int2Flag = false;
         if(PORTBbits.RB2 == PRESSED)
         {
-            static uint8_t pressCount = 0;
-            pressCount++;
-            itoa(pressCount, txBuffer, 10);
-            uart1_puts("RB2 pressed ");
+//            static uint8_t pressCount = 0;
+//            pressCount++;
+//            itoa(pressCount, txBuffer, 10);
+//            uart1_puts("RB2 pressed ");
+//            uart1_puts(txBuffer);
+//            uart1_newline();
+            relayStatus.button2 ^= 1;
+            itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
             uart1_newline();
         }
@@ -622,10 +681,14 @@ void runApplication(void)
         rb4Flag = false;
         if(PORTBbits.RB4 == PRESSED)
         {
-            static uint8_t pressCount = 0;
-            pressCount++;
-            itoa(pressCount, txBuffer, 10);
-            uart1_puts("RB4 pressed ");
+//            static uint8_t pressCount = 0;
+//            pressCount++;
+//            itoa(pressCount, txBuffer, 10);
+//            uart1_puts("RB4 pressed ");
+//            uart1_puts(txBuffer);
+//            uart1_newline();
+            relayStatus.button3 ^= 1;
+            itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
             uart1_newline();
         }
@@ -637,10 +700,14 @@ void runApplication(void)
         rb5Flag = false;
         if(PORTBbits.RB5 == PRESSED)
         {
-            static uint8_t pressCount = 0;
-            pressCount++;
-            itoa(pressCount, txBuffer, 10);
-            uart1_puts("RB5 pressed ");
+//            static uint8_t pressCount = 0;
+//            pressCount++;
+//            itoa(pressCount, txBuffer, 10);
+//            uart1_puts("RB5 pressed ");
+//            uart1_puts(txBuffer);
+//            uart1_newline();
+            relayStatus.button4 ^= 1;
+            itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
             uart1_newline();
         }
@@ -651,10 +718,14 @@ void runApplication(void)
         rb6Flag = false;
         if(PORTBbits.RB6 == PRESSED)
         {
-            static uint8_t pressCount = 0;
-            pressCount++;
-            itoa(pressCount, txBuffer, 10);
-            uart1_puts("RB6 pressed ");
+//            static uint8_t pressCount = 0;
+//            pressCount++;
+//            itoa(pressCount, txBuffer, 10);
+//            uart1_puts("RB6 pressed ");
+//            uart1_puts(txBuffer);
+//            uart1_newline();
+            relayStatus.button5 ^= 1;
+            itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
             uart1_newline();
         }
