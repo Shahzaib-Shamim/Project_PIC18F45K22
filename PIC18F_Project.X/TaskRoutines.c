@@ -24,37 +24,16 @@ uint8_t integerData[NUM_OF_INT_Data];
 char *keyword;
 bool dateFlag = false;
 bool timeFlag = false;
-//bool pres1Flag = false;
-//bool pres2Flag = false;
-//bool temp1Flag = false;
-//bool temp2Flag = false;
 bool txEnableFlag = true; // false
-//bool eepromFlag = false;
 uint8_t eepromStateFlags = 0;
 bool calibrationEnableFlag = true; //false
 uint8_t ds3231_readBuff[7];
 uint32_t time_ccp = 0;
 uint8_t lcdStates = 0;
 float voltage[4];
-
 float calibData[4];
 uint16_t *adcData;
 
-//typedef union
-//{
-//    struct
-//    {
-//        unsigned button1 : 1;
-//        unsigned button2 : 1;
-//        unsigned button3 : 1;
-//        unsigned button4 : 1;
-//        unsigned button5 : 1;
-//        unsigned : 1;
-//        unsigned : 1;
-//        unsigned : 1;
-//    };
-//    uint8_t relay;
-//} RelayState_t;
 union RelayState_u
 {
     struct
@@ -72,10 +51,30 @@ union RelayState_u
 };
 union RelayState_u relayStatus;
 
-//typedef union{
-//    float a;
-//    char b[4];
-//} my_union_t;
+union sensorCalibrationCoef_u
+{
+    struct
+    {
+        unsigned pres1_a : 1;
+        unsigned pres1_b : 1;
+        unsigned pres1_c : 1;
+        unsigned pres1_d : 1;
+        unsigned temp1_a: 1;
+        unsigned temp1_b: 1;
+        unsigned temp1_c: 1;
+        unsigned temp1_d: 1;
+        unsigned pres2_a : 1;
+        unsigned pres2_b : 1;
+        unsigned pres2_c : 1;
+        unsigned pres2_d : 1;
+        unsigned temp2_a: 1;
+        unsigned temp2_b: 1;
+        unsigned temp2_c: 1;
+        unsigned temp2_d: 1;
+    };
+    uint16_t sensorsCoef;
+};
+union sensorCalibrationCoef_u sensorsCoefStates;
     
 typedef struct
 {
@@ -197,20 +196,51 @@ void loadTemp2_Coef(void)
     EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
 }
 
+void load_Coef(void)
+{
+    uint8_t eepromReadBuff[4];
+    
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 0, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &pres1.coefA);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 4, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &pres1.coefB);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 8, eepromReadBuff, 4); 
+    EEPROM_byteToFloat(eepromReadBuff, &pres1.coefC);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 1, 12, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &pres1.coefD);
+    
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 0, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &temp1.coefA);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 4, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &temp1.coefB);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 8, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &temp1.coefC);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 2, 12, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &temp1.coefD);
+    
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 0, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &pres2.coefD);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 4, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &pres2.coefD);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 8, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &pres2.coefD);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 3, 12, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &pres2.coefD);
+    
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 0, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 4, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 8, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
+    EEPROM_readMultipleBytes(EEPROM_ADDR, 4, 12, eepromReadBuff, 4);
+    EEPROM_byteToFloat(eepromReadBuff, &temp2.coefD);
+}
+
 void storeLastCalibRTC(void)
 {
     uint8_t readBuff[7];
-//    uint8_t writeBuff[4];
-    
-//     Store Time
-//    DS3231_getTime(&readBuff[0], &readBuff[1], &readBuff[2]);
-//    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 4, readBuff, 3);
-//    // Store Date
-//    DS3231_getDate(&readBuff[3], &readBuff[4], &readBuff[5], &readBuff[6]);
-//    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 7, &readBuff[3], 4);
-    
-    
-    
+      
     DS3231_getData(&readBuff[0], &readBuff[1], &readBuff[2],
                    &readBuff[3], &readBuff[4], &readBuff[5], &readBuff[6]);
     EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 4, readBuff, 7);
@@ -252,15 +282,6 @@ void getLastCalibRTC(void)
 
 void getFWInfo(void)
 {
-//    uint8_t readBuff[4];
-//    EEPROM_readMultipleBytes(EEPROM_ADDR, 0, 0, readBuff, 4);
-//    uint16_t fw = EEPROM_byteToFloat(readBuff) * 100;
-//    uart1_puts("FW info = ");
-//    itoa(fw, txBuffer, 10);
-//    uart1_puts(txBuffer);
-//    uart1_newline();
-    
-    
     uint8_t readBuff;
     readBuff = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 0);
     uart1_puts("FW info = ");
@@ -271,10 +292,12 @@ void getFWInfo(void)
 
 void startInitialization(void)
 {
-    loadPres1_Coef();
-    loadTemp1_Coef();
-    loadPres2_Coef();
-    loadTemp2_Coef();
+//    loadPres1_Coef();
+//    loadTemp1_Coef();
+//    loadPres2_Coef();
+//    loadTemp2_Coef();
+    
+    load_Coef();
 }
 
 void runApplication(void)
@@ -295,7 +318,7 @@ void runApplication(void)
         {
             i = 0;
 //            ds3232Timestamp();
-            ads1115SampleData();
+//            ads1115SampleData();
         }        
     }
 
@@ -358,9 +381,34 @@ void runApplication(void)
             
             LCDsetCursor(0, 0);
             LCD_Write_Str("Pulse=");
-            ltoa(time_ccp / 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
+//            ltoa(time_ccp / 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
+            //added start
+            uint8_t lowByte, highByte;
+            uint16_t pulsetime;
+//            if(1 == 1)
+//            {
+//                int0Flag = false;
+                lowByte = LCD_i2cRead(0x3B);
+                highByte = LCD_i2cRead(0x3D);
+                pulsetime = (uint16_t)((highByte << 8) | (lowByte & 0xff));
+//                LCDsetCursor(0, 6);
+                ltoa(pulsetime / 1000, lcdBuff, 10);    // ltoa
+                LCD_Write_Str(lcdBuff);
+                uart1_puts(lcdBuff);
+                LCD_Write_Str(".");
+                uart1_puts(".");
+                ltoa(pulsetime % 1000, lcdBuff, 10);    // ltoa
+                LCD_Write_Str(lcdBuff);
+                uart1_puts(lcdBuff);
+                uart1_puts("sec");
+                uart1_newline();
+                
+//                sprintf(lcdBuff, "%0.3f", 1.23);
+//            }
+            
+            //added stop
             LCDsetCursor(16, 0);
-            LCD_Write_Str("ms");
+            LCD_Write_Str("sec");
 //            ltoa(time_ccp / 1000, lcdBuff, 10);
 //            uart1_puts(lcdBuff);
 //            uart1_puts("ms\n");
@@ -378,6 +426,21 @@ void runApplication(void)
             itoa(*(calibData + 1) * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 2);
             LCD_Write_Str("degC");
+            
+            for(uint8_t i = 0; i < 4; i++)
+            {
+                uint16_t adcData;
+                adcData = calibData[i] * 1000;
+                itoa(adcData, txBuffer, 10);
+                uart1_puts(txBuffer);
+                uart1_puts("    ");
+                adcData = voltage[i] * 1000;
+                itoa(adcData, txBuffer, 10);
+                uart1_puts(txBuffer);
+                uart1_newline();            
+            }
+            uart1_puts("--------------------------");
+            uart1_newline();
             
             LCDsetCursor(0, 3);
             LCD_Write_Str("Relay#12345=");
@@ -398,6 +461,8 @@ void runApplication(void)
             LCDsetCursor(15, 3);
             itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
         }
+        // </editor-fold>
+        
         // </editor-fold>
     }
 
@@ -525,6 +590,8 @@ void runApplication(void)
         {
             uart1_puts("Calibration mode enabled\n");
             calibrationEnableFlag = true;
+            lcdStates = LCD_CAL_MODE_Y;
+            LCDclear();
         }
 
         // Calibration mode disable
@@ -532,6 +599,15 @@ void runApplication(void)
         {
             uart1_puts("Calibration mode disabled\n");
             calibrationEnableFlag = false;
+            lcdStates = LCD_CAL_MODE_N;
+            LCDclear();
+//            LCDsetCursor(0, 0);
+//            LCD_Write_Str("Calibration mode:");
+//            LCDsetCursor(0, 1);
+//            LCD_Write_Str("Done");
+            lcdStates = LCD_NORMAL_MODE;
+            
+            
         }
 
         // Start sending data
@@ -619,11 +695,11 @@ void runApplication(void)
     {
         ccp2Flag = false;
 
-        time_ccp = time_after_capture(cap_overflow_tmr3, &capture_value);
-        ltoa(time_ccp/1000, txBuffer, 10);
-        uart1_puts("Pulsetime=");
-        uart1_puts(txBuffer);
-        uart1_newline();
+//        time_ccp = time_after_capture(cap_overflow_tmr3, &capture_value);
+//        ltoa(time_ccp/1000, txBuffer, 10);
+//        uart1_puts("Pulsetime=");
+//        uart1_puts(txBuffer);
+//        uart1_newline();
 
         // not correct
 //        ltoa(time_ccp, txBuffer, 10);
@@ -645,12 +721,6 @@ void runApplication(void)
         int1Flag = false;
         if(PORTBbits.RB1 == PRESSED)
         {
-//            static uint8_t pressCount = 0;
-//            pressCount++;
-//            itoa(pressCount, txBuffer, 10);
-//            uart1_puts("RB1 pressed ");
-//            uart1_puts(txBuffer);
-//            uart1_newline();
             relayStatus.button1 ^= 1;
             itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
@@ -663,12 +733,6 @@ void runApplication(void)
         int2Flag = false;
         if(PORTBbits.RB2 == PRESSED)
         {
-//            static uint8_t pressCount = 0;
-//            pressCount++;
-//            itoa(pressCount, txBuffer, 10);
-//            uart1_puts("RB2 pressed ");
-//            uart1_puts(txBuffer);
-//            uart1_newline();
             relayStatus.button2 ^= 1;
             itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
@@ -681,12 +745,6 @@ void runApplication(void)
         rb4Flag = false;
         if(PORTBbits.RB4 == PRESSED)
         {
-//            static uint8_t pressCount = 0;
-//            pressCount++;
-//            itoa(pressCount, txBuffer, 10);
-//            uart1_puts("RB4 pressed ");
-//            uart1_puts(txBuffer);
-//            uart1_newline();
             relayStatus.button3 ^= 1;
             itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
@@ -700,12 +758,6 @@ void runApplication(void)
         rb5Flag = false;
         if(PORTBbits.RB5 == PRESSED)
         {
-//            static uint8_t pressCount = 0;
-//            pressCount++;
-//            itoa(pressCount, txBuffer, 10);
-//            uart1_puts("RB5 pressed ");
-//            uart1_puts(txBuffer);
-//            uart1_newline();
             relayStatus.button4 ^= 1;
             itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
@@ -718,12 +770,6 @@ void runApplication(void)
         rb6Flag = false;
         if(PORTBbits.RB6 == PRESSED)
         {
-//            static uint8_t pressCount = 0;
-//            pressCount++;
-//            itoa(pressCount, txBuffer, 10);
-//            uart1_puts("RB6 pressed ");
-//            uart1_puts(txBuffer);
-//            uart1_newline();
             relayStatus.button5 ^= 1;
             itoa(relayStatus.relay, txBuffer, 2);
             uart1_puts(txBuffer);
@@ -740,14 +786,14 @@ void ledBlink(void)
 
 void ads1115SampleData(void)
 {
-    float *pfloatData = voltage;
+//    float *pfloatData = voltage;
     
     if(myADC.isPresent == 1)
     {
         for(uint8_t i = 0; i < 4; i++)
         {
-//            voltage[i] = ADS1115_readSingleEnded(&myADC, i);
-            ADS1115_readSingleEnded(&myADC, i, &voltage[i]);
+            voltage[i] = ADS1115_readSingleEnded(&myADC, i);
+//            ADS1115_readSingleEnded(&myADC, i, &voltage[i]);
             // __delay_us(10);
         }
 
@@ -756,8 +802,8 @@ void ads1115SampleData(void)
         uint8_t i;
           
         // send calibrated data and raw data
-        if(calibrationEnableFlag == true)       
-        {
+//        if(calibrationEnableFlag == true)       
+//        {
             /**
              * calibration equation using 4 polynomials
              * y = ax3 + bx2 + cx + d       (x = adc value in float (0.000 to 5.000V)
@@ -770,41 +816,28 @@ void ads1115SampleData(void)
                     (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
             calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
                     (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;            
-        }
-        
-        // send calibrated data only
-//        else if(calibrationEnableFlag == false)     
-//        {
-//            calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
-//                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
-//            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
-//                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
-//            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
-//                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
-//            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
-//                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
 //        }
         
-        for(i = 0; i < 4; i++)
-        {
-            adcData[i] = calibData[i] * 1000;
-            itoa(adcData[i], txBuffer, 10);
-            uart1_puts(txBuffer);
-            uart1_puts("    ");
-            adcData[i] = voltage[i] * 1000;
-            itoa(adcData[i], txBuffer, 10);
-            uart1_puts(txBuffer);
-            uart1_newline();            
-        }
-        uart1_puts("--------------------------");
-        uart1_newline();
+//        for(i = 0; i < 4; i++)
+//        {
+//            adcData[i] = calibData[i] * 1000;
+//            itoa(adcData[i], txBuffer, 10);
+//            uart1_puts(txBuffer);
+//            uart1_puts("    ");
+//            adcData[i] = voltage[i] * 1000;
+//            itoa(adcData[i], txBuffer, 10);
+//            uart1_puts(txBuffer);
+//            uart1_newline();            
+//        }
+//        uart1_puts("--------------------------");
+//        uart1_newline();
     }
 }
 
 void ds3232Timestamp(void)
 {
-    char *Day = "";
-    char *MonthName = "";
+//    char *Day = "";
+//    char *MonthName = "";
     //    uint8_t ds3231_readBuff[7];
     DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
     DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
@@ -839,7 +872,6 @@ void process_data(void)
     // <editor-fold defaultstate="collapsed" desc="Time calibration task">
     if(serialMsgFlags == SER_MSG_FLAG_TIME)
     {
-//        keyword[0] = "C00";
         keyword = "C00";
         keywordPointer = strstr(input_line, keyword);
         if(keywordPointer != NULL)
@@ -1067,6 +1099,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                        pres1Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.pres1_a = 1;
                     }
                     else if(keyword == "C02B")        
                     {
@@ -1079,6 +1113,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                        pres1Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.pres1_b = 1;
                     }
 
                     else if(keyword == "C02C")
@@ -1092,6 +1128,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            pres1Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.pres1_c = 1;
                     }
 
                     else if(keyword == "C02D")
@@ -1105,6 +1143,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            pres1Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.pres1_d = 1;
                     }
                     // </editor-fold>
 
@@ -1120,6 +1160,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            temp1Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.temp1_a = 1;
                     }
 
                     else if(keyword == "C03B")
@@ -1133,6 +1175,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            temp1Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.temp1_b = 1;
                     }
 
                     else if(keyword == "C03C")
@@ -1146,6 +1190,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            temp1Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.temp1_c = 1; 
                     }
                     
                     else if(keyword == "C03D")
@@ -1159,6 +1205,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            temp1Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.temp1_d = 1;
                     }
                     // </editor-fold>
                     
@@ -1174,6 +1222,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            pres2Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.pres2_a = 1;
                     }
 
                     else if(keyword == "C04B")
@@ -1187,6 +1237,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            pres2Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.pres2_b = 1;
                     }
 
                     else if(keyword == "C04C")
@@ -1200,6 +1252,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            pres2Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.pres2_c = 1;
                     }
 
                     else if(keyword == "C04D")
@@ -1213,6 +1267,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            pres2Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.pres2_d = 1;
                     }
                     // </editor-fold>
 
@@ -1228,6 +1284,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            temp2Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.temp2_a = 1;
                     }
 
                     else if(keyword == "C05B")
@@ -1241,6 +1299,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            temp2Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.temp2_b = 1;
                     }
 
                     else if(keyword == "C05C")
@@ -1254,6 +1314,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            temp2Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.temp2_c = 1;
                     }
 
                     else if(keyword == "C05D")
@@ -1267,6 +1329,8 @@ void process_data(void)
                         uart1_puts(txBuffer);
                         uart1_newline();
 //                            temp2Flag = true;
+                        sensorsCoefStates.sensorsCoef = 0;
+                        sensorsCoefStates.temp2_d = 1;
                     }
                     // </editor-fold>
                 }
@@ -1695,8 +1759,7 @@ void process_data(void)
     // end Date calibration task
 }
 
-// <editor-fold defaultstate="collapsed" desc="C functions">
-
+// <editor-fold defaultstate="collapsed" desc="Functions: CRC, itoa, ltoa">
 uint16_t checksumCalculator(uint8_t *data, uint16_t length)
 {
     uint16_t curr_crc = 0x0000;
@@ -1712,7 +1775,6 @@ uint16_t checksumCalculator(uint8_t *data, uint16_t length)
 }
 
 // Function to swap two numbers
-
 void swap(char *x, char *y)
 {
     char t = *x;
@@ -1721,7 +1783,6 @@ void swap(char *x, char *y)
 }
 
 // Function to reverse `buffer[i?j]`
-
 char* reverse(char *buffer, int i, int j)
 {
     while(i < j)
@@ -1732,7 +1793,6 @@ char* reverse(char *buffer, int i, int j)
 }
 
 // Iterative function to implement `itoa()` function in C
-
 char* itoa(int value, char* buffer, int numBase)
 {
     // invalid input
@@ -1779,7 +1839,6 @@ char* itoa(int value, char* buffer, int numBase)
 }
 
 // Iterative function to implement `itoa()` function in C
-
 char* ltoa(long value, char* buffer, int numBase)
 {
     // invalid input

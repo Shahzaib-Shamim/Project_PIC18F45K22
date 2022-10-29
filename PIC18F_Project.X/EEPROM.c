@@ -172,3 +172,10 @@ void EEPROM_byteToFloat(uint8_t *pByteData, float *pFloatData)
     *pointer_to_float = pByteData[3];
 }
 
+
+//typedef union{
+//    float a;
+//    char b[4];
+//} my_union_t;
+
+

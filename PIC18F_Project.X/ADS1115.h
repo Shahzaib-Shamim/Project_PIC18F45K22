@@ -111,8 +111,8 @@ typedef struct
 
 // --Global Functions Section---------------------------------------------------
 void ADS1115_init(ADS1115_Object_t *instance);
-//float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel);
-void ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel, float* floatVar);
+float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel);
+//void ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel, float* floatVar);
 
 // Local Functions
 static uint16_t conversionComplete(ADS1115_Object_t *instance);

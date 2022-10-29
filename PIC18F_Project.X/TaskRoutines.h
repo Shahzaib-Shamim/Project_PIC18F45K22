@@ -87,9 +87,10 @@ extern uint8_t lcdStates;
 #define LCD_IDLE            0
 #define LCD_STARTUP         1
 #define LCD_BOOTINIT        2
-#define LCD_CAL_MODE        3
+#define LCD_CAL_MODE_Y      3
 #define LCD_NORMAL_MODE     4
 #define LCD_SHUTDOWN        5
+#define LCD_CAL_MODE_N      6
 
 /**
  * Global function to initialize variables
@@ -103,6 +104,7 @@ void loadPres1_Coef(void);
 void loadTemp1_Coef(void);
 void loadPres2_Coef(void);
 void loadTemp2_Coef(void);
+void load_Coef(void);
 
 /**
  * Initialization sequence

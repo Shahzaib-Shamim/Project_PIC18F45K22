@@ -33,7 +33,7 @@ void main(void)
     // Start boot sequence
     startInitialization();
 
-    uart1_puts("\nPIC18F Project\n\r\0");
+//    uart1_puts("\nPIC18F Project\n\r\0");
 
     LED_SetDigitalOutput();
     LED_SetHigh();
@@ -57,8 +57,20 @@ void main(void)
     LCD_Write_Str(uartBuff);
     LCDsetCursor(0, 3);
     LCD_Write_Str("--------------------");
+    
+//    uart1_puts("--------------------\n");
+//    uart1_puts("Project\n");
+//    uart1_puts("Firmware V");
+//    itoa(intData / 100, uartBuff, 10);
+//    uart1_puts(uartBuff);
+//    uart1_puts(".");
+//    itoa(intData % 100, uartBuff, 10);
+//    uart1_puts(uartBuff);
+//    uart1_puts("\n--------------------\n");
+    uart1_puts("Ready...!\n");
+    
     __delay_ms(1000);
-    lcdStates = LCD_IDLE;
+    lcdStates = LCD_NORMAL_MODE;
     // </editor-fold>
     
     // Timer with CCP config
