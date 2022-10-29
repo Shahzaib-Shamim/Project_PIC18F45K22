@@ -392,7 +392,7 @@ void runApplication(void)
                 highByte = LCD_i2cRead(0x3D);
                 pulsetime = (uint16_t)((highByte << 8) | (lowByte & 0xff));
 //                LCDsetCursor(0, 6);
-                ltoa(pulsetime / 1000, lcdBuff, 10);    // ltoa
+                /*ltoa(pulsetime / 1000, lcdBuff, 10);    // ltoa
                 LCD_Write_Str(lcdBuff);
                 uart1_puts(lcdBuff);
                 LCD_Write_Str(".");
@@ -401,9 +401,12 @@ void runApplication(void)
                 LCD_Write_Str(lcdBuff);
                 uart1_puts(lcdBuff);
                 uart1_puts("sec");
+                uart1_newline();*/
+                ltoa(pulsetime, lcdBuff, 10);    // ltoa
+                LCD_Write_Str(lcdBuff);
+                uart1_puts(lcdBuff);
                 uart1_newline();
                 
-//                sprintf(lcdBuff, "%0.3f", 1.23);
 //            }
             
             //added stop
@@ -427,7 +430,8 @@ void runApplication(void)
             LCDsetCursor(16, 2);
             LCD_Write_Str("degC");
             
-            for(uint8_t i = 0; i < 4; i++)
+            // this code is ok to send over uart
+            /*for(uint8_t i = 0; i < 4; i++)
             {
                 uint16_t adcData;
                 adcData = calibData[i] * 1000;
@@ -440,30 +444,156 @@ void runApplication(void)
                 uart1_newline();            
             }
             uart1_puts("--------------------------");
-            uart1_newline();
+            uart1_newline();*/
             
             LCDsetCursor(0, 3);
             LCD_Write_Str("Relay#12345=");
 //            LCDsetCursor(15, 3);
             
             LCDsetCursor(19, 3);
-            itoa(relayStatus.button1, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+//            itoa(relayStatus.button1, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(18, 3);
-            itoa(relayStatus.button2, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+//            itoa(relayStatus.button2, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(17, 3);
-            itoa(relayStatus.button3, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+//            itoa(relayStatus.button3, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(16, 3);
-            itoa(relayStatus.button4, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+//            itoa(relayStatus.button4, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(15, 3);
-            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+//            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            
+            LCDsetCursor(15, 3);
+            itoa((relayStatus.button5 << 3), lcdBuff, 2); LCD_Write_Str(lcdBuff);
         }
         // </editor-fold>
         
-        // </editor-fold>
+        // <editor-fold defaultstate="collapsed" desc="LCD Calibration mode">
+        if(lcdStates == LCD_CAL_MODE_Y)
+        {
+            LCDsetCursor(0, 0);
+            LCD_Write_Str("Calibration mode:");
+            // <editor-fold defaultstate="collapsed" desc="Pressure1 coef">
+            if((strncmp(input_line, "C02", 3) == 0))
+            {
+                LCDsetCursor(0, 1);
+                LCD_Write_Str("P1 Coef  done");
+                if(sensorsCoefStates.pres1_a == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("A");
+                }
+                else if(sensorsCoefStates.pres1_b == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("B");
+                }
+                if(sensorsCoefStates.pres1_c == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("C");
+                }
+                if(sensorsCoefStates.pres1_d == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("D");
+                }
+                
+            }
+            // <editor-fold>
+            
+            // <editor-fold defaultstate="collapsed" desc="Temperature1 coef">
+            if((strncmp(input_line, "C03", 3) == 0))
+            {
+                LCDsetCursor(0, 1);
+                LCD_Write_Str("T1 Coef  done");
+                if(sensorsCoefStates.temp1_a == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("A");
+                }
+                else if(sensorsCoefStates.temp1_b == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("B");
+                }
+                if(sensorsCoefStates.temp1_c == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("C");
+                }
+                if(sensorsCoefStates.temp1_d == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("D");
+                }
+                
+            }
+            // <editor-fold>
+            
+            // <editor-fold defaultstate="collapsed" desc="Pressure2 coef">
+            if((strncmp(input_line, "C04", 3) == 0))
+            {
+                LCDsetCursor(0, 1);
+                LCD_Write_Str("P2 Coef  done");
+                if(sensorsCoefStates.pres2_a == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("A");
+                }
+                else if(sensorsCoefStates.pres2_b == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("B");
+                }
+                if(sensorsCoefStates.pres2_c == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("C");
+                }
+                if(sensorsCoefStates.pres2_d == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("D");
+                }
+                
+            }
+            // <editor-fold>
+            
+            // <editor-fold defaultstate="collapsed" desc=Temperature2 coef">
+            if((strncmp(input_line, "C05", 3) == 0))
+            {
+                LCDsetCursor(0, 1);
+                LCD_Write_Str("T2 Coef  done");
+                if(sensorsCoefStates.temp2_a == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("A");
+                }
+                else if(sensorsCoefStates.temp2_b == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("B");
+                }
+                if(sensorsCoefStates.temp2_c == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("C");
+                }
+                if(sensorsCoefStates.temp2_d == 1)
+                {
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("D");
+                }
+                
+            }
+            // <editor-fold>
+            
+            
+        }
+        // <editor-fold>
     }
 
     // --Serial Msg process-----------------------------------------------------
@@ -722,9 +852,9 @@ void runApplication(void)
         if(PORTBbits.RB1 == PRESSED)
         {
             relayStatus.button1 ^= 1;
-            itoa(relayStatus.relay, txBuffer, 2);
-            uart1_puts(txBuffer);
-            uart1_newline();
+//            itoa(relayStatus.relay, txBuffer, 2);
+//            uart1_puts(txBuffer);
+//            uart1_newline();
         }
     }
     else if(int2Flag == true && tmr0Flag == true)
@@ -734,9 +864,9 @@ void runApplication(void)
         if(PORTBbits.RB2 == PRESSED)
         {
             relayStatus.button2 ^= 1;
-            itoa(relayStatus.relay, txBuffer, 2);
-            uart1_puts(txBuffer);
-            uart1_newline();
+//            itoa(relayStatus.relay, txBuffer, 2);
+//            uart1_puts(txBuffer);
+//            uart1_newline();
         }
     }
     else if(rb4Flag == true && tmr0Flag == true)
@@ -746,9 +876,9 @@ void runApplication(void)
         if(PORTBbits.RB4 == PRESSED)
         {
             relayStatus.button3 ^= 1;
-            itoa(relayStatus.relay, txBuffer, 2);
-            uart1_puts(txBuffer);
-            uart1_newline();
+//            itoa(relayStatus.relay, txBuffer, 2);
+//            uart1_puts(txBuffer);
+//            uart1_newline();
         }
 
     }
@@ -759,9 +889,9 @@ void runApplication(void)
         if(PORTBbits.RB5 == PRESSED)
         {
             relayStatus.button4 ^= 1;
-            itoa(relayStatus.relay, txBuffer, 2);
-            uart1_puts(txBuffer);
-            uart1_newline();
+//            itoa(relayStatus.relay, txBuffer, 2);
+//            uart1_puts(txBuffer);
+//            uart1_newline();
         }
     }
     else if(rb6Flag == true && tmr0Flag == true)
@@ -771,9 +901,9 @@ void runApplication(void)
         if(PORTBbits.RB6 == PRESSED)
         {
             relayStatus.button5 ^= 1;
-            itoa(relayStatus.relay, txBuffer, 2);
-            uart1_puts(txBuffer);
-            uart1_newline();
+//            itoa(relayStatus.relay, txBuffer, 2);
+//            uart1_puts(txBuffer);
+//            uart1_newline();
         }
     }
     // </editor-fold>
@@ -799,7 +929,7 @@ void ads1115SampleData(void)
 
 //        int adcData;
         
-        uint8_t i;
+//        uint8_t i;
           
         // send calibrated data and raw data
 //        if(calibrationEnableFlag == true)       
@@ -1095,9 +1225,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 0, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefA_P1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefA_P1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                        pres1Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_a = 1;
@@ -1109,9 +1239,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 4, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefB_P1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefB_P1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                        pres1Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_b = 1;
@@ -1124,9 +1254,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 8, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefC_P1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefC_P1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres1Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_c = 1;
@@ -1139,9 +1269,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 12, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefD_P1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefD_P1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres1Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_d = 1;
@@ -1156,9 +1286,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 0, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefA_T1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefA_T1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp1Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_a = 1;
@@ -1171,9 +1301,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 4, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefB_T1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefB_T1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp1Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_b = 1;
@@ -1186,9 +1316,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 8, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefC_T1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefC_T1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp1Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_c = 1; 
@@ -1201,9 +1331,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 12, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefD_T1 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefD_T1 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp1Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_d = 1;
@@ -1218,9 +1348,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 0, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefA_P2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefA_P2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres2Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_a = 1;
@@ -1233,9 +1363,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 4, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefB_P2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefB_P2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres2Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_b = 1;
@@ -1248,9 +1378,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 8, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefC_P2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefC_P2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres2Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_c = 1;
@@ -1263,9 +1393,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 12, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefD_P2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefD_P2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            pres2Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_d = 1;
@@ -1280,9 +1410,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 0, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefA_T2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefA_T2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp2Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp2_a = 1;
@@ -1295,9 +1425,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 4, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefB_T2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefB_T2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp2Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp2_b = 1;
@@ -1310,9 +1440,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 8, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefC_T2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefC_T2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp2Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp2_c = 1;
@@ -1325,9 +1455,9 @@ void process_data(void)
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 12, integerData, 4);
                         floatToLong = floatData * 10000;
                         ltoa(floatToLong, txBuffer, 10);
-                        uart1_puts("CoefD_T2 = ");
-                        uart1_puts(txBuffer);
-                        uart1_newline();
+//                        uart1_puts("CoefD_T2 = ");
+//                        uart1_puts(txBuffer);
+//                        uart1_newline();
 //                            temp2Flag = true;
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp2_d = 1;
@@ -1487,8 +1617,8 @@ void process_data(void)
 //                crc2 = (crc >> 0) & 0xff; // low byte
                 dataCount = 0;
                 uint8_t readByte = EEPROM_read1ByteFromPage(EEPROM_ADDR, integerData[0], integerData[1]);
-                itoa(readByte, txBuffer, 10);
-                uart1_puts(txBuffer);
+//                itoa(readByte, txBuffer, 10);
+//                uart1_puts(txBuffer);
 //                uart1_puts("  EEPROM read done\n");
             }
             else if(dataCount < eepromRd1PacketLen || dataCount > eepromRd1PacketLen)
@@ -1639,12 +1769,12 @@ void process_data(void)
                 uint8_t readBytes[4];
                 EEPROM_readMultipleBytes(EEPROM_ADDR, integerData[0], integerData[1], readBytes, 4);
 
-                for(i = 0; i < 4; i++)
-                {
-                    itoa(readBytes, txBuffer, 10);
-                    uart1_puts(txBuffer);
-//                    uart1_puts("  EEPROM readN done\n");
-                }
+//                for(i = 0; i < 4; i++)
+//                {
+//                    itoa(readBytes, txBuffer, 10);
+//                    uart1_puts(txBuffer);
+////                    uart1_puts("  EEPROM readN done\n");
+//                }
             }
             else if(dataCount < eepromRdNPacketLen || dataCount > eepromRdNPacketLen)
             {
@@ -1721,7 +1851,7 @@ void process_data(void)
                 {
 //                    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 0, integerData[0], 1);
                     EEPROM_write1ByteToPage(EEPROM_ADDR, 0, 0, integerData[0]);
-                    uart1_puts("FW stored\n");
+//                    uart1_puts("FW stored\n");
                 }
                 else
                 {
