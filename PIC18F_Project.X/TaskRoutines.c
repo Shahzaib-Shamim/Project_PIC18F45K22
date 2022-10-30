@@ -30,9 +30,29 @@ bool calibrationEnableFlag = true; //false
 uint8_t ds3231_readBuff[7];
 uint32_t time_ccp = 0;
 uint8_t lcdStates = 0;
+bool systemStates = 0;
 float voltage[4];
 float calibData[4];
 uint16_t *adcData;
+char str[10] = {0};
+char *p = str;
+
+union SystemState_u
+{
+    struct
+    {
+        unsigned rtcTimeFlag    : 1;
+        unsigned rtcDateFlag    : 1;
+        unsigned eepromWrBytes  : 1;
+        unsigned eepromRdBytes  : 1;
+        unsigned eepromWrByte   : 1;
+        unsigned eepromRdByte   : 1;
+        unsigned fwWr           : 1;
+        unsigned fwRd           : 1;
+    };
+    uint16_t systemAllStates;
+};
+union SystemState_u systemStatus;
 
 union RelayState_u
 {
@@ -87,8 +107,6 @@ calFactors pres1 = {.coefA = 1.0f, .coefB = 1.0f, .coefC = 1.0f, .coefD = 1.0f},
            temp1 = {.coefA = 1.0f, .coefB = 1.0f, .coefC = 1.0f, .coefD = 1.0f},
            pres2 = {.coefA = 1.0f, .coefB = 1.0f, .coefC = 1.0f, .coefD = 1.0f},
            temp2 = {.coefA = 1.0f, .coefB = 1.0f, .coefC = 1.0f, .coefD = 1.0f};
-
-
 
 void initSysVariables(void)
 {
@@ -312,14 +330,14 @@ void runApplication(void)
     {
         sysFlags.uartTxTask = false;
         
-        static uint8_t i = 0;
+        /*static uint8_t i = 0;
         i++;
         if(i == 40)
         {
             i = 0;
 //            ds3232Timestamp();
 //            ads1115SampleData();
-        }        
+        }*/       
     }
 
 //    if(sysFlags.ads1115SampleTask == true && txEnableFlag == true)
@@ -345,7 +363,6 @@ void runApplication(void)
         sysFlags.lcdTask = false;
 //        uint8_t readBuffRTC[7];
         char *MonthName = "";
-//        static uint8_t buttonsState = 0;
         
         // <editor-fold defaultstate="collapsed" desc="LCD Idle mode">
         if(lcdStates == LCD_IDLE)
@@ -353,8 +370,6 @@ void runApplication(void)
             // readBuffTRTC --> ds3231_readBuff
             DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
             DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
-
-            LCDclear();
             
             LCDsetCursor(0, 0);
             LCD_Write_Str("Idle...");
@@ -391,21 +406,31 @@ void runApplication(void)
                 lowByte = LCD_i2cRead(0x3B);
                 highByte = LCD_i2cRead(0x3D);
                 pulsetime = (uint16_t)((highByte << 8) | (lowByte & 0xff));
+                LCDsetCursor(0, 6);
+                ltoa(pulsetime, lcdBuff, 10);    // ltoa, / 1000
+                LCD_Write_Str(lcdBuff);
+                
+                
+                
+                
+//                uart1_puts(lcdBuff);
+//                LCD_Write_Str(".");
+//                uart1_puts(".");
+//                ltoa(pulsetime % 1000, lcdBuff, 10);    // ltoa
+//                LCD_Write_Str(lcdBuff);
+//                uart1_puts(lcdBuff);
+//                uart1_puts("sec");
+//                uart1_newline();
+//                ltoa(pulsetime, lcdBuff, 10);    // ltoa
+//                LCD_Write_Str(lcdBuff);
+                
 //                LCDsetCursor(0, 6);
-                /*ltoa(pulsetime / 1000, lcdBuff, 10);    // ltoa
-                LCD_Write_Str(lcdBuff);
-                uart1_puts(lcdBuff);
-                LCD_Write_Str(".");
-                uart1_puts(".");
-                ltoa(pulsetime % 1000, lcdBuff, 10);    // ltoa
-                LCD_Write_Str(lcdBuff);
-                uart1_puts(lcdBuff);
-                uart1_puts("sec");
-                uart1_newline();*/
-                ltoa(pulsetime, lcdBuff, 10);    // ltoa
-                LCD_Write_Str(lcdBuff);
-                uart1_puts(lcdBuff);
-                uart1_newline();
+//                LCD_Write_Str("       ");
+//                LCDsetCursor(0, 6);
+//                ltoa(120, lcdBuff, 10);    // ltoa
+//                LCD_Write_Str(lcdBuff);
+//                uart1_puts(lcdBuff);
+//                uart1_newline();
                 
 //            }
             
@@ -418,17 +443,39 @@ void runApplication(void)
 //            
             ads1115SampleData();
             *adcData = calibData;
+            
+            // ok code
             LCDsetCursor(0, 1);
             LCD_Write_Str("P1=");
-            itoa(*(calibData + 0) * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
+             FloatToStringNew(p, calibData[0], 3);
+            LCD_Write_Str(str);
+            LCDsetCursor(16, 1);
+            LCD_Write_Str("PSI");
+            
+//            LCDsetCursor(0, 2);
+//            LCD_Write_Str("T1=");
+//            ltoa(voltage[1] * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
+//            LCDsetCursor(16, 2);
+//            LCD_Write_Str("degC");
+            LCDsetCursor(0, 2);
+            LCD_Write_Str("T1=");
+            FloatToStringNew(p, calibData[1], 3);
+            LCD_Write_Str(str);
+            LCDsetCursor(16, 2);
+            LCD_Write_Str("degC");
+            
+            
+            /*LCDsetCursor(0, 1);
+            LCD_Write_Str("P1=");
+            ltoa(1 * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 1);
             LCD_Write_Str("PSI");
             
             LCDsetCursor(0, 2);
             LCD_Write_Str("T1=");
-            itoa(*(calibData + 1) * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
+            ltoa(2 * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 2);
-            LCD_Write_Str("degC");
+            LCD_Write_Str("degC");*/
             
             // this code is ok to send over uart
             /*for(uint8_t i = 0; i < 4; i++)
@@ -448,25 +495,22 @@ void runApplication(void)
             
             LCDsetCursor(0, 3);
             LCD_Write_Str("Relay#12345=");
-//            LCDsetCursor(15, 3);
             
             LCDsetCursor(19, 3);
-//            itoa(relayStatus.button1, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button1, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(18, 3);
-//            itoa(relayStatus.button2, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button2, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(17, 3);
-//            itoa(relayStatus.button3, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button3, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(16, 3);
-//            itoa(relayStatus.button4, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button4, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(15, 3);
-//            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
-            LCDsetCursor(15, 3);
-            itoa((relayStatus.button5 << 3), lcdBuff, 2); LCD_Write_Str(lcdBuff);
         }
         // </editor-fold>
         
@@ -475,8 +519,27 @@ void runApplication(void)
         {
             LCDsetCursor(0, 0);
             LCD_Write_Str("Calibration mode:");
-            // <editor-fold defaultstate="collapsed" desc="Pressure1 coef">
-            if((strncmp(input_line, "C02", 3) == 0))
+            
+            // <editor-fold defaultstate="collapsed" desc="RTC Time">
+            if((strncmp(input_line, "C00", 3) == 0) && systemStatus.rtcTimeFlag == 1)
+            {
+                systemStatus.rtcTimeFlag = 0;
+                LCDsetCursor(0, 1);
+                LCD_Write_Str("Time set done");                
+            }
+            // </editor-fold>
+            
+            // <editor-fold defaultstate="collapsed" desc="RTC Date">
+            else if((strncmp(input_line, "C01", 3) == 0))
+            {
+                systemStatus.rtcDateFlag = 0;
+                LCDsetCursor(0, 1);
+                LCD_Write_Str("Date set done");                
+            }
+            // </editor-fold>
+            
+            // <editor-fold defaultstate="collapsed" desc="RTC Time">
+            else if((strncmp(input_line, "C02", 3) == 0))
             {
                 LCDsetCursor(0, 1);
                 LCD_Write_Str("P1 Coef  done");
@@ -502,98 +565,154 @@ void runApplication(void)
                 }
                 
             }
-            // <editor-fold>
+            // </editor-fold>
+            
+            // <editor-fold defaultstate="collapsed" desc="Pressure1 coef">
+            else if((strncmp(input_line, "C02", 3) == 0))
+            {
+                LCDsetCursor(0, 1);
+                LCD_Write_Str("P1 Coef  done");
+                if(sensorsCoefStates.pres1_a == 1)
+                {
+                    sensorsCoefStates.pres1_a = 0;
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("A");
+                }
+                else if(sensorsCoefStates.pres1_b == 1)
+                {
+                    sensorsCoefStates.pres1_b = 0;
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("B");
+                }
+                if(sensorsCoefStates.pres1_c == 1)
+                {
+                    sensorsCoefStates.pres1_c = 0;
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("C");
+                }
+                if(sensorsCoefStates.pres1_d == 1)
+                {
+                    sensorsCoefStates.pres1_d = 0;
+                    LCDsetCursor(7, 1);
+                    LCD_Write_Str("D");
+                }
+                
+            }
+            // </editor-fold>
             
             // <editor-fold defaultstate="collapsed" desc="Temperature1 coef">
-            if((strncmp(input_line, "C03", 3) == 0))
+            else if((strncmp(input_line, "C03", 3) == 0))
             {
                 LCDsetCursor(0, 1);
                 LCD_Write_Str("T1 Coef  done");
                 if(sensorsCoefStates.temp1_a == 1)
                 {
+                    sensorsCoefStates.temp1_a = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("A");
                 }
                 else if(sensorsCoefStates.temp1_b == 1)
                 {
+                    sensorsCoefStates.temp1_b = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("B");
                 }
                 if(sensorsCoefStates.temp1_c == 1)
                 {
+                    sensorsCoefStates.temp1_c = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("C");
                 }
                 if(sensorsCoefStates.temp1_d == 1)
                 {
+                    sensorsCoefStates.temp1_d = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("D");
                 }
                 
             }
-            // <editor-fold>
+            // </editor-fold>
             
             // <editor-fold defaultstate="collapsed" desc="Pressure2 coef">
-            if((strncmp(input_line, "C04", 3) == 0))
+            else if((strncmp(input_line, "C04", 3) == 0))
             {
                 LCDsetCursor(0, 1);
                 LCD_Write_Str("P2 Coef  done");
                 if(sensorsCoefStates.pres2_a == 1)
                 {
+                    sensorsCoefStates.pres2_a = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("A");
                 }
                 else if(sensorsCoefStates.pres2_b == 1)
                 {
+                    sensorsCoefStates.pres2_b = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("B");
                 }
                 if(sensorsCoefStates.pres2_c == 1)
                 {
+                    sensorsCoefStates.pres2_c = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("C");
                 }
                 if(sensorsCoefStates.pres2_d == 1)
                 {
+                    sensorsCoefStates.pres2_d = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("D");
                 }
                 
             }
-            // <editor-fold>
+            // </editor-fold>
             
-            // <editor-fold defaultstate="collapsed" desc=Temperature2 coef">
-            if((strncmp(input_line, "C05", 3) == 0))
+            // <editor-fold defaultstate="collapsed" desc="Temperature2 coef">
+            else if((strncmp(input_line, "C05", 3) == 0))
             {
                 LCDsetCursor(0, 1);
                 LCD_Write_Str("T2 Coef  done");
                 if(sensorsCoefStates.temp2_a == 1)
                 {
+                    sensorsCoefStates.temp2_a = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("A");
                 }
                 else if(sensorsCoefStates.temp2_b == 1)
                 {
+                    sensorsCoefStates.temp2_b = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("B");
                 }
                 if(sensorsCoefStates.temp2_c == 1)
                 {
+                    sensorsCoefStates.temp2_c = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("C");
                 }
                 if(sensorsCoefStates.temp2_d == 1)
                 {
+                    sensorsCoefStates.temp2_d = 0;
                     LCDsetCursor(7, 1);
                     LCD_Write_Str("D");
                 }
                 
             }
-            // <editor-fold>
-            
+            // </editor-fold> 
+        }
+        // </editor-fold>
+        
+        // <editor-fold defaultstate="collapsed" desc="LCD Shutdown mode">
+        if(lcdStates == LCD_SHUTDOWN)
+        {
+//            sysFlags.ledBlinkTask = false;
+//            sysFlags.uartTxTask = false;
+//            sysFlags.ads1115SampleTask = false;
+//            sysFlags.ds3231Task = false;
+//            sysFlags.eepromTask = false;
+//            sysFlags.lcdTask = false;
             
         }
-        // <editor-fold>
+        // <</editor-fold>
     }
 
     // --Serial Msg process-----------------------------------------------------
@@ -721,7 +840,7 @@ void runApplication(void)
             uart1_puts("Calibration mode enabled\n");
             calibrationEnableFlag = true;
             lcdStates = LCD_CAL_MODE_Y;
-            LCDclear();
+            LCDclear();   // comment abhi
         }
 
         // Calibration mode disable
@@ -736,7 +855,26 @@ void runApplication(void)
 //            LCDsetCursor(0, 1);
 //            LCD_Write_Str("Done");
             lcdStates = LCD_NORMAL_MODE;
-            
+//            LCDclear();
+
+            /*LCDclear();
+            LCDsetCursor(0, 0);
+            LCD_Write_Str("Pulse=");
+            LCDsetCursor(16, 0);
+            LCD_Write_Str("sec");
+
+            LCDsetCursor(0, 1);
+            LCD_Write_Str("P1=");
+            LCDsetCursor(16, 1);
+            LCD_Write_Str("PSI");
+
+            LCDsetCursor(0, 2);
+            LCD_Write_Str("T1=");
+            LCDsetCursor(16, 2);
+            LCD_Write_Str("degC");
+
+            LCDsetCursor(0, 3);
+            LCD_Write_Str("Relay#12345=");*/
             
         }
 
@@ -744,7 +882,7 @@ void runApplication(void)
         else if(strncmp(input_line, "C08StartTX", 10) == 0)
         {
             txEnableFlag = true;
-            lcdStates = LCD_NORMAL_MODE;
+//            lcdStates = LCD_NORMAL_MODE;
         }
 
         // Stop sending data
@@ -752,6 +890,7 @@ void runApplication(void)
         {
             txEnableFlag = false;
             lcdStates = LCD_IDLE;
+            LCDclear();
         }
 
         // Write 1 byte to EEPROM
@@ -805,6 +944,46 @@ void runApplication(void)
         else if(strncmp(input_line, "C17GetFW", 8) == 0)
         {
             getFWInfo();
+        }
+        
+        // Start shutdown process
+        else if(strncmp(input_line, "C18Shutdown", 11) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_IDLE;
+            lcdStates = LCD_SHUTDOWN;
+        }
+        
+        // LCD Idle mode
+        else if(strncmp(input_line, "C19LCDIdle", 10) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_IDLE;
+            lcdStates = LCD_IDLE;
+            LCDclear();
+        }
+        
+        // LCD Normal mode
+        else if(strncmp(input_line, "C20LCDRun", 9) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_IDLE;
+            lcdStates = LCD_NORMAL_MODE;
+            LCDclear();
+            /*LCDsetCursor(0, 0);
+            LCD_Write_Str("Pulse=");
+            LCDsetCursor(16, 0);
+            LCD_Write_Str("sec");
+
+            LCDsetCursor(0, 1);
+            LCD_Write_Str("P1=");
+            LCDsetCursor(16, 1);
+            LCD_Write_Str("PSI");
+
+            LCDsetCursor(0, 2);
+            LCD_Write_Str("T1=");
+            LCDsetCursor(16, 2);
+            LCD_Write_Str("degC");
+
+            LCDsetCursor(0, 3);
+            LCD_Write_Str("Relay#12345=");*/
         }
 
         // Nothing to be process
@@ -1052,6 +1231,16 @@ void process_data(void)
                 crc1 = (crc >> 8) & 0xff; // high byte
                 crc2 = (crc >> 0) & 0xff; // low byte
                 dataCount = 0;
+                
+                if(integerData[3] == 1 && integerData[4] == 1)
+                {
+                    timeFlag = true;
+                    ds3232Timestamp();
+//                    uart1_puts("RTC calib done\n");
+//                    lcdStates = LCD_CAL_RTC_T;
+                    systemStatus.systemAllStates = 0;
+                    systemStatus.rtcTimeFlag = true;
+                }
             }
             else if(dataCount < timePacketLen || dataCount > timePacketLen)
             {
@@ -1068,11 +1257,11 @@ void process_data(void)
         }
 
 //        if(crc1 == integerData[3] && crc2 == integerData[4])  // disable for testing
-        if(integerData[3] == 1 && integerData[4] == 1)
+        /*if(integerData[3] == 1 && integerData[4] == 1)
         {
             timeFlag = true;
             ds3232Timestamp();
-        }
+        }*/
     }
     // </editor-fold>
 
@@ -1129,6 +1318,15 @@ void process_data(void)
                 crc1 = (crc >> 8) & 0xff; // high byte
                 crc2 = (crc >> 0) & 0xff; // low byte
                 dataCount = 0;
+                
+                if(integerData[4] == 1 && integerData[5] == 1)
+                {
+                    dateFlag = true;
+                    ds3232Timestamp();
+//                    lcdStates = LCD_CAL_RTC_D;
+                    systemStatus.systemAllStates = 0;
+                    systemStatus.rtcDateFlag = true;
+                }
             }
             else if(dataCount < datePacketLen || dataCount > datePacketLen)
             {
@@ -1144,11 +1342,11 @@ void process_data(void)
             // serialMsgFlags = 0;
         }
 //        if(crc1 == integerData[4] && crc2 == integerData[5])  // disable for testing
-        if(integerData[4] == 1 && integerData[5] == 1)
+        /*if(integerData[4] == 1 && integerData[5] == 1)
         {
             dateFlag = true;
             ds3232Timestamp();
-        }
+        }*/
     }
     // </editor-fold>
 
@@ -1548,6 +1746,8 @@ void process_data(void)
                     //            eepromStateFlags = eepromWr1Byte;
 //                    uart1_puts("EEPROM write done\n");
                     EEPROM_write1ByteToPage(EEPROM_ADDR, integerData[0], integerData[1], integerData[2]);
+                    systemStatus.systemAllStates = 0;
+                    systemStatus.eepromWrBytes = true;
                 }
             }
             else if(dataCount < eepromWr1PacketLen || dataCount > eepromWr1PacketLen)
@@ -1620,6 +1820,8 @@ void process_data(void)
 //                itoa(readByte, txBuffer, 10);
 //                uart1_puts(txBuffer);
 //                uart1_puts("  EEPROM read done\n");
+                systemStatus.systemAllStates = 0;
+                systemStatus.eepromRdBytes = true;
             }
             else if(dataCount < eepromRd1PacketLen || dataCount > eepromRd1PacketLen)
             {
@@ -1700,6 +1902,8 @@ void process_data(void)
                     //            eepromFlag = true;
                     //            eepromStateFlags = eepromWr1Byte;
                     EEPROM_writeMultipleBytes(EEPROM_ADDR, integerData[0], integerData[1], &integerData[2], 4);
+                    systemStatus.systemAllStates = 0;
+                    systemStatus.eepromWrByte = true;
                 }
             }
             else if(dataCount < eepromWrNPacketLen || dataCount > eepromWrNPacketLen)
@@ -1775,6 +1979,8 @@ void process_data(void)
 //                    uart1_puts(txBuffer);
 ////                    uart1_puts("  EEPROM readN done\n");
 //                }
+                systemStatus.systemAllStates = 0;
+                systemStatus.eepromRdByte = true;
             }
             else if(dataCount < eepromRdNPacketLen || dataCount > eepromRdNPacketLen)
             {
@@ -1852,6 +2058,8 @@ void process_data(void)
 //                    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 0, integerData[0], 1);
                     EEPROM_write1ByteToPage(EEPROM_ADDR, 0, 0, integerData[0]);
 //                    uart1_puts("FW stored\n");
+                    systemStatus.systemAllStates = 0;
+                    systemStatus.fwWr = true;
                 }
                 else
                 {
@@ -1882,7 +2090,8 @@ void process_data(void)
         if(serialMsgErrorFlag == true)
         {
             serialMsgErrorFlag = false;
-            uart1_puts("Data no good\n");
+            uart1_puts("Invalid command\n");
+            lcdStates = LCD_INVALID_INPUT;
         }
     }
     // </editor-fold>
@@ -2012,5 +2221,42 @@ char* ltoa(long value, char* buffer, int numBase)
 
     // reverse the string and return it
     return reverse(buffer, 0, i - 1);
+}
+
+// convert float to string one decimal digit at a time
+// assumes float is < 65536 and ARRAYSIZE is big enough
+// problem: it truncates numbers at size without rounding
+// str is a char array to hold the result, float is the number to convert
+// size is the number of decimal digits you want
+void FloatToStringNew(char *str, float f, char size)
+{
+    char pos; // position in string
+    char len; // length of decimal part of result
+    char* curr; // temp holder for next digit
+    int value; // decimal digit(s) to convert
+
+    pos = 0; // initialize pos, just to be sure
+    value = (int) f; // truncate the floating point number
+    itoa(value, str, 10); // this is kinda dangerous depending on the length of str
+    // now str array has the digits before the decimal
+
+    if(f < 0) // handle negative numbers
+    {
+        f *= -1;
+        value *= -1;
+    }
+
+    len = strlen(str); // find out how big the integer part was
+    pos = len; // position the pointer to the end of the integer part
+    str[pos++] = '.'; // add decimal point to string
+
+    while(pos < (size + len + 1)) // process remaining digits
+    {
+        f = f - (float) value; // hack off the whole part of the number
+        f *= 10; // move next digit over
+        value = (int) f; // get next digit
+        itoa(value, curr, 10); // convert digit to string
+        str[pos++] = *curr; // add digit to result string and increment pointer
+    }
 }
 // </editor-fold>

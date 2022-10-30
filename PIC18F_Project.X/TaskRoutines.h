@@ -84,13 +84,22 @@ extern uint8_t lcdStates;
 #define eepromRdNByte       4
 
 // LCD States
-#define LCD_IDLE            0
-#define LCD_STARTUP         1
-#define LCD_BOOTINIT        2
-#define LCD_CAL_MODE_Y      3
-#define LCD_NORMAL_MODE     4
-#define LCD_SHUTDOWN        5
-#define LCD_CAL_MODE_N      6
+#define LCD_IDLE                0
+#define LCD_STARTUP             1
+#define LCD_BOOTINIT            2
+#define LCD_CAL_MODE_Y          3
+#define LCD_NORMAL_MODE         4
+#define LCD_SHUTDOWN            5
+#define LCD_CAL_MODE_N          6
+//#define LCD_CAL_RTC_T           7
+//#define LCD_CAL_RTC_D           8
+//#define LCD_FW_Wr               9
+//#define LCD_FW_Rd               10
+//#define LCD_Wr_4BYTES_EEPROM    11
+//#define LCD_Rd_4BYTES_EEPROM    12
+//#define LCD_Wr_1BYTE_EEPROM     13
+//#define LCD_Rd_1BYTE_EEPROM     14
+#define LCD_INVALID_INPUT       15
 
 /**
  * Global function to initialize variables
@@ -155,6 +164,7 @@ void swap(char *x, char *y);
 char* reverse(char *buffer, int i, int j);
 char* itoa(int value, char* buffer, int numBase);
 char* ltoa(long value, char* buffer, int numBase);
+void FloatToStringNew(char *str, float f, char size);
 
 #endif	/* TASKROUTINES_H */
 

@@ -70,7 +70,33 @@ void main(void)
     uart1_puts("Ready...!\n");
     
     __delay_ms(1000);
+    
+    LCDclear();
+    LCDsetCursor(0, 0);
+    LCD_Write_Str("Intializing...");
+    __delay_ms(1000);
     lcdStates = LCD_NORMAL_MODE;
+    
+    LCDclear();
+    
+    /*LCDsetCursor(0, 0);
+    LCD_Write_Str("Pulse=");
+    LCDsetCursor(16, 0);
+    LCD_Write_Str("sec");
+    
+    LCDsetCursor(0, 1);
+    LCD_Write_Str("P1=");
+    LCDsetCursor(16, 1);
+    LCD_Write_Str("PSI");
+    
+    LCDsetCursor(0, 2);
+    LCD_Write_Str("T1=");
+    LCDsetCursor(16, 2);
+    LCD_Write_Str("degC");
+            
+    LCDsetCursor(0, 3);
+    LCD_Write_Str("Relay#12345=");*/
+    
     // </editor-fold>
     
     // Timer with CCP config
