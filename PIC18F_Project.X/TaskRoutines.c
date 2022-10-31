@@ -8,6 +8,7 @@
 #include "EXTI.h"
 #include "TMR0.h"
 #include "Capture.h"
+#include "Functions.h"
 
 volatile TIMER1_t timer1 = {
     .timer1_1msFlag = false,
@@ -108,6 +109,12 @@ calFactors pres1 = {.coefA = 1.0f, .coefB = 1.0f, .coefC = 1.0f, .coefD = 1.0f},
            pres2 = {.coefA = 1.0f, .coefB = 1.0f, .coefC = 1.0f, .coefD = 1.0f},
            temp2 = {.coefA = 1.0f, .coefB = 1.0f, .coefC = 1.0f, .coefD = 1.0f};
 
+#define FILTER_SIZE     4
+MAVFilter_f_t* adc_channel0_pres1;
+MAVFilter_f_t* adc_channel1_temp1;
+//MAVFilter_f_t* adc_channel2_pres2;
+//MAVFilter_f_t* adc_channel3_temp2;
+
 void initSysVariables(void)
 {
     sysFlags.ledBlinkTask = false;
@@ -116,6 +123,12 @@ void initSysVariables(void)
     sysFlags.ds3231Task = false;
     sysFlags.eepromTask = false;
     sysFlags.lcdTask = false;
+    
+    // Initialize moving average filter
+    adc_channel0_pres1 = Initialize_MAVFilter_f(FILTER_SIZE);
+    adc_channel1_temp1 = Initialize_MAVFilter_f(FILTER_SIZE);
+//    adc_channel2_pres2 = Initialize_MAVFilter_f(FILTER_SIZE);
+//    adc_channel3_temp2 = Initialize_MAVFilter_f(FILTER_SIZE);
 
     // ADS1115 configuration
     myADC.address = ADS1115_ADDR;
@@ -262,7 +275,7 @@ void storeLastCalibRTC(void)
     DS3231_getData(&readBuff[0], &readBuff[1], &readBuff[2],
                    &readBuff[3], &readBuff[4], &readBuff[5], &readBuff[6]);
     EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 4, readBuff, 7);
-//    uart1_puts("To EEPROM\n");
+    uart1_puts("\nRTC Stored\n");
 }
 
 void getLastCalibRTC(void)
@@ -295,7 +308,7 @@ void getLastCalibRTC(void)
     itoa(readBuff[6], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_newline();
-    uart1_puts("From EEPROM\n");*/
+    uart1_puts("Last RTC\n");*/
 }
 
 void getFWInfo(void)
@@ -341,21 +354,18 @@ void runApplication(void)
     }
 
 //    if(sysFlags.ads1115SampleTask == true && txEnableFlag == true)
-//    {
-//        sysFlags.ads1115SampleTask = false;
-//        //        ads1115SampleData();
-//    }
+    if(sysFlags.ads1115SampleTask == true)
+    {
+        sysFlags.ads1115SampleTask = false;
+        ads1115SampleData();
+        // TODO: do moving average filter
+    }
 
     //    if(sysFlags.ds3231Task == true && serialMsgFlags == txEnableFlag == true)
 //    if(sysFlags.ds3231Task == true && txEnableFlag == true)
 //    {
 //        sysFlags.ds3231Task = false;
 ////                ds3232Timestamp();
-//    }
-
-//    if(sysFlags.eepromTask == true)
-//    {
-//        sysFlags.eepromTask = false;
 //    }
 
     if(sysFlags.lcdTask == true)
@@ -392,7 +402,7 @@ void runApplication(void)
         // <editor-fold defaultstate="collapsed" desc="LCD Normal mode">
         if(lcdStates == LCD_NORMAL_MODE)
         {
-            LCDclear();
+//            LCDclear();
             
             LCDsetCursor(0, 0);
             LCD_Write_Str("Pulse=");
@@ -400,82 +410,47 @@ void runApplication(void)
             //added start
             uint8_t lowByte, highByte;
             uint16_t pulsetime;
-//            if(1 == 1)
-//            {
+            if(1 == 1)
+            {
 //                int0Flag = false;
                 lowByte = LCD_i2cRead(0x3B);
                 highByte = LCD_i2cRead(0x3D);
                 pulsetime = (uint16_t)((highByte << 8) | (lowByte & 0xff));
-                LCDsetCursor(0, 6);
                 ltoa(pulsetime, lcdBuff, 10);    // ltoa, / 1000
-                LCD_Write_Str(lcdBuff);
-                
-                
-                
-                
-//                uart1_puts(lcdBuff);
-//                LCD_Write_Str(".");
-//                uart1_puts(".");
-//                ltoa(pulsetime % 1000, lcdBuff, 10);    // ltoa
-//                LCD_Write_Str(lcdBuff);
-//                uart1_puts(lcdBuff);
-//                uart1_puts("sec");
-//                uart1_newline();
-//                ltoa(pulsetime, lcdBuff, 10);    // ltoa
-//                LCD_Write_Str(lcdBuff);
-                
-//                LCDsetCursor(0, 6);
-//                LCD_Write_Str("       ");
-//                LCDsetCursor(0, 6);
-//                ltoa(120, lcdBuff, 10);    // ltoa
-//                LCD_Write_Str(lcdBuff);
-//                uart1_puts(lcdBuff);
-//                uart1_newline();
-                
-//            }
+                LCDsetCursor(6, 0);
+                LCD_Write_Str("        ");
+                LCDsetCursor(6, 0);
+                LCD_Write_Str(lcdBuff);                
+            }
             
             //added stop
             LCDsetCursor(16, 0);
-            LCD_Write_Str("sec");
-//            ltoa(time_ccp / 1000, lcdBuff, 10);
-//            uart1_puts(lcdBuff);
-//            uart1_puts("ms\n");
-//            
-            ads1115SampleData();
+            LCD_Write_Str("msec");
+ 
+//            ads1115SampleData();
             *adcData = calibData;
             
             // ok code
             LCDsetCursor(0, 1);
             LCD_Write_Str("P1=");
-             FloatToStringNew(p, calibData[0], 3);
+            FloatToStringNew(p, calibData[0], 3);
+            LCDsetCursor(3, 1);
+            LCD_Write_Str("        ");
+            LCDsetCursor(3, 1);
             LCD_Write_Str(str);
             LCDsetCursor(16, 1);
             LCD_Write_Str("PSI");
             
-//            LCDsetCursor(0, 2);
-//            LCD_Write_Str("T1=");
-//            ltoa(voltage[1] * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
-//            LCDsetCursor(16, 2);
-//            LCD_Write_Str("degC");
             LCDsetCursor(0, 2);
             LCD_Write_Str("T1=");
             FloatToStringNew(p, calibData[1], 3);
+            LCDsetCursor(3, 2);
+            LCD_Write_Str("        ");
+            LCDsetCursor(3, 2);
             LCD_Write_Str(str);
             LCDsetCursor(16, 2);
             LCD_Write_Str("degC");
-            
-            
-            /*LCDsetCursor(0, 1);
-            LCD_Write_Str("P1=");
-            ltoa(1 * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
-            LCDsetCursor(16, 1);
-            LCD_Write_Str("PSI");
-            
-            LCDsetCursor(0, 2);
-            LCD_Write_Str("T1=");
-            ltoa(2 * 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
-            LCDsetCursor(16, 2);
-            LCD_Write_Str("degC");*/
+
             
             // this code is ok to send over uart
             /*for(uint8_t i = 0; i < 4; i++)
@@ -495,6 +470,8 @@ void runApplication(void)
             
             LCDsetCursor(0, 3);
             LCD_Write_Str("Relay#12345=");
+            LCDsetCursor(15, 3);
+            LCD_Write_Str("     ");
             
             LCDsetCursor(19, 3);
             itoa(relayStatus.button1, lcdBuff, 2); LCD_Write_Str(lcdBuff);
@@ -840,7 +817,7 @@ void runApplication(void)
             uart1_puts("Calibration mode enabled\n");
             calibrationEnableFlag = true;
             lcdStates = LCD_CAL_MODE_Y;
-            LCDclear();   // comment abhi
+            LCDclear();
         }
 
         // Calibration mode disable
@@ -855,7 +832,7 @@ void runApplication(void)
 //            LCDsetCursor(0, 1);
 //            LCD_Write_Str("Done");
             lcdStates = LCD_NORMAL_MODE;
-//            LCDclear();
+            LCDclear();
 
             /*LCDclear();
             LCDsetCursor(0, 0);
@@ -1099,12 +1076,18 @@ void ads1115SampleData(void)
     
     if(myADC.isPresent == 1)
     {
-        for(uint8_t i = 0; i < 4; i++)
+        /*for(uint8_t i = 0; i < 4; i++)
         {
-            voltage[i] = ADS1115_readSingleEnded(&myADC, i);
+            voltage[i] = ADS1115_readSingleEnded(&myADC, i);  // non-filtered
 //            ADS1115_readSingleEnded(&myADC, i, &voltage[i]);
             // __delay_us(10);
-        }
+        }*/
+        
+        // added mav filter
+        voltage[0] = calculateMovingAverage_f(adc_channel0_pres1, ADS1115_readSingleEnded(&myADC, 0));
+        voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
+//        voltage[2] = calculateMovingAverage_f(adc_channel2_pres2, ADS1115_readSingleEnded(&myADC, 2));
+//        voltage[3] = calculateMovingAverage_f(adc_channel3_temp2, ADS1115_readSingleEnded(&myADC, 3));
 
 //        int adcData;
         
@@ -1420,9 +1403,9 @@ void process_data(void)
                     {
                         pres1.coefA = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 0, eepromWriteBuff, 4);
-                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 0, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 0, &integerData[0], 4);   // integerData
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefA_P1 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1434,9 +1417,9 @@ void process_data(void)
                     {
                         pres1.coefB = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 4, eepromWriteBuff, 4);
-                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 4, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 4, &integerData[0], 4);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefB_P1 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1449,9 +1432,9 @@ void process_data(void)
                     {
                         pres1.coefC = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 8, eepromWriteBuff, 4);
-                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 8, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 8, &integerData[0], 4);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefC_P1 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1464,9 +1447,9 @@ void process_data(void)
                     {
                         pres1.coefD = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 12, eepromWriteBuff, 4);
-                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 12, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 1, 12, &integerData[0], 4);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefD_P1 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1481,9 +1464,9 @@ void process_data(void)
                     {
                         temp1.coefA = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 0, eepromWriteBuff, 4);
-                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 0, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 0, &integerData[0], 4);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefA_T1 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1496,9 +1479,9 @@ void process_data(void)
                     {
                         temp1.coefB = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 4, eepromWriteBuff, 4);
-                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 4, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 4, &integerData[0], 4);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefB_T1 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1511,9 +1494,9 @@ void process_data(void)
                     {
                         temp1.coefC = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 8, eepromWriteBuff, 4);
-                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 8, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 8, &integerData[0], 4);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefC_T1 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1526,9 +1509,9 @@ void process_data(void)
                     {
                         temp1.coefD = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 12, eepromWriteBuff, 4);
-                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 12, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 2, 12, &integerData[0], 4);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefD_T1 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1544,8 +1527,8 @@ void process_data(void)
                         pres2.coefA = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 0, eepromWriteBuff, 4);
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 0, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefA_P2 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1559,8 +1542,8 @@ void process_data(void)
                         pres2.coefB = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 4, eepromWriteBuff, 4);
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 4, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefB_P2 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1574,8 +1557,8 @@ void process_data(void)
                         pres2.coefC = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 8, eepromWriteBuff, 4);
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 8, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefC_P2 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1589,8 +1572,8 @@ void process_data(void)
                         pres2.coefD = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 12, eepromWriteBuff, 4);
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 3, 12, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefD_P2 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1606,8 +1589,8 @@ void process_data(void)
                         temp2.coefA = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 0, eepromWriteBuff, 4);
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 0, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefA_T2 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1621,8 +1604,8 @@ void process_data(void)
                         temp2.coefB = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 4, eepromWriteBuff, 4);
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 4, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefB_T2 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1636,8 +1619,8 @@ void process_data(void)
                         temp2.coefC = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 8, eepromWriteBuff, 4);
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 8, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefC_T2 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1651,8 +1634,8 @@ void process_data(void)
                         temp2.coefD = floatData;
 //                        EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 12, eepromWriteBuff, 4);
                         EEPROM_writeMultipleBytes(EEPROM_ADDR, 4, 12, integerData, 4);
-                        floatToLong = floatData * 10000;
-                        ltoa(floatToLong, txBuffer, 10);
+//                        floatToLong = floatData * 10000;
+//                        ltoa(floatToLong, txBuffer, 10);
 //                        uart1_puts("CoefD_T2 = ");
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
@@ -1744,10 +1727,11 @@ void process_data(void)
                 {
                     //            eepromFlag = true;
                     //            eepromStateFlags = eepromWr1Byte;
-//                    uart1_puts("EEPROM write done\n");
+//                    
                     EEPROM_write1ByteToPage(EEPROM_ADDR, integerData[0], integerData[1], integerData[2]);
                     systemStatus.systemAllStates = 0;
                     systemStatus.eepromWrBytes = true;
+                    uart1_puts("EEPROM Wr done\n");
                 }
             }
             else if(dataCount < eepromWr1PacketLen || dataCount > eepromWr1PacketLen)
@@ -1817,9 +1801,9 @@ void process_data(void)
 //                crc2 = (crc >> 0) & 0xff; // low byte
                 dataCount = 0;
                 uint8_t readByte = EEPROM_read1ByteFromPage(EEPROM_ADDR, integerData[0], integerData[1]);
-//                itoa(readByte, txBuffer, 10);
-//                uart1_puts(txBuffer);
-//                uart1_puts("  EEPROM read done\n");
+                itoa(readByte, txBuffer, 10);
+                uart1_puts(txBuffer);
+                uart1_puts("\nEEPROM Rd done\n");
                 systemStatus.systemAllStates = 0;
                 systemStatus.eepromRdBytes = true;
             }
@@ -1904,6 +1888,7 @@ void process_data(void)
                     EEPROM_writeMultipleBytes(EEPROM_ADDR, integerData[0], integerData[1], &integerData[2], 4);
                     systemStatus.systemAllStates = 0;
                     systemStatus.eepromWrByte = true;
+                    uart1_puts("EEPROM WrN done\n");
                 }
             }
             else if(dataCount < eepromWrNPacketLen || dataCount > eepromWrNPacketLen)
@@ -1973,14 +1958,14 @@ void process_data(void)
                 uint8_t readBytes[4];
                 EEPROM_readMultipleBytes(EEPROM_ADDR, integerData[0], integerData[1], readBytes, 4);
 
-//                for(i = 0; i < 4; i++)
-//                {
-//                    itoa(readBytes, txBuffer, 10);
-//                    uart1_puts(txBuffer);
-////                    uart1_puts("  EEPROM readN done\n");
-//                }
-                systemStatus.systemAllStates = 0;
-                systemStatus.eepromRdByte = true;
+                for(i = 0; i < 4; i++)
+                {
+                    itoa(readBytes[i], txBuffer, 10);
+                    uart1_puts(txBuffer); 
+                }
+                uart1_puts("\nEEPROM RdN done\n");
+//                systemStatus.systemAllStates = 0;
+//                systemStatus.eepromRdByte = true;
             }
             else if(dataCount < eepromRdNPacketLen || dataCount > eepromRdNPacketLen)
             {
@@ -2057,7 +2042,7 @@ void process_data(void)
                 {
 //                    EEPROM_writeMultipleBytes(EEPROM_ADDR, 0, 0, integerData[0], 1);
                     EEPROM_write1ByteToPage(EEPROM_ADDR, 0, 0, integerData[0]);
-//                    uart1_puts("FW stored\n");
+                    uart1_puts("FW stored\n");
                     systemStatus.systemAllStates = 0;
                     systemStatus.fwWr = true;
                 }
@@ -2098,7 +2083,7 @@ void process_data(void)
     // end Date calibration task
 }
 
-// <editor-fold defaultstate="collapsed" desc="Functions: CRC, itoa, ltoa">
+// <editor-fold defaultstate="collapsed" desc="Functions: CRC, itoa, ltoa, float to string">
 uint16_t checksumCalculator(uint8_t *data, uint16_t length)
 {
     uint16_t curr_crc = 0x0000;

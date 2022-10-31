@@ -25,10 +25,10 @@ extern volatile TIMER1_t timer1;
 // --Task routines macros-------------------------------------------------------
 #define LED_BLINK_TASK_TIME       50
 #define UART_TX_TASK_TIME         1000
-#define ADS1115_SAMPLE_TASK_TIME  250
+#define ADS1115_SAMPLE_TASK_TIME  20
 #define DS3231_TIMESTAMP_TASK     900
 #define EEPROM_TASK               400
-#define LCD_TASK                  1000
+#define LCD_TASK                  500
 
 // add task routines here
 typedef struct
