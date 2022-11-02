@@ -24,8 +24,8 @@ extern volatile TIMER1_t timer1;
 // Tasks in ms
 // --Task routines macros-------------------------------------------------------
 #define LED_BLINK_TASK_TIME       50
-#define UART_TX_TASK_TIME         1000
-#define ADS1115_SAMPLE_TASK_TIME  20
+#define UART_TX_TASK_TIME         250
+#define ADS1115_SAMPLE_TASK_TIME  8
 #define DS3231_TIMESTAMP_TASK     900
 #define EEPROM_TASK               400
 #define LCD_TASK                  500
@@ -58,6 +58,7 @@ extern uint8_t lcdStates;
 #define SER_MSG_FLAG_RTC_R      9
 #define SER_MSG_FLAG_FW_W       10
 #define SER_MSG_FLAG_FW_R       11
+#define SER_MSG_FLAG_RELAY      12
 
 
 // Data Packet length
@@ -69,6 +70,7 @@ extern uint8_t lcdStates;
 #define eepromWrNPacketLen  8
 #define eepromRdNPacketLen  2
 #define fwInfoWePacketLen   3
+#define relayPacketLen      3
 
 // Variable buffer size
 #define numOfChar           10

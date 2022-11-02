@@ -25,6 +25,23 @@ void PIN_MANAGER_Initialize(void)
     
     // GPIOs
     ANSELDbits.ANSD2 = DIGITAL;           // LED
+    
+    // Relay1 to 5 = A0 to A4
+    // Pulse counter A5
+    ANSELAbits.ANSA0 = DIGITAL;
+    TRISAbits.TRISA0 = OUTPUT;    
+    LATAbits.LATA0 = LOW;
+    ANSELAbits.ANSA1 = DIGITAL;
+    TRISAbits.TRISA1 = OUTPUT;    
+    LATAbits.LATA1 = LOW;
+    ANSELAbits.ANSA2 = DIGITAL;
+    TRISAbits.TRISA2 = OUTPUT;    
+    LATAbits.LATA2 = LOW;
+    ANSELAbits.ANSA3 = DIGITAL;
+    TRISAbits.TRISA3 = OUTPUT;    
+    LATAbits.LATA3 = LOW;
+    TRISAbits.TRISA4 = OUTPUT;    
+    LATAbits.LATA4 = LOW;
 //    ANSELC = 0x3C;
 //    ANSELB = 0x3F;
 //    ANSELE = 0x07;

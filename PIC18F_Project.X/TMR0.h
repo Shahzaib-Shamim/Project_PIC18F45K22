@@ -56,6 +56,7 @@
 #define DEBOUNCE_TIME_50MS          40535
 #define DEBOUNCE_TIME_80MS          25535
 #define DEBOUNCE_TIME_100MS         15535
+#define TMR0_5MS                    63035
 
 // --Global variables-----------------------------------------------------------
 //extern volatile bool int0Flag;

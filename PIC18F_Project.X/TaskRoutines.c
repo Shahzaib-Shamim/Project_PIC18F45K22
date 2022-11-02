@@ -37,6 +37,7 @@ float calibData[4];
 uint16_t *adcData;
 char str[10] = {0};
 char *p = str;
+uint8_t channelNumber = 0;
 
 union SystemState_u
 {
@@ -112,8 +113,8 @@ calFactors pres1 = {.coefA = 1.0f, .coefB = 1.0f, .coefC = 1.0f, .coefD = 1.0f},
 #define FILTER_SIZE     4
 MAVFilter_f_t* adc_channel0_pres1;
 MAVFilter_f_t* adc_channel1_temp1;
-//MAVFilter_f_t* adc_channel2_pres2;
-//MAVFilter_f_t* adc_channel3_temp2;
+MAVFilter_f_t* adc_channel2_pres2;
+MAVFilter_f_t* adc_channel3_temp2;
 
 void initSysVariables(void)
 {
@@ -127,8 +128,8 @@ void initSysVariables(void)
     // Initialize moving average filter
     adc_channel0_pres1 = Initialize_MAVFilter_f(FILTER_SIZE);
     adc_channel1_temp1 = Initialize_MAVFilter_f(FILTER_SIZE);
-//    adc_channel2_pres2 = Initialize_MAVFilter_f(FILTER_SIZE);
-//    adc_channel3_temp2 = Initialize_MAVFilter_f(FILTER_SIZE);
+    adc_channel2_pres2 = Initialize_MAVFilter_f(FILTER_SIZE);
+    adc_channel3_temp2 = Initialize_MAVFilter_f(FILTER_SIZE);
 
     // ADS1115 configuration
     myADC.address = ADS1115_ADDR;
@@ -321,13 +322,28 @@ void getFWInfo(void)
     uart1_newline();
 }
 
+void gpioInitialize(void)
+{
+    relayStatus.relay = LOW;
+    LATAbits.LATA0 = relayStatus.button1;
+    LATAbits.LATA1 = relayStatus.button2;
+    LATAbits.LATA2 = relayStatus.button3;
+    LATAbits.LATA3 = relayStatus.button4;
+    LATAbits.LATA4 = relayStatus.button5;
+    
+    // reset pulsecounter
+    LATAbits.LATA5 = HIGH;
+    __delay_ms(10);
+    LATAbits.LATA5 = LOW;
+}
+
 void startInitialization(void)
 {
 //    loadPres1_Coef();
 //    loadTemp1_Coef();
 //    loadPres2_Coef();
 //    loadTemp2_Coef();
-    
+    gpioInitialize();
     load_Coef();
 }
 
@@ -350,14 +366,65 @@ void runApplication(void)
             i = 0;
 //            ds3232Timestamp();
 //            ads1115SampleData();
-        }*/       
+        }*/
+        
+        /*DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
+        DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
+        itoa(ds3231_readBuff[2], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // hour
+        itoa(ds3231_readBuff[1], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // minute
+        itoa(ds3231_readBuff[0], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(" ");    // second
+        itoa(ds3231_readBuff[3], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(",");  // day of week
+//        Day = setDayName(ds3231_readBuff[3]); uart1_puts(Day); uart1_puts(",");         // day of week
+        itoa(ds3231_readBuff[4], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts("/");    // day of month
+        MonthName = setMonthName(ds3231_readBuff[5]); uart1_puts(MonthName); uart1_puts("/");   // month
+        itoa(ds3231_readBuff[6], lcdBuff, 10); uart1_puts(lcdBuff); // year
+        uart1_puts("    ");
+        
+        itoa(relayStatus.relay, txBuffer, 10);
+        uart1_puts(txBuffer);
+        uart1_puts("    ");
+        
+        if(calibrationEnableFlag == true)
+        {
+            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", calibData[0], calibData[1], calibData[2], calibData[3]);
+        }
+        else if(calibrationEnableFlag == false)
+        {
+            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", voltage[0], voltage[1], voltage[2], voltage[3]);
+        }
+        uart1_puts(txBuffer);
+        uart1_newline();*/
     }
 
 //    if(sysFlags.ads1115SampleTask == true && txEnableFlag == true)
     if(sysFlags.ads1115SampleTask == true)
     {
+//        static uint8_t channel = 0;
         sysFlags.ads1115SampleTask = false;
         ads1115SampleData();
+//        channelNumber++;
+        if(channelNumber++ == 4)
+        {
+            channelNumber = 0;
+            
+            voltage[0] = calculateMovingAverage_f(adc_channel0_pres1, ADS1115_readSingleEnded(&myADC, 0));
+            voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
+            voltage[2] = calculateMovingAverage_f(adc_channel2_pres2, ADS1115_readSingleEnded(&myADC, 2));
+            voltage[3] = calculateMovingAverage_f(adc_channel3_temp2, ADS1115_readSingleEnded(&myADC, 3));
+            
+            calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
+                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
+            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
+                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
+            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
+                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
+            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
+                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
+        }
+        
+        
+//        voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
+        
         // TODO: do moving average filter
     }
 
@@ -962,6 +1029,23 @@ void runApplication(void)
             LCDsetCursor(0, 3);
             LCD_Write_Str("Relay#12345=");*/
         }
+        
+        else if (strncmp(input_line, "C21ResetCount", 13) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_IDLE;
+            lcdStates = LCD_NORMAL_MODE;
+//            LCDclear();
+            LATAbits.LATA5 = HIGH;
+            TMR0_WriteTimer(TMR0_5MS);
+            INTCONbits.TMR0IF = 0;
+            INTCONbits.TMR0IE = 1;
+            TMR0_StartTimer();
+        }
+        
+        else if(strncmp(input_line, "C22Relay", 8) == 0)
+        {
+            serialMsgFlags = SER_MSG_FLAG_RELAY;
+        }
 
         // Nothing to be process
         else
@@ -1008,9 +1092,7 @@ void runApplication(void)
         if(PORTBbits.RB1 == PRESSED)
         {
             relayStatus.button1 ^= 1;
-//            itoa(relayStatus.relay, txBuffer, 2);
-//            uart1_puts(txBuffer);
-//            uart1_newline();
+            LATAbits.LATA0 = relayStatus.button1;
         }
     }
     else if(int2Flag == true && tmr0Flag == true)
@@ -1020,9 +1102,7 @@ void runApplication(void)
         if(PORTBbits.RB2 == PRESSED)
         {
             relayStatus.button2 ^= 1;
-//            itoa(relayStatus.relay, txBuffer, 2);
-//            uart1_puts(txBuffer);
-//            uart1_newline();
+            LATAbits.LATA1 = relayStatus.button2;
         }
     }
     else if(rb4Flag == true && tmr0Flag == true)
@@ -1032,9 +1112,7 @@ void runApplication(void)
         if(PORTBbits.RB4 == PRESSED)
         {
             relayStatus.button3 ^= 1;
-//            itoa(relayStatus.relay, txBuffer, 2);
-//            uart1_puts(txBuffer);
-//            uart1_newline();
+            LATAbits.LATA2 = relayStatus.button3;
         }
 
     }
@@ -1045,9 +1123,7 @@ void runApplication(void)
         if(PORTBbits.RB5 == PRESSED)
         {
             relayStatus.button4 ^= 1;
-//            itoa(relayStatus.relay, txBuffer, 2);
-//            uart1_puts(txBuffer);
-//            uart1_newline();
+            LATAbits.LATA3 = relayStatus.button4;
         }
     }
     else if(rb6Flag == true && tmr0Flag == true)
@@ -1057,9 +1133,7 @@ void runApplication(void)
         if(PORTBbits.RB6 == PRESSED)
         {
             relayStatus.button5 ^= 1;
-//            itoa(relayStatus.relay, txBuffer, 2);
-//            uart1_puts(txBuffer);
-//            uart1_newline();
+            LATAbits.LATA4 = relayStatus.button5;
         }
     }
     // </editor-fold>
@@ -1084,11 +1158,62 @@ void ads1115SampleData(void)
         }*/
         
         // added mav filter
-        voltage[0] = calculateMovingAverage_f(adc_channel0_pres1, ADS1115_readSingleEnded(&myADC, 0));
+        /*voltage[0] = calculateMovingAverage_f(adc_channel0_pres1, ADS1115_readSingleEnded(&myADC, 0));
         voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
-//        voltage[2] = calculateMovingAverage_f(adc_channel2_pres2, ADS1115_readSingleEnded(&myADC, 2));
+        voltage[2] = calculateMovingAverage_f(adc_channel2_pres2, ADS1115_readSingleEnded(&myADC, 2));
 //        voltage[3] = calculateMovingAverage_f(adc_channel3_temp2, ADS1115_readSingleEnded(&myADC, 3));
+         
+         calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
+                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
+            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
+                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
+            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
+                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
+            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
+                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD; 
+         */
 
+        
+        
+        if(channelNumber == 0)
+        {
+//            voltage[0] = calculateMovingAverage_f(adc_channel0_pres1, ADS1115_readSingleEnded(&myADC, 0));
+            voltage[0] = ADS1115_readSingleEnded(&myADC, 0);
+//            calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
+//                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
+        }
+        if(channelNumber == 1)
+        {
+//            voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
+            voltage[1] = ADS1115_readSingleEnded(&myADC, 1);
+//            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
+//                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
+        }
+        if(channelNumber == 2)
+        {
+//            voltage[2] = calculateMovingAverage_f(adc_channel2_pres2, ADS1115_readSingleEnded(&myADC, 2));
+            voltage[2] = ADS1115_readSingleEnded(&myADC, 2);
+//            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
+//                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
+        }
+        if(channelNumber == 3)
+        {
+//            voltage[3] = calculateMovingAverage_f(adc_channel3_temp2, ADS1115_readSingleEnded(&myADC, 3));
+            voltage[3] = ADS1115_readSingleEnded(&myADC, 3);
+//            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
+//                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
+        }
+//        calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
+//                (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
+//        calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
+//                (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
+//        calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
+//                (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
+//        calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
+//                (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD; 
+        
+        
+        
 //        int adcData;
         
 //        uint8_t i;
@@ -1100,14 +1225,10 @@ void ads1115SampleData(void)
              * calibration equation using 4 polynomials
              * y = ax3 + bx2 + cx + d       (x = adc value in float (0.000 to 5.000V)
              */
-            calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
-                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
-            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
-                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
-            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
-                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
-            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
-                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;            
+            
+            
+            
+                   
 //        }
         
 //        for(i = 0; i < 4; i++)
@@ -2068,6 +2189,106 @@ void process_data(void)
     }
     // </editor-fold>
 
+    // <editor-fold defaultstate="collapsed" desc="Relay control task">
+    if (serialMsgFlags == SER_MSG_FLAG_RELAY)
+    {
+        uint8_t writeBytes[4];
+        keyword = "C22Relay";
+        keywordPointer = strstr(input_line, keyword);
+        if (keywordPointer != NULL)
+        {
+            dataPosition = (keywordPointer - input_line) + strlen(keyword);
+            dataCount = 0;
+
+            char *token = strtok(&input_line[dataPosition], delimiter);
+            if (token != NULL && strlen(token) < sizeof (parsedStrings[0]))
+            {
+                strncpy(parsedStrings[0], token, sizeof (parsedStrings[0]));
+                dataCount++;
+            } else
+            {
+                // uart_puts("token to big1\n");
+                strcpy(parsedStrings[0], NULL);
+            }
+
+            for (uint8_t i = 1; i < relayPacketLen; i++)
+            {
+                token = strtok(NULL, delimiter);
+                if (token != NULL && strlen(token) < sizeof (parsedStrings[i]))
+                {
+                    strncpy(parsedStrings[i], token, sizeof (parsedStrings[i]));
+                    dataCount++;
+                } else
+                {
+                    // uart_puts("token to big2\n");
+                    strcpy(parsedStrings[i], NULL);
+                }
+            }
+
+            // convert ascii data into integer data           
+            if (dataCount == relayPacketLen)
+            {
+                integerData[0] = (uint8_t) (atoi(parsedStrings[0])); // relay number with on/off state
+                integerData[1] = (uint8_t) (atoi(parsedStrings[1])); // CRC1
+                integerData[2] = (uint8_t) (atoi(parsedStrings[2])); // CRC2
+                for (i = 3; i < NUM_OF_INT_Data; i++)
+                {
+                    integerData[i] = 0;
+                }
+                dataCount = 0;
+
+                crc = checksumCalculator(integerData[0], 1);
+                crc1 = (crc >> 8) & 0xff;
+                crc2 = (crc >> 0) & 0xff;
+
+                //                if(crc1 == integerData[0] && crc2 == integerData[1])
+                if (integerData[1] == 1 && integerData[2] == 1)
+                {
+                    uint8_t relayNumber = (uint8_t)(integerData[0] / 10);
+                    
+                    switch(relayNumber)
+                    {
+                        case 1:
+                            LATAbits.LATA0 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            break;
+                        case 2:
+                            LATAbits.LATA1 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            break;
+
+                        case 3:
+                            LATAbits.LATA2 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            break;
+                        case 4:
+                            LATAbits.LATA3 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            break;
+                        case 5:
+                            LATAbits.LATA4 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            break;
+                        default:
+                            break;                              
+                    }
+                } 
+                else
+                {
+                    serialMsgErrorFlag = true; // uart1_puts("data no good\n");
+                    serialMsgFlags = 0;
+                }
+            } 
+            else if (dataCount < relayPacketLen || dataCount > relayPacketLen)
+            {
+                serialMsgErrorFlag = true; // uart1_puts("data no good\n");
+                dataCount = 0;
+                serialMsgFlags = 0;
+            }
+        } else
+        {
+            // uart1_puts("sorry no keyword\n");
+            // dataCountTime = 0;
+            // serialMsgFlags = 0;
+        }
+    }
+    // </editor-fold>
+    
     // <editor-fold defaultstate="collapsed" desc="No task">
     else
     {
