@@ -19,6 +19,21 @@ void ADS1115_init(ADS1115_Object_t *instance)
     I2C1_write(LOW_BYTE(instance->config.value));
     I2C1_stop();
     
+    // added
+    I2C1_start(I2C_START_CMD);
+    I2C1_write((instance->address << 1) & 0xFE);
+    I2C1_write(REGISTER_HI_THRESH);
+    I2C1_write(HIGH_BYTE(0x8000));
+    I2C1_write(LOW_BYTE(0x8000));
+    I2C1_stop();
+    
+    I2C1_start(I2C_START_CMD);
+    I2C1_write((instance->address << 1) & 0xFE);
+    I2C1_write(REGISTER_LO_THRESH);
+    I2C1_write(HIGH_BYTE(0x0000));
+    I2C1_write(LOW_BYTE(0x0000));
+    I2C1_stop();
+    // stop
     __delay_us(10000);
 
     I2C1_start(I2C_START_CMD);
@@ -46,6 +61,7 @@ void ADS1115_init(ADS1115_Object_t *instance)
 }
 
 float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
+//void ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel, float* floatVar)
 {
     instance->config.os = OS_START_SINGLE_CONVERSION;
     switch(channel)
@@ -83,6 +99,50 @@ float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
     I2C1_stop();
     
     while(!conversionComplete(instance));
+    return computeVoltage(instance, getLastConversion(instance));
+//    *floatVar = computeVoltage(instance, getLastConversion(instance));
+}
+
+void ADS1115_setReadSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
+{
+    instance->config.os = OS_START_SINGLE_CONVERSION;
+    switch(channel)
+    {
+        case CHANNEL_0:
+        {
+            instance->config.mux = MUX_SINGLE_0;
+            break;
+        }
+
+        case CHANNEL_1:
+        {
+            instance->config.mux = MUX_SINGLE_1;
+            break;
+        }
+
+        case CHANNEL_2:
+        {
+            instance->config.mux = MUX_SINGLE_2;
+            break;
+        }
+
+        case CHANNEL_3:
+        {
+            instance->config.mux = MUX_SINGLE_3;
+            break;
+        }
+    }
+    
+    I2C1_start(I2C_START_CMD);
+    I2C1_write((uint8_t)( (instance->address << 1) & 0xFE) );
+    I2C1_write(REGISTER_CONFIG);
+    I2C1_write(HIGH_BYTE(instance->config.value));
+    I2C1_write(LOW_BYTE(instance->config.value));
+    I2C1_stop();
+}
+
+float ADS1115_getVoltage(ADS1115_Object_t *instance, const uint8_t channel)
+{
     return computeVoltage(instance, getLastConversion(instance));
 }
 
@@ -171,5 +231,4 @@ static float computeVoltage(ADS1115_Object_t *instance, const uint16_t value)
 
     return((float) value * (range / 32768.0f));
 }
-
 

@@ -27,11 +27,11 @@ void __interrupt(high_priority) INTERRUPT_InterruptManagerHigh(void)
     {
         ECCP1_CompareISR();
     }
-    /*else if(INTCONbits.INT0IE == 1 && INTCONbits.INT0IF == 1)
+    else if(INTCONbits.INT0IE == 1 && INTCONbits.INT0IF == 1)
     {
         INT0_ISR();
     }
-    else if(INTCON3bits.INT1IE == 1 && INTCON3bits.INT1IF == 1)
+    /*else if(INTCON3bits.INT1IE == 1 && INTCON3bits.INT1IF == 1)
     {
         INT1_ISR();
     }
@@ -41,12 +41,12 @@ void __interrupt(high_priority) INTERRUPT_InterruptManagerHigh(void)
     }*/   
     else if(PIE2bits.CCP2IE == 1 && PIR2bits.CCP2IF == 1)
     {
-        CCP2_ISR();
+//        CCP2_ISR();
     }    
     //TMR3
     else if(PIE2bits.TMR3IE == 1 && PIR2bits.TMR3IF == 1)
     {
-        TMR3_ISR();
+//        TMR3_ISR();
     }
     //TMR5
 //    else if(PIE5bits.TMR5IE == 1 && PIR5bits.TMR5IF == 1)

@@ -21,28 +21,19 @@
 
 // --Global variable section----------------------------------------------------
 char uartBuff[10] = {0};
-uint8_t intData[4];
+uint8_t intData;
 
 void main(void)
 {
     SYSTEM_Initialization();
 
-    // Initialize system variables
-    initSysVariables();
-    
-    // Start boot sequence
-    startInitialization();
-
-    __delay_ms(2000);
-    uart1_puts("\nPIC18F Project\n\r\0");
-
+    // <editor-fold defaultstate="collapsed" desc="LCD Intialization & Startup">
     LED_SetDigitalOutput();
     LED_SetHigh();
     LCD_Init();
     __delay_ms(200);
     LED_SetLow();
-
-    // <editor-fold defaultstate="collapsed" desc="LCD Startup">
+    
     LCDclear();
     LCDsetCursor(0, 0);
     LCD_Write_Str("--------------------");
@@ -50,16 +41,32 @@ void main(void)
     LCD_Write_Str("Project");
     LCDsetCursor(2, 2);
     LCD_Write_Str("Firmware V");
-    intData[0] = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 0);
-    itoa(intData[0] / 100, uartBuff, 10);
+    intData = EEPROM_read1ByteFromPage(EEPROM_ADDR, 0, 0);
+    itoa(intData / 100, uartBuff, 10);
     LCD_Write_Str(uartBuff);
     LCD_Write_Str(".");
-    itoa(intData[0] % 100, uartBuff, 10);
+    itoa(intData % 100, uartBuff, 10);
     LCD_Write_Str(uartBuff);
     LCDsetCursor(0, 3);
     LCD_Write_Str("--------------------");
+    uart1_puts("Ready...!\n");
+    
     __delay_ms(1000);
-    lcdStates = LCD_IDLE;
+    
+    LCDclear();
+    LCDsetCursor(0, 0);
+    LCD_Write_Str("Intializing...");
+    
+    // Initialize system variables
+    initSysVariables();
+    
+    // Start boot sequence
+    startInitialization();
+    
+    __delay_ms(1000);
+    lcdStates = LCD_NORMAL_MODE;
+    
+    LCDclear();    
     // </editor-fold>
     
     // Timer with CCP config

@@ -132,24 +132,50 @@ uint16_t EEPROM_read_16bitData(uint8_t slaveAddr, uint8_t page, uint8_t byteOffs
     return (uint16_t) ((readBuff[0] << 8) | readBuff[1]);
 }
 
-void EEPROM_floatToByte(float floatData, uint8_t *pByteData)
+//void EEPROM_floatToByte(float floatData, uint8_t *pByteData)
+//{
+//    uint8_t *pointer_to_float;
+//    pointer_to_float = (uint8_t *)&floatData;
+//    pByteData[0] = *pointer_to_float++;
+//    pByteData[1] = *pointer_to_float++;
+//    pByteData[2] = *pointer_to_float++;
+//    pByteData[3] = *pointer_to_float;
+//}
+void EEPROM_floatToByte(float *pfloatData, uint8_t *pByteData)
 {
     uint8_t *pointer_to_float;
-    pointer_to_float = (uint8_t *)&floatData;
+    pointer_to_float = (uint8_t *)pfloatData;
     pByteData[0] = *pointer_to_float++;
     pByteData[1] = *pointer_to_float++;
     pByteData[2] = *pointer_to_float++;
     pByteData[3] = *pointer_to_float;
 }
 
-float EEPROM_byteToFloat(uint8_t *pByteData)
+//float EEPROM_byteToFloat(uint8_t *pByteData)
+//{
+//    float floatData;
+//    uint8_t *pointer_to_float;
+//    pointer_to_float = (uint8_t *)&floatData;
+//    *pointer_to_float++ = pByteData[0];
+//    *pointer_to_float++ = pByteData[1];
+//    *pointer_to_float++ = pByteData[2];
+//    *pointer_to_float = pByteData[3];
+//    return floatData;
+//}
+void EEPROM_byteToFloat(uint8_t *pByteData, float *pFloatData)
 {
-    float floatData;
     uint8_t *pointer_to_float;
-    pointer_to_float = (uint8_t *)&floatData;
+    pointer_to_float = (uint8_t *)pFloatData;
     *pointer_to_float++ = pByteData[0];
     *pointer_to_float++ = pByteData[1];
     *pointer_to_float++ = pByteData[2];
     *pointer_to_float = pByteData[3];
-    return floatData;
 }
+
+
+//typedef union{
+//    float a;
+//    char b[4];
+//} my_union_t;
+
+

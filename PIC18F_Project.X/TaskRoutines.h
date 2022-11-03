@@ -24,11 +24,13 @@ extern volatile TIMER1_t timer1;
 // Tasks in ms
 // --Task routines macros-------------------------------------------------------
 #define LED_BLINK_TASK_TIME       50
-#define UART_TX_TASK_TIME         1000
-#define ADS1115_SAMPLE_TASK_TIME  250
+#define UART_TX_TASK_TIME         250
+#define ADS1115_SAMPLE_TASK_TIME  8
 #define DS3231_TIMESTAMP_TASK     900
 #define EEPROM_TASK               400
-#define LCD_TASK                  1000
+#define LCD_TASK                  500
+#define PULSE_TASK                1000
+#define COEF_TASK                 50
 
 // add task routines here
 typedef struct
@@ -39,6 +41,8 @@ typedef struct
   uint8_t ds3231Task        : 1;
   uint8_t eepromTask        : 1;  
   uint8_t lcdTask           : 1;
+  uint8_t pulseTask           : 1;
+  uint8_t coefTask           : 1;
 } ApplicationFlags_t;
 
 extern volatile ApplicationFlags_t sysFlags;
@@ -58,6 +62,7 @@ extern uint8_t lcdStates;
 #define SER_MSG_FLAG_RTC_R      9
 #define SER_MSG_FLAG_FW_W       10
 #define SER_MSG_FLAG_FW_R       11
+#define SER_MSG_FLAG_RELAY      12
 
 
 // Data Packet length
@@ -69,6 +74,7 @@ extern uint8_t lcdStates;
 #define eepromWrNPacketLen  8
 #define eepromRdNPacketLen  2
 #define fwInfoWePacketLen   3
+#define relayPacketLen      3
 
 // Variable buffer size
 #define numOfChar           10
@@ -84,12 +90,22 @@ extern uint8_t lcdStates;
 #define eepromRdNByte       4
 
 // LCD States
-#define LCD_IDLE            0
-#define LCD_STARTUP         1
-#define LCD_BOOTINIT        2
-#define LCD_CAL_MODE        3
-#define LCD_NORMAL_MODE     4
-#define LCD_SHUTDOWN        5
+#define LCD_IDLE                0
+#define LCD_STARTUP             1
+#define LCD_BOOTINIT            2
+#define LCD_CAL_MODE_Y          3
+#define LCD_NORMAL_MODE         4
+#define LCD_SHUTDOWN            5
+#define LCD_CAL_MODE_N          6
+//#define LCD_CAL_RTC_T           7
+//#define LCD_CAL_RTC_D           8
+//#define LCD_FW_Wr               9
+//#define LCD_FW_Rd               10
+//#define LCD_Wr_4BYTES_EEPROM    11
+//#define LCD_Rd_4BYTES_EEPROM    12
+//#define LCD_Wr_1BYTE_EEPROM     13
+//#define LCD_Rd_1BYTE_EEPROM     14
+#define LCD_INVALID_INPUT       15
 
 /**
  * Global function to initialize variables
@@ -103,6 +119,7 @@ void loadPres1_Coef(void);
 void loadTemp1_Coef(void);
 void loadPres2_Coef(void);
 void loadTemp2_Coef(void);
+void load_Coef(void);
 
 /**
  * Initialization sequence
@@ -153,6 +170,7 @@ void swap(char *x, char *y);
 char* reverse(char *buffer, int i, int j);
 char* itoa(int value, char* buffer, int numBase);
 char* ltoa(long value, char* buffer, int numBase);
+void FloatToStringNew(char *str, float f, char size);
 
 #endif	/* TASKROUTINES_H */
 

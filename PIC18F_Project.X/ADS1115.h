@@ -19,7 +19,7 @@
 
 // --Macro Declarations---------------------------------------------------------
 #define REGISTER_CONVERSION					0x00
-#define REGISTER_CONFIG             0x01
+#define REGISTER_CONFIG                     0x01
 #define REGISTER_LO_THRESH					0x02
 #define REGISTER_HI_THRESH					0x03
 
@@ -112,6 +112,10 @@ typedef struct
 // --Global Functions Section---------------------------------------------------
 void ADS1115_init(ADS1115_Object_t *instance);
 float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel);
+//void ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel, float* floatVar);
+void ADS1115_setReadSingleEnded(ADS1115_Object_t *instance, const uint8_t channel);
+float ADS1115_getVoltage(ADS1115_Object_t *instance, const uint8_t channel);
+
 
 // Local Functions
 static uint16_t conversionComplete(ADS1115_Object_t *instance);

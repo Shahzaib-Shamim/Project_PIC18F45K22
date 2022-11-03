@@ -1,5 +1,6 @@
 #include "ECCP.h"
 #include "TaskRoutines.h"
+#include "GPIO.h"
 
 void ECCP1_Initialize(void)
 {
@@ -73,6 +74,16 @@ void ECCP1_CompareISR(void)
     if((timer1.timer1_1msCounter % LCD_TASK) == 0)
     {
         sysFlags.lcdTask = true;
+    }
+    
+    if((timer1.timer1_1msCounter % PULSE_TASK) == 0)
+    {
+        sysFlags.pulseTask = true;
+    }
+    
+    if((timer1.timer1_1msCounter % COEF_TASK) == 0)
+    {
+        sysFlags.coefTask = true;
     }
     
     // Reset timer

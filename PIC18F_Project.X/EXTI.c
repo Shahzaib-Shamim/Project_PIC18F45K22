@@ -17,7 +17,7 @@ volatile uint8_t previous_PORTB_RB6 = 0;
 void EXTI0_Initialize(void)
 {
     // High priority interrupt
-    INTCON2bits.INTEDG0 = EXTI_RISING_EDGE; //EXTI_FALLING_EDGE
+    INTCON2bits.INTEDG0 = EXTI_FALLING_EDGE; //EXTI_FALLING_EDGE
     INTCONbits.INT0IF = 0; // clear flag before enabling interrupt
     INTCONbits.INT0IE = EXTI_ENABLE;
 }
@@ -52,11 +52,27 @@ void IOC_Initialize(void)
 void INT0_ISR(void)
 {
     //    uart1_puts("INT0\n");
-    TMR0_WriteTimer(DEBOUNCE_TIME_100MS);
-    INTCONbits.TMR0IF = 0;
-    INTCONbits.TMR0IE = 1;
-    TMR0_StartTimer();
+//    TMR0_WriteTimer(DEBOUNCE_TIME_100MS);
+//    INTCONbits.TMR0IF = 0;
+//    INTCONbits.TMR0IE = 1;
+//    TMR0_StartTimer();
+//    INTCONbits.INT0IF = 0;
+    int0Flag = true;
     INTCONbits.INT0IF = 0;
+    /*if(INTCON2bits.INTEDG0 == EXTI_RISING_EDGE)
+    {
+        uart1_puts("\n---Pulse Rising---\n");
+        INTCON2bits.INTEDG0 = EXTI_FALLING_EDGE;
+        INTCON3bits.INT1IF = 0;  // clear flag before enabling interrupt
+        int0Flag = false;
+    }
+    else if(INTCON2bits.INTEDG0 == EXTI_FALLING_EDGE)
+    {
+        uart1_puts("---Pulse falling---\n");
+        INTCON2bits.INTEDG0 = EXTI_RISING_EDGE;
+        INTCON3bits.INT1IF = 0;  // clear flag before enabling interrupt
+        int0Flag = true;
+    }*/
 }
 
 void INT1_ISR(void)

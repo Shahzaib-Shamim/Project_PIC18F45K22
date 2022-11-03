@@ -26,6 +26,8 @@
 // if Fosc = 64MHz because of PLL
 #define TIME_PER_OVERFLOW   (8191.875f)        //in usec
 #define TIME_PER_TICK       (0.125f)  //0.0625f        //in usec
+//#define TIME_PER_OVERFLOW   (8191875)        //in nsec
+//#define TIME_PER_TICK       (125)  //0.0625f        //in nsec
 
 // --Defines for CCP2-----------------------------------------------------------
 #define CCP2_EVERY_RISING_EDGE      0x05

@@ -19,12 +19,13 @@ void SYSTEM_Initialization(void)
     ECCP1_Initialize();
     I2C1_initialize();
     CCP2_Initialize();
-//    EXTI0_Initialize();
+    EXTI0_Initialize();
     EXTI1_Initialize();
     EXTI2_Initialize();
     IOC_Initialize();
     TMR0_Initialize();
     TMR1_Initialize();
+    __delay_ms(2000);
 }
 
 static void OSCILLATOR_Init(void)

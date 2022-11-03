@@ -95,14 +95,16 @@ uint16_t EEPROM_read_16bitData(uint8_t slaveAddr, uint8_t page, uint8_t byteOffs
  * @param floatData = float data variable
  * @param pByteData = pointer to byte array
  */
-void EEPROM_floatToByte(float floatData, uint8_t *pByteData);
+//void EEPROM_floatToByte(float floatData, uint8_t *pByteData);
+void EEPROM_floatToByte(float *pfloatData, uint8_t *pByteData);
 
 /**
  * Converts 1byte data into float data
  * @param pByteData = pointer to byte array
  * @return float variable
  */
-float EEPROM_byteToFloat(uint8_t *pByteData);
+//float EEPROM_byteToFloat(uint8_t *pByteData);
+void EEPROM_byteToFloat(uint8_t *pByteData, float *pFloatData);
 
 
 
