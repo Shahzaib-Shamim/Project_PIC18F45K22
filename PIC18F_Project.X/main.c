@@ -27,21 +27,13 @@ void main(void)
 {
     SYSTEM_Initialization();
 
-    // Initialize system variables
-    initSysVariables();
-    
-    // Start boot sequence
-    startInitialization();
-
-//    uart1_puts("\nPIC18F Project\n\r\0");
-
+    // <editor-fold defaultstate="collapsed" desc="LCD Intialization & Startup">
     LED_SetDigitalOutput();
     LED_SetHigh();
     LCD_Init();
     __delay_ms(200);
     LED_SetLow();
-
-    // <editor-fold defaultstate="collapsed" desc="LCD Startup">
+    
     LCDclear();
     LCDsetCursor(0, 0);
     LCD_Write_Str("--------------------");
@@ -57,16 +49,6 @@ void main(void)
     LCD_Write_Str(uartBuff);
     LCDsetCursor(0, 3);
     LCD_Write_Str("--------------------");
-    
-//    uart1_puts("--------------------\n");
-//    uart1_puts("Project\n");
-//    uart1_puts("Firmware V");
-//    itoa(intData / 100, uartBuff, 10);
-//    uart1_puts(uartBuff);
-//    uart1_puts(".");
-//    itoa(intData % 100, uartBuff, 10);
-//    uart1_puts(uartBuff);
-//    uart1_puts("\n--------------------\n");
     uart1_puts("Ready...!\n");
     
     __delay_ms(1000);
@@ -74,29 +56,17 @@ void main(void)
     LCDclear();
     LCDsetCursor(0, 0);
     LCD_Write_Str("Intializing...");
+    
+    // Initialize system variables
+    initSysVariables();
+    
+    // Start boot sequence
+    startInitialization();
+    
     __delay_ms(1000);
     lcdStates = LCD_NORMAL_MODE;
     
-    LCDclear();
-    
-    /*LCDsetCursor(0, 0);
-    LCD_Write_Str("Pulse=");
-    LCDsetCursor(16, 0);
-    LCD_Write_Str("sec");
-    
-    LCDsetCursor(0, 1);
-    LCD_Write_Str("P1=");
-    LCDsetCursor(16, 1);
-    LCD_Write_Str("PSI");
-    
-    LCDsetCursor(0, 2);
-    LCD_Write_Str("T1=");
-    LCDsetCursor(16, 2);
-    LCD_Write_Str("degC");
-            
-    LCDsetCursor(0, 3);
-    LCD_Write_Str("Relay#12345=");*/
-    
+    LCDclear();    
     // </editor-fold>
     
     // Timer with CCP config

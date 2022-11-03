@@ -116,6 +116,9 @@ MAVFilter_f_t* adc_channel1_temp1;
 MAVFilter_f_t* adc_channel2_pres2;
 MAVFilter_f_t* adc_channel3_temp2;
 
+unsigned long errorTimer = 0;
+char lcdBuff2[20] = {0};
+
 void initSysVariables(void)
 {
     sysFlags.ledBlinkTask = false;
@@ -359,16 +362,9 @@ void runApplication(void)
     {
         sysFlags.uartTxTask = false;
         
-        /*static uint8_t i = 0;
-        i++;
-        if(i == 40)
-        {
-            i = 0;
-//            ds3232Timestamp();
-//            ads1115SampleData();
-        }*/
-        
-        /*DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
+        // ok
+        /*static char *monthName = "";
+        DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
         DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
         itoa(ds3231_readBuff[2], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // hour
         itoa(ds3231_readBuff[1], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // minute
@@ -376,7 +372,7 @@ void runApplication(void)
         itoa(ds3231_readBuff[3], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(",");  // day of week
 //        Day = setDayName(ds3231_readBuff[3]); uart1_puts(Day); uart1_puts(",");         // day of week
         itoa(ds3231_readBuff[4], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts("/");    // day of month
-        MonthName = setMonthName(ds3231_readBuff[5]); uart1_puts(MonthName); uart1_puts("/");   // month
+        monthName = setMonthName(ds3231_readBuff[5]); uart1_puts(monthName); uart1_puts("/");   // month
         itoa(ds3231_readBuff[6], lcdBuff, 10); uart1_puts(lcdBuff); // year
         uart1_puts("    ");
         
@@ -394,6 +390,43 @@ void runApplication(void)
         }
         uart1_puts(txBuffer);
         uart1_newline();*/
+        
+        
+        
+        
+        
+        if(calibrationEnableFlag == true)
+        {
+            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f----", calibData[0], calibData[1], calibData[2], calibData[3]);
+            uart1_puts(txBuffer);
+            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", voltage[0], voltage[1], voltage[2], voltage[3]);
+            uart1_puts(txBuffer);
+            uart1_newline();            
+        }
+        
+        else if(calibrationEnableFlag == false)
+        {
+            static char *monthName = "";
+            DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
+            DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
+            itoa(ds3231_readBuff[2], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // hour
+            itoa(ds3231_readBuff[1], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // minute
+            itoa(ds3231_readBuff[0], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(" ");    // second
+            itoa(ds3231_readBuff[3], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(",");  // day of week
+    //        Day = setDayName(ds3231_readBuff[3]); uart1_puts(Day); uart1_puts(",");         // day of week
+            itoa(ds3231_readBuff[4], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts("/");    // day of month
+            monthName = setMonthName(ds3231_readBuff[5]); uart1_puts(monthName); uart1_puts("/");   // month
+            itoa(ds3231_readBuff[6], lcdBuff, 10); uart1_puts(lcdBuff); // year
+            uart1_puts("  ");
+
+            itoa(relayStatus.relay, txBuffer, 10);
+            uart1_puts(txBuffer);
+            uart1_puts("  ");
+            
+            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", calibData[0], calibData[1], calibData[2], calibData[3]);
+            uart1_puts(txBuffer);
+            uart1_newline();
+        }
     }
 
 //    if(sysFlags.ads1115SampleTask == true && txEnableFlag == true)
@@ -401,17 +434,24 @@ void runApplication(void)
     {
 //        static uint8_t channel = 0;
         sysFlags.ads1115SampleTask = false;
+        
+        LATDbits.LATD2 = HIGH;
+        // 1.2ms to get single channel data 
         ads1115SampleData();
+        LATDbits.LATD2 = LOW;
 //        channelNumber++;
         if(channelNumber++ == 4)
         {
             channelNumber = 0;
-            
+//            LATDbits.LATD2 = HIGH;
+            // 4.8ms for 128sps, 6ms for 860sps 
             voltage[0] = calculateMovingAverage_f(adc_channel0_pres1, ADS1115_readSingleEnded(&myADC, 0));
             voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
             voltage[2] = calculateMovingAverage_f(adc_channel2_pres2, ADS1115_readSingleEnded(&myADC, 2));
             voltage[3] = calculateMovingAverage_f(adc_channel3_temp2, ADS1115_readSingleEnded(&myADC, 3));
+//            LATDbits.LATD2 = LOW;
             
+            // 1 ms for this calculation
             calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
                     (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
             calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
@@ -420,6 +460,7 @@ void runApplication(void)
                     (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
             calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
                     (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
+            
         }
         
         
@@ -440,6 +481,9 @@ void runApplication(void)
         sysFlags.lcdTask = false;
 //        uint8_t readBuffRTC[7];
         char *MonthName = "";
+        static bool blinkingSymbol = false;
+        
+        blinkingSymbol ^= 1;
         
         // <editor-fold defaultstate="collapsed" desc="LCD Idle mode">
         if(lcdStates == LCD_IDLE)
@@ -471,6 +515,17 @@ void runApplication(void)
         {
 //            LCDclear();
             
+            if(blinkingSymbol == true)
+            {
+                LCDsetCursor(19, 0);
+                LCD_Write_Char('*');
+            }
+            else if(blinkingSymbol == false)
+            {
+                LCDsetCursor(19, 0);
+                LCD_Write_Char(' ');
+            }
+            
             LCDsetCursor(0, 0);
             LCD_Write_Str("Pulse=");
 //            ltoa(time_ccp / 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
@@ -492,7 +547,7 @@ void runApplication(void)
             
             //added stop
             LCDsetCursor(16, 0);
-            LCD_Write_Str("msec");
+            LCD_Write_Str("ms");
  
 //            ads1115SampleData();
             *adcData = calibData;
@@ -506,7 +561,7 @@ void runApplication(void)
             LCDsetCursor(3, 1);
             LCD_Write_Str(str);
             LCDsetCursor(16, 1);
-            LCD_Write_Str("PSI");
+            LCD_Write_Str("Pa");
             
             LCDsetCursor(0, 2);
             LCD_Write_Str("T1=");
@@ -516,7 +571,9 @@ void runApplication(void)
             LCDsetCursor(3, 2);
             LCD_Write_Str(str);
             LCDsetCursor(16, 2);
-            LCD_Write_Str("degC");
+//            LCD_Write_Str("degC");
+            LCD_Write_Char(0b11011111); //degree symbol
+            LCD_Write_Char('C');
 
             
             // this code is ok to send over uart
@@ -535,7 +592,7 @@ void runApplication(void)
             uart1_puts("--------------------------");
             uart1_newline();*/
             
-            LCDsetCursor(0, 3);
+            /*LCDsetCursor(0, 3);
             LCD_Write_Str("Relay#12345=");
             LCDsetCursor(15, 3);
             LCD_Write_Str("     ");
@@ -553,7 +610,14 @@ void runApplication(void)
             itoa(relayStatus.button4, lcdBuff, 2); LCD_Write_Str(lcdBuff);
             
             LCDsetCursor(15, 3);
-            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);*/
+            
+            
+            errorTimer++;
+            LCDsetCursor(0, 3);
+            LCD_Write_Str("Error->");
+            ltoa(errorTimer, lcdBuff2, 10);
+            LCD_Write_Str(lcdBuff2);
             
         }
         // </editor-fold>
@@ -1141,7 +1205,7 @@ void runApplication(void)
 
 void ledBlink(void)
 {
-    LED_Toggle();
+//    LED_Toggle();
 }
 
 void ads1115SampleData(void)
@@ -1342,6 +1406,7 @@ void process_data(void)
                     ds3232Timestamp();
 //                    uart1_puts("RTC calib done\n");
 //                    lcdStates = LCD_CAL_RTC_T;
+                    uart1_puts("Time stored\n");
                     systemStatus.systemAllStates = 0;
                     systemStatus.rtcTimeFlag = true;
                 }
@@ -1428,6 +1493,7 @@ void process_data(void)
                     dateFlag = true;
                     ds3232Timestamp();
 //                    lcdStates = LCD_CAL_RTC_D;
+                    uart1_puts("Date stored\n");
                     systemStatus.systemAllStates = 0;
                     systemStatus.rtcDateFlag = true;
                 }
@@ -1531,6 +1597,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                        pres1Flag = true;
+                        uart1_puts("CoefA_P1 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_a = 1;
                     }
@@ -1545,6 +1612,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                        pres1Flag = true;
+                        uart1_puts("CoefB_P1 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_b = 1;
                     }
@@ -1560,6 +1628,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            pres1Flag = true;
+                        uart1_puts("CoefC_P1 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_c = 1;
                     }
@@ -1575,6 +1644,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            pres1Flag = true;
+                        uart1_puts("CoefD_P1 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_d = 1;
                     }
@@ -1592,6 +1662,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            temp1Flag = true;
+                        uart1_puts("CoefA_T1 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_a = 1;
                     }
@@ -1607,6 +1678,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            temp1Flag = true;
+                        uart1_puts("CoefB_T1 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_b = 1;
                     }
@@ -1622,6 +1694,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            temp1Flag = true;
+                        uart1_puts("CoefC_T1 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_c = 1; 
                     }
@@ -1637,6 +1710,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            temp1Flag = true;
+                        uart1_puts("CoefD_T1 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_d = 1;
                     }
@@ -1654,6 +1728,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            pres2Flag = true;
+                        uart1_puts("CoefA_P2 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_a = 1;
                     }
@@ -1669,6 +1744,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            pres2Flag = true;
+                        uart1_puts("CoefB_P2 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_b = 1;
                     }
@@ -1684,6 +1760,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            pres2Flag = true;
+                        uart1_puts("CoefC_P2 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_c = 1;
                     }
@@ -1699,6 +1776,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            pres2Flag = true;
+                        uart1_puts("CoefD_P2 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_d = 1;
                     }
@@ -1716,6 +1794,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            temp2Flag = true;
+                        uart1_puts("CoefA_T2 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp2_a = 1;
                     }
@@ -1731,6 +1810,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            temp2Flag = true;
+                        uart1_puts("CoefB_T2 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp2_b = 1;
                     }
@@ -1746,6 +1826,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            temp2Flag = true;
+                        uart1_puts("CoefC_T2 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp2_c = 1;
                     }
@@ -1761,6 +1842,7 @@ void process_data(void)
 //                        uart1_puts(txBuffer);
 //                        uart1_newline();
 //                            temp2Flag = true;
+                        uart1_puts("CoefD_T2 done\n");
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp2_d = 1;
                     }
@@ -2249,24 +2331,32 @@ void process_data(void)
                     switch(relayNumber)
                     {
                         case 1:
-                            LATAbits.LATA0 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            relayStatus.button1 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            LATAbits.LATA0 = relayStatus.button1;
                             break;
                         case 2:
-                            LATAbits.LATA1 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            relayStatus.button2 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            LATAbits.LATA1 = relayStatus.button2;
                             break;
 
                         case 3:
-                            LATAbits.LATA2 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            relayStatus.button3 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            LATAbits.LATA2 = relayStatus.button3;
                             break;
                         case 4:
-                            LATAbits.LATA3 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            relayStatus.button4 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            LATAbits.LATA3 = relayStatus.button4;
                             break;
                         case 5:
-                            LATAbits.LATA4 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            relayStatus.button5 = (integerData[0] % 10 == 0) ? LOW : HIGH;
+                            LATAbits.LATA4 = relayStatus.button5;
                             break;
                         default:
-                            break;                              
+                            break;
+                            
+                        
                     }
+                    uart1_puts("RelayCommand\n");
                 } 
                 else
                 {

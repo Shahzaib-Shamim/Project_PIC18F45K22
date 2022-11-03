@@ -11,8 +11,7 @@
 // --Includes-------------------------------------------------------------------
 #include <stdint.h>
 #include <stdbool.h>
-//#include <stdio.h>
-//#include <stdio.h>      // sprintf
+#include <stdio.h>      // sprintf
 #include <string.h>
 
 // --Defines--------------------------------------------------------------------
