@@ -27,11 +27,11 @@ void __interrupt(high_priority) INTERRUPT_InterruptManagerHigh(void)
     {
         ECCP1_CompareISR();
     }
-    /*else if(INTCONbits.INT0IE == 1 && INTCONbits.INT0IF == 1)
+    else if(INTCONbits.INT0IE == 1 && INTCONbits.INT0IF == 1)
     {
         INT0_ISR();
     }
-    else if(INTCON3bits.INT1IE == 1 && INTCON3bits.INT1IF == 1)
+    /*else if(INTCON3bits.INT1IE == 1 && INTCON3bits.INT1IF == 1)
     {
         INT1_ISR();
     }

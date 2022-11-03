@@ -29,6 +29,8 @@ extern volatile TIMER1_t timer1;
 #define DS3231_TIMESTAMP_TASK     900
 #define EEPROM_TASK               400
 #define LCD_TASK                  500
+#define PULSE_TASK                1000
+#define COEF_TASK                 50
 
 // add task routines here
 typedef struct
@@ -39,6 +41,8 @@ typedef struct
   uint8_t ds3231Task        : 1;
   uint8_t eepromTask        : 1;  
   uint8_t lcdTask           : 1;
+  uint8_t pulseTask           : 1;
+  uint8_t coefTask           : 1;
 } ApplicationFlags_t;
 
 extern volatile ApplicationFlags_t sysFlags;

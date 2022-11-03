@@ -19,7 +19,7 @@ void SYSTEM_Initialization(void)
     ECCP1_Initialize();
     I2C1_initialize();
     CCP2_Initialize();
-//    EXTI0_Initialize();
+    EXTI0_Initialize();
     EXTI1_Initialize();
     EXTI2_Initialize();
     IOC_Initialize();

@@ -27,17 +27,20 @@ bool dateFlag = false;
 bool timeFlag = false;
 bool txEnableFlag = true; // false
 uint8_t eepromStateFlags = 0;
-bool calibrationEnableFlag = true; //false
+bool calibrationEnableFlag = false; //false
 uint8_t ds3231_readBuff[7];
 uint32_t time_ccp = 0;
 uint8_t lcdStates = 0;
 bool systemStates = 0;
 float voltage[4];
+float voltageFiltered[4];
 float calibData[4];
 uint16_t *adcData;
 char str[10] = {0};
 char *p = str;
 uint8_t channelNumber = 0;
+uint8_t lowByte, highByte;
+uint16_t pulsetime;
 
 union SystemState_u
 {
@@ -65,7 +68,7 @@ union RelayState_u
         unsigned button3 : 1;
         unsigned button4 : 1;
         unsigned button5 : 1;
-        unsigned : 1;
+        unsigned pulsecounter : 1;
         unsigned : 1;
         unsigned : 1;
     };
@@ -144,7 +147,8 @@ void initSysVariables(void)
     myADC.config.compMode = COMP_MODE_TRADITIONAL;
     myADC.config.compPol = COMP_POL_ACT_LOW;
     myADC.config.compLat = COMP_LAT_NONLATCHING;
-    myADC.config.compQue = COMP_QUEUE_DISABLE_COMPARATOR;
+//    myADC.config.compQue = COMP_QUEUE_DISABLE_COMPARATOR;
+    myADC.config.compQue = COMP_QUEUE_ONE_CONVERSION;
     ADS1115_init(&myADC);
 
     //    if(myADC.isPresent == 1)
@@ -157,6 +161,8 @@ void initSysVariables(void)
     //        sprintf((char *) txBuffer, "ADS1115 Not found\r\n");
     //        uart1_puts((uint8_t *) txBuffer);
     //    }
+    
+//    ADS1115_setReadSingleEnded(&myADC, channelNumber);
 }
 
 void loadPres1_Coef(void)
@@ -348,6 +354,7 @@ void startInitialization(void)
 //    loadTemp2_Coef();
     gpioInitialize();
     load_Coef();
+    ADS1115_setReadSingleEnded(&myADC, channelNumber);
 }
 
 void runApplication(void)
@@ -361,45 +368,12 @@ void runApplication(void)
     if(sysFlags.uartTxTask == true && txEnableFlag == true)
     {
         sysFlags.uartTxTask = false;
-        
-        // ok
-        /*static char *monthName = "";
-        DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
-        DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
-        itoa(ds3231_readBuff[2], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // hour
-        itoa(ds3231_readBuff[1], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // minute
-        itoa(ds3231_readBuff[0], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(" ");    // second
-        itoa(ds3231_readBuff[3], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(",");  // day of week
-//        Day = setDayName(ds3231_readBuff[3]); uart1_puts(Day); uart1_puts(",");         // day of week
-        itoa(ds3231_readBuff[4], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts("/");    // day of month
-        monthName = setMonthName(ds3231_readBuff[5]); uart1_puts(monthName); uart1_puts("/");   // month
-        itoa(ds3231_readBuff[6], lcdBuff, 10); uart1_puts(lcdBuff); // year
-        uart1_puts("    ");
-        
-        itoa(relayStatus.relay, txBuffer, 10);
-        uart1_puts(txBuffer);
-        uart1_puts("    ");
-        
-        if(calibrationEnableFlag == true)
-        {
-            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", calibData[0], calibData[1], calibData[2], calibData[3]);
-        }
-        else if(calibrationEnableFlag == false)
-        {
-            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", voltage[0], voltage[1], voltage[2], voltage[3]);
-        }
-        uart1_puts(txBuffer);
-        uart1_newline();*/
-        
-        
-        
-        
-        
+                
         if(calibrationEnableFlag == true)
         {
             sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f----", calibData[0], calibData[1], calibData[2], calibData[3]);
             uart1_puts(txBuffer);
-            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", voltage[0], voltage[1], voltage[2], voltage[3]);
+            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", voltageFiltered[0], voltageFiltered[1], voltageFiltered[2], voltageFiltered[3]);
             uart1_puts(txBuffer);
             uart1_newline();            
         }
@@ -412,14 +386,17 @@ void runApplication(void)
             itoa(ds3231_readBuff[2], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // hour
             itoa(ds3231_readBuff[1], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(":");    // minute
             itoa(ds3231_readBuff[0], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(" ");    // second
-            itoa(ds3231_readBuff[3], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(",");  // day of week
-    //        Day = setDayName(ds3231_readBuff[3]); uart1_puts(Day); uart1_puts(",");         // day of week
+            itoa(ds3231_readBuff[3], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts(",");    // day of week
             itoa(ds3231_readBuff[4], lcdBuff, 10); uart1_puts(lcdBuff); uart1_puts("/");    // day of month
             monthName = setMonthName(ds3231_readBuff[5]); uart1_puts(monthName); uart1_puts("/");   // month
             itoa(ds3231_readBuff[6], lcdBuff, 10); uart1_puts(lcdBuff); // year
             uart1_puts("  ");
 
             itoa(relayStatus.relay, txBuffer, 10);
+            uart1_puts(txBuffer);
+            uart1_puts("  ");
+            
+            ltoa(pulsetime, txBuffer, 10);
             uart1_puts(txBuffer);
             uart1_puts("  ");
             
@@ -432,41 +409,76 @@ void runApplication(void)
 //    if(sysFlags.ads1115SampleTask == true && txEnableFlag == true)
     if(sysFlags.ads1115SampleTask == true)
     {
-//        static uint8_t channel = 0;
         sysFlags.ads1115SampleTask = false;
         
-        LATDbits.LATD2 = HIGH;
         // 1.2ms to get single channel data 
-        ads1115SampleData();
-        LATDbits.LATD2 = LOW;
-//        channelNumber++;
+//        ads1115SampleData();
+        
+        
+//        ADS1115_setReadSingleEnded(&myADC, channelNumber);
         if(channelNumber++ == 4)
         {
             channelNumber = 0;
-//            LATDbits.LATD2 = HIGH;
-            // 4.8ms for 128sps, 6ms for 860sps 
-            voltage[0] = calculateMovingAverage_f(adc_channel0_pres1, ADS1115_readSingleEnded(&myADC, 0));
-            voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
-            voltage[2] = calculateMovingAverage_f(adc_channel2_pres2, ADS1115_readSingleEnded(&myADC, 2));
-            voltage[3] = calculateMovingAverage_f(adc_channel3_temp2, ADS1115_readSingleEnded(&myADC, 3));
-//            LATDbits.LATD2 = LOW;
-            
+            // 4.8ms for 128sps, 6ms for 860sps
+            // voltage[i] before
+//            voltage[0] = calculateMovingAverage_f(adc_channel0_pres1, ADS1115_readSingleEnded(&myADC, 0));
+//            voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
+//            voltage[2] = calculateMovingAverage_f(adc_channel2_pres2, ADS1115_readSingleEnded(&myADC, 2));
+//            voltage[3] = calculateMovingAverage_f(adc_channel3_temp2, ADS1115_readSingleEnded(&myADC, 3));
+           
             // 1 ms for this calculation
-            calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
-                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
-            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
-                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
-            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
-                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
-            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
-                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
+//            calibData[0] = (pres1.coefA * voltage[0] * voltage[0] * voltage[0]) +
+//                    (pres1.coefB * voltage[0] * voltage[0]) + (pres1.coefC * voltage[0]) + pres1.coefD;
+//            calibData[1] = (temp1.coefA * voltage[1] * voltage[1] * voltage[1]) +
+//                    (temp1.coefB * voltage[1] * voltage[1]) + (temp1.coefC * voltage[1]) + temp1.coefD;
+//            calibData[2] = (pres2.coefA * voltage[2] * voltage[2] * voltage[2]) +
+//                    (pres2.coefB * voltage[2] * voltage[2]) + (pres2.coefC * voltage[2]) + pres2.coefD;
+//            calibData[3] = (temp2.coefA * voltage[3] * voltage[3] * voltage[3]) +
+//                    (temp2.coefB * voltage[3] * voltage[3]) + (temp2.coefC * voltage[3]) + temp2.coefD;
+            
+            voltageFiltered[0] = calculateMovingAverage_f(adc_channel0_pres1, voltage[0]);
+            voltageFiltered[1] = calculateMovingAverage_f(adc_channel1_temp1, voltage[1]);
+            voltageFiltered[2] = calculateMovingAverage_f(adc_channel2_pres2, voltage[2]);
+            voltageFiltered[3] = calculateMovingAverage_f(adc_channel3_temp2, voltage[3]);
+            
+//            calibData[0] = (pres1.coefA * voltageFiltered[0] * voltageFiltered[0] * voltageFiltered[0]) +
+//                    (pres1.coefB * voltageFiltered[0] * voltageFiltered[0]) + (pres1.coefC * voltageFiltered[0]) + pres1.coefD;
+//            calibData[1] = (temp1.coefA * voltageFiltered[1] * voltageFiltered[1] * voltageFiltered[1]) +
+//                    (temp1.coefB * voltageFiltered[1] * voltageFiltered[1]) + (temp1.coefC * voltageFiltered[1]) + temp1.coefD;
+//            calibData[2] = (pres2.coefA * voltageFiltered[2] * voltageFiltered[2] * voltageFiltered[2]) +
+//                    (pres2.coefB * voltageFiltered[2] * voltageFiltered[2]) + (pres2.coefC * voltageFiltered[2]) + pres2.coefD;
+//            calibData[3] = (temp2.coefA * voltageFiltered[3] * voltageFiltered[3] * voltageFiltered[3]) +
+//                    (temp2.coefB * voltageFiltered[3] * voltageFiltered[3]) + (temp2.coefC * voltageFiltered[3]) + temp2.coefD;
             
         }
+        ADS1115_setReadSingleEnded(&myADC, channelNumber);
         
         
 //        voltage[1] = calculateMovingAverage_f(adc_channel1_temp1, ADS1115_readSingleEnded(&myADC, 1));
         
         // TODO: do moving average filter
+    }
+    
+    if(int0Flag == true)
+    {
+        int0Flag = false;
+        
+        if(channelNumber == 0)
+        {
+            voltage[0] = ADS1115_getVoltage(&myADC, 0);
+        }
+        else if(channelNumber == 1)
+        {
+            voltage[1] = ADS1115_getVoltage(&myADC, 1);
+        }
+        else if(channelNumber == 2)
+        {
+            voltage[2] = ADS1115_getVoltage(&myADC, 2);
+        }
+        else if(channelNumber == 3)
+        {
+            voltage[3] = ADS1115_getVoltage(&myADC, 3);
+        }
     }
 
     //    if(sysFlags.ds3231Task == true && serialMsgFlags == txEnableFlag == true)
@@ -475,6 +487,20 @@ void runApplication(void)
 //        sysFlags.ds3231Task = false;
 ////                ds3232Timestamp();
 //    }
+    
+    if(sysFlags.coefTask == true)
+    {
+        sysFlags.coefTask = false;
+        
+        calibData[0] = (pres1.coefA * voltageFiltered[0] * voltageFiltered[0] * voltageFiltered[0]) +
+                        (pres1.coefB * voltageFiltered[0] * voltageFiltered[0]) + (pres1.coefC * voltageFiltered[0]) + pres1.coefD;
+        calibData[1] = (temp1.coefA * voltageFiltered[1] * voltageFiltered[1] * voltageFiltered[1]) +
+                        (temp1.coefB * voltageFiltered[1] * voltageFiltered[1]) + (temp1.coefC * voltageFiltered[1]) + temp1.coefD;
+        calibData[2] = (pres2.coefA * voltageFiltered[2] * voltageFiltered[2] * voltageFiltered[2]) +
+                        (pres2.coefB * voltageFiltered[2] * voltageFiltered[2]) + (pres2.coefC * voltageFiltered[2]) + pres2.coefD;
+        calibData[3] = (temp2.coefA * voltageFiltered[3] * voltageFiltered[3] * voltageFiltered[3]) +
+                        (temp2.coefB * voltageFiltered[3] * voltageFiltered[3]) + (temp2.coefC * voltageFiltered[3]) + temp2.coefD;
+    }
 
     if(sysFlags.lcdTask == true)
     {
@@ -530,14 +556,14 @@ void runApplication(void)
             LCD_Write_Str("Pulse=");
 //            ltoa(time_ccp / 1000, lcdBuff, 10); LCD_Write_Str(lcdBuff);
             //added start
-            uint8_t lowByte, highByte;
-            uint16_t pulsetime;
+//            uint8_t lowByte, highByte;
+//            uint16_t pulsetime;
             if(1 == 1)
             {
 //                int0Flag = false;
-                lowByte = LCD_i2cRead(0x3B);
-                highByte = LCD_i2cRead(0x3D);
-                pulsetime = (uint16_t)((highByte << 8) | (lowByte & 0xff));
+//                lowByte = LCD_i2cRead(0x3B);
+//                highByte = LCD_i2cRead(0x3D);
+//                pulsetime = (uint16_t)((highByte << 8) | (lowByte & 0xff));
                 ltoa(pulsetime, lcdBuff, 10);    // ltoa, / 1000
                 LCDsetCursor(6, 0);
                 LCD_Write_Str("        ");
@@ -822,6 +848,15 @@ void runApplication(void)
         }
         // <</editor-fold>
     }
+    
+    if(sysFlags.pulseTask == true)
+    {
+        sysFlags.pulseTask = false;
+        
+        lowByte = LCD_i2cRead(0x3B);
+        highByte = LCD_i2cRead(0x3D);
+        pulsetime = (uint16_t)((highByte << 8) | (lowByte & 0xff));
+    }
 
     // --Serial Msg process-----------------------------------------------------
     if(uartProcessFlag == true)
@@ -1096,14 +1131,22 @@ void runApplication(void)
         
         else if (strncmp(input_line, "C21ResetCount", 13) == 0)
         {
-            serialMsgFlags = SER_MSG_FLAG_IDLE;
-            lcdStates = LCD_NORMAL_MODE;
+            
 //            LCDclear();
             LATAbits.LATA5 = HIGH;
+            relayStatus.pulsecounter = 1;
             TMR0_WriteTimer(TMR0_5MS);
             INTCONbits.TMR0IF = 0;
             INTCONbits.TMR0IE = 1;
             TMR0_StartTimer();
+            
+            serialMsgFlags = SER_MSG_FLAG_IDLE;
+            lcdStates = LCD_NORMAL_MODE;
+
+//            LCDclear();
+//            LCDsetCursor(0, 0);
+//            LCD_Write_Str("Pulsetime Reset");
+//            uart1_puts("Pulsetime Reset\n");
         }
         
         else if(strncmp(input_line, "C22Relay", 8) == 0)
@@ -1125,7 +1168,7 @@ void runApplication(void)
     }
     
     // <editor-fold defaultstate="collapsed" desc="CCP2 task">
-    if(ccp2Flag == true)
+    /*if(ccp2Flag == true)
     {
         ccp2Flag = false;
 
@@ -1145,7 +1188,7 @@ void runApplication(void)
 //            capture_value.ccpL = 0;
 //            capture_value.ccpH = 0;
 
-    }
+    }*/
     // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="Button reading task">
@@ -1201,11 +1244,21 @@ void runApplication(void)
         }
     }
     // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="Reset pulse counter">
+    if(tmr0Flag == true && relayStatus.pulsecounter == 1)
+    {
+        tmr0Flag = false;
+        relayStatus.pulsecounter = 0;
+        LATAbits.LATA5 = LOW;
+         uart1_puts("Pulsetime Reset\n");
+    }
+    // </editor-fold>
 }
 
 void ledBlink(void)
 {
-//    LED_Toggle();
+    LED_Toggle();
 }
 
 void ads1115SampleData(void)
@@ -2164,7 +2217,8 @@ void process_data(void)
                 for(i = 0; i < 4; i++)
                 {
                     itoa(readBytes[i], txBuffer, 10);
-                    uart1_puts(txBuffer); 
+                    uart1_puts(txBuffer);
+                    uart1_puts(" "); 
                 }
                 uart1_puts("\nEEPROM RdN done\n");
 //                systemStatus.systemAllStates = 0;

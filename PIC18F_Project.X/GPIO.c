@@ -42,6 +42,10 @@ void PIN_MANAGER_Initialize(void)
     LATAbits.LATA3 = LOW;
     TRISAbits.TRISA4 = OUTPUT;    
     LATAbits.LATA4 = LOW;
+    
+    ANSELAbits.ANSA5 = DIGITAL;
+    TRISAbits.TRISA5 = OUTPUT;    
+    LATAbits.LATA5 = LOW;
 //    ANSELC = 0x3C;
 //    ANSELB = 0x3F;
 //    ANSELE = 0x07;
