@@ -13,20 +13,16 @@
 #include "main.h"
 
 // Macros Declaration-----------------------------------------------------------
-#define INPUT   1
-#define OUTPUT  0
-
-#define HIGH    1
-#define LOW     0
-
-#define ANALOG      1
-#define DIGITAL     0
-
-#define PULL_UP_ENABLED      0
-#define PULL_UP_DISABLED     1
-
-#define ENABLE    1
-#define DISABLE   0
+#define INPUT               1
+#define OUTPUT              0
+#define HIGH                1
+#define LOW                 0
+#define ANALOG              1
+#define DIGITAL             0
+#define PULL_UP_ENABLED     0
+#define PULL_UP_DISABLED    1
+#define ENABLE              1
+#define DISABLE             0
 
 // --EUSART1 Pins (RC6 = TX1, RC7 = RX1)----------------------------------------
 // get/set RC6 procedures

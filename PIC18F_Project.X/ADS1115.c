@@ -19,7 +19,7 @@ void ADS1115_init(ADS1115_Object_t *instance)
     I2C1_write(LOW_BYTE(instance->config.value));
     I2C1_stop();
     
-    // added
+    // Configured ADS1115 for interrupt
     I2C1_start(I2C_START_CMD);
     I2C1_write((instance->address << 1) & 0xFE);
     I2C1_write(REGISTER_HI_THRESH);
@@ -33,7 +33,7 @@ void ADS1115_init(ADS1115_Object_t *instance)
     I2C1_write(HIGH_BYTE(0x0000));
     I2C1_write(LOW_BYTE(0x0000));
     I2C1_stop();
-    // stop
+
     __delay_us(10000);
 
     I2C1_start(I2C_START_CMD);
@@ -61,7 +61,6 @@ void ADS1115_init(ADS1115_Object_t *instance)
 }
 
 float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
-//void ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel, float* floatVar)
 {
     instance->config.os = OS_START_SINGLE_CONVERSION;
     switch(channel)
@@ -100,7 +99,6 @@ float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)
     
     while(!conversionComplete(instance));
     return computeVoltage(instance, getLastConversion(instance));
-//    *floatVar = computeVoltage(instance, getLastConversion(instance));
 }
 
 void ADS1115_setReadSingleEnded(ADS1115_Object_t *instance, const uint8_t channel)

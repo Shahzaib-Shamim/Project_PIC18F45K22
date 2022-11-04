@@ -13,8 +13,8 @@
 #include "main.h"
 
 // Data Type Section
-typedef struct
-{
+
+typedef struct {
     uint16_t size;
     float *buffer;
 

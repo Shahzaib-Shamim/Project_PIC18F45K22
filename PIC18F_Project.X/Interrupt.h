@@ -91,7 +91,7 @@
  * @Example
     INTERRUPT_Initialize();
  */
-void INTERRUPT_Initialize (void);
+void INTERRUPT_Initialize(void);
 
 #endif	/* INTERRUPTS_H */
 

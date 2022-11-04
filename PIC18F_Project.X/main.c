@@ -5,19 +5,11 @@
 #include "SystemInitalization.h"
 #include "GPIO.h"
 #include "UART.h"
-//#include "Interrupt.h"
 #include "ECCP.h"
 #include "TMR.h"
-//#include "I2C.h"
-//#include "ADS1115.h"
 #include "TaskRoutines.h"
 #include "LCD_HD44780_20x4.h"
 #include "EEPROM.h"
-//#include "DS3231.h"
-//#include "EEPROM.h"
-//#include "EXTI.h"
-//#include "TMR0.h"
-//#include "Capture.h"
 
 // --Global variable section----------------------------------------------------
 char uartBuff[10] = {0};

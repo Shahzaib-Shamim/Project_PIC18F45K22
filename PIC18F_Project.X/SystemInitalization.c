@@ -18,7 +18,6 @@ void SYSTEM_Initialization(void)
     INTERRUPT_Initialize();
     ECCP1_Initialize();
     I2C1_initialize();
-    CCP2_Initialize();
     EXTI0_Initialize();
     EXTI1_Initialize();
     EXTI2_Initialize();
@@ -29,7 +28,7 @@ void SYSTEM_Initialization(void)
 }
 
 static void OSCILLATOR_Init(void)
-{   
+{
     // SCS FOSC; IRCF 1MHz_HFINTOSC/16; IDLEN disabled; 
     OSCCON = 0x30;
     // PRISD enabled; SOSCGO disabled; MFIOSEL disabled; 

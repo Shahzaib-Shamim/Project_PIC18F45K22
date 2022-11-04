@@ -14,7 +14,7 @@
 #include "I2C.h"
 
 #define ADS1115_ADDR    0x48
-#define ADS1115_ADDR_WR (ADS1115_ADDR << 1) | 0     // 0x90
+#define ADS1115_ADDR_WR (ADS1115_ADDR << 1) | 0     // becomes 0x90
 #define ADS1115_ADDR_RD (ADS1115_ADDR << 1) | 1  
 
 // --Macro Declarations---------------------------------------------------------
@@ -25,16 +25,16 @@
 
 #define COMP_QUEUE_ONE_CONVERSION			0
 #define COMP_QUEUE_TWO_CONVERSION			1
-#define COMP_QUEUE_FOUR_CONVERSION		2
-#define COMP_QUEUE_DISABLE_COMPARATOR	3
+#define COMP_QUEUE_FOUR_CONVERSION          2
+#define COMP_QUEUE_DISABLE_COMPARATOR       3
 
-#define COMP_LAT_NONLATCHING			0
+#define COMP_LAT_NONLATCHING                0
 #define COMP_LAT_LATCHING					1
 
 #define COMP_POL_ACT_HIGH					1
 #define COMP_POL_ACT_LOW					0
 
-#define COMP_MODE_TRADITIONAL			0
+#define COMP_MODE_TRADITIONAL               0
 #define COMP_MODE_WINDOW					1
 
 #define DR_8_SPS							0
@@ -46,7 +46,7 @@
 #define DR_475_SPS							6
 #define DR_860_SPS							7
 
-#define MODE_CONT_CONV_MODE             0
+#define MODE_CONT_CONV_MODE                 0
 #define MODE_SINGLE_SHOT_OR_PWR_DOWN		1
 
 #define PGA_FSR_6_144						0
@@ -78,41 +78,38 @@
 
 // --Data Type Section----------------------------------------------------------
 
-typedef union
-{
+typedef union {
 
-  struct
-  {
-    unsigned compQue : 2;
-    unsigned compLat : 1;
-    unsigned compPol : 1;
-    unsigned compMode : 1;
-    unsigned dataRate : 3;
-    unsigned mode : 1;
-    unsigned pga : 3;
-    unsigned mux : 3;
-    unsigned os : 1;
-  };
-
-  uint16_t value;
-
+    struct {
+        unsigned compQue : 2;
+        unsigned compLat : 1;
+        unsigned compPol : 1;
+        unsigned compMode : 1;
+        unsigned dataRate : 3;
+        unsigned mode : 1;
+        unsigned pga : 3;
+        unsigned mux : 3;
+        unsigned os : 1;
+    };
+    uint16_t value;
 } ADS1115_ConfigBits_t;
 
-typedef struct
-{
-  uint8_t address;
-  ADS1115_ConfigBits_t config;
-  uint8_t isPresent;
+typedef struct {
+    uint8_t address;
+    ADS1115_ConfigBits_t config;
+    uint8_t isPresent;
 } ADS1115_Object_t;
-
 
 // --Global Variable Section----------------------------------------------------
 
 
 // --Global Functions Section---------------------------------------------------
 void ADS1115_init(ADS1115_Object_t *instance);
+
+// Polling method
 float ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel);
-//void ADS1115_readSingleEnded(ADS1115_Object_t *instance, const uint8_t channel, float* floatVar);
+
+// Interrupt method
 void ADS1115_setReadSingleEnded(ADS1115_Object_t *instance, const uint8_t channel);
 float ADS1115_getVoltage(ADS1115_Object_t *instance, const uint8_t channel);
 

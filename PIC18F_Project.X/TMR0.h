@@ -59,9 +59,6 @@
 #define TMR0_5MS                    63035
 
 // --Global variables-----------------------------------------------------------
-//extern volatile bool int0Flag;
-//extern volatile bool int1Flag;
-//extern volatile bool int2Flag;
 extern volatile bool tmr0Flag;
 
 
@@ -95,7 +92,7 @@ extern volatile bool tmr0Flag;
         // Do something else...
     }
     </code>
-*/
+ */
 void TMR0_Initialize(void);
 
 /**
@@ -124,7 +121,7 @@ void TMR0_Initialize(void);
 
     // Do something else...
     </code>
-*/
+ */
 void TMR0_StartTimer(void);
 
 /**
@@ -156,7 +153,7 @@ void TMR0_StartTimer(void);
     // Stop TMR0;
     TMR0_StopTimer();
     </code>
-*/
+ */
 void TMR0_StopTimer(void);
 
 
@@ -192,7 +189,7 @@ void TMR0_StopTimer(void);
         TMR0_Reload();
     }
     </code>
-*/
+ */
 uint16_t TMR0_ReadTimer(void);
 
 /**
@@ -231,7 +228,7 @@ uint16_t TMR0_ReadTimer(void);
         // Do something else...
     }
     </code>
-*/
+ */
 void TMR0_WriteTimer(uint16_t timerVal);
 
 /**
@@ -267,7 +264,7 @@ void TMR0_WriteTimer(uint16_t timerVal);
         }
     }
     </code>
-*/
+ */
 void TMR0_Reload(void);
 
 /**

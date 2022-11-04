@@ -35,12 +35,12 @@ void LCD_Init(void)
     // Sequence to put the LCD into 4 bit mode this is according to the hitachi HD44780 datasheet page 109
 
     // we start in 8bit mode
-    LCDwrite4bits(LCD_8BIT_INIT); 
-    __delay_us(4500);   // wait more than 4.1ms
+    LCDwrite4bits(LCD_8BIT_INIT);
+    __delay_us(4500); // wait more than 4.1ms
 
     // second write
-    LCDwrite4bits(LCD_8BIT_INIT); 
-    __delay_us(150);    // wait > 100us
+    LCDwrite4bits(LCD_8BIT_INIT);
+    __delay_us(150); // wait > 100us
 
     // third write
     LCDwrite4bits(LCD_8BIT_INIT);
@@ -101,7 +101,7 @@ void LCDclear(void)
     {
     };
 #else
-    __delay_us(30000);  // this command takes a long time!
+    __delay_us(30000); // this command takes a long time!
 #endif
 }
 
@@ -113,7 +113,7 @@ void LCDhome(void)
     {
     };
 #else 
-    __delay_us(30000);  // this command takes a long time!
+    __delay_us(30000); // this command takes a long time!
 #endif
 }
 
@@ -125,7 +125,7 @@ void LCDsetCursor(unsigned char col, unsigned char row)
         row = _numlines - 1; // we count rows starting w/0
     }
 
-    LCDcommandWrite((uint8_t)(LCD_DD_RAM_ADDRESS | (col + row_offsets[row])));
+    LCDcommandWrite((uint8_t) (LCD_DD_RAM_ADDRESS | (col + row_offsets[row])));
 }
 
 // Turn the display on/off (quickly)
@@ -228,7 +228,7 @@ void LCDnoAutoscroll(void)
 void LCDcreateChar(unsigned char location, unsigned char charmap[])
 {
     location &= 0x7; // we only have 8 locations 0-7
-    LCDcommandWrite((uint8_t)(LCD_CG_RAM_ADDRESS | (location << 3)));
+    LCDcommandWrite((uint8_t) (LCD_CG_RAM_ADDRESS | (location << 3)));
     for(int i = 0; i < 8; i++)
         LCDdataWrite(charmap[i]);
 }
@@ -287,7 +287,7 @@ unsigned char LCDreadDDRam(unsigned char address)
 
 unsigned char LCDreadCGRam(unsigned char address)
 {
-    LCDcommandWrite((uint8_t)(LCD_CG_RAM_ADDRESS | (address & LCD_CG_RAM_ADDRESS_MASK)));
+    LCDcommandWrite((uint8_t) (LCD_CG_RAM_ADDRESS | (address & LCD_CG_RAM_ADDRESS_MASK)));
     return LCDdataRead();
 }
 
@@ -301,7 +301,7 @@ static void LCDsend(unsigned char value, unsigned char RsMode)
 {
     unsigned char highnib = value & 0xF0;
 
-    unsigned char lownib = (uint8_t)(value << 4);
+    unsigned char lownib = (uint8_t) (value << 4);
     lownib &= 0xF0;
 
     LCDwrite4bits((highnib) | En | RsMode);
@@ -321,7 +321,7 @@ static unsigned char LCDreceive(unsigned char RsMode)
     highnib = LCDread4bits(LCD_PCF8574_WEAK_PU | En | RsMode);
     lownib = LCDread4bits(LCD_PCF8574_WEAK_PU | En | RsMode);
     LCDwritePCF8574((LCD_PCF8574_WEAK_PU & ~LCD_PCF8574_WEAK_PU) | En | RsMode); // Set P7..P4 = 1, En = 1, RnW = 0, Rs = XX
-    return(unsigned char) ((highnib & 0xF0) | ((lownib & 0xF0) >> 4));
+    return (unsigned char) ((highnib & 0xF0) | ((lownib & 0xF0) >> 4));
 }
 
 static void LCDwrite4bits(unsigned char nibEnRsMode)
@@ -342,7 +342,7 @@ static unsigned char LCDread4bits(unsigned char RsEnMode)
 static void LCDpulseEnableNeg(unsigned char _data)
 {
     LCDwritePCF8574(_data | En); // En high
-    __delay_us(1);  // enable pulse must be >450ns
+    __delay_us(1); // enable pulse must be >450ns
 
     LCDwritePCF8574(_data & ~En); // En low
     __delay_us(50);
@@ -369,7 +369,7 @@ static unsigned char LCDreadPCF8574(void)
 
 void LCD_i2cWriteSingle(unsigned char device, unsigned char info)
 {
-    unsigned char data = info;    
+    unsigned char data = info;
     I2C1_start(I2C_START_CMD);
     I2C1_write((device << 1) & I2C_WRITE);
     I2C1_write(info);
@@ -379,11 +379,11 @@ void LCD_i2cWriteSingle(unsigned char device, unsigned char info)
 
 unsigned char LCD_i2cRead(unsigned char device)
 {
-    unsigned char data = 0;    
+    unsigned char data = 0;
     I2C1_start(I2C_START_CMD);
-    I2C1_write((uint8_t)( (device << 1) | I2C_READ) );
+    I2C1_write((uint8_t) ((device << 1) | I2C_READ));
     data = I2C1_read();
     I2C1_master_ack(I2C_DATA_NOACK);
-    I2C1_stop();   
+    I2C1_stop();
     return data;
 }

@@ -28,7 +28,7 @@
 #define ECCP1_MODULE_OFF                          0
 #define ECCP1_RESERVED                            1
 #define ECCP1_TOGGLE_ON_COMPARE                   2
-//#define ECCP1_RESERVED                            3
+//#define ECCP1_RESERVED                          3
 #define ECCP1_CAPTURE_ON_EVERY_FALLING_EDGE       4
 #define ECCP1_CAPTURE_ON_EVERY_RISING_EDGE        5
 #define ECCP1_CAPTURE_ON_EVERY_4TH_RISING_EDGE    6
@@ -58,18 +58,17 @@
    None
  */
 
-typedef union CCPR1Reg_tag
-{
-   struct
-   {
-      uint8_t ccpr1l;
-      uint8_t ccpr1h;
-   };
-   struct
-   {
-      uint16_t ccpr1_16Bit;
-   };
-} CCP1_PERIOD_REG_T ;
+typedef union CCPR1Reg_tag {
+
+    struct {
+        uint8_t ccpr1l;
+        uint8_t ccpr1h;
+    };
+
+    struct {
+        uint16_t ccpr1_16Bit;
+    };
+} CCP1_PERIOD_REG_T;
 
 
 /**
@@ -127,7 +126,7 @@ void ECCP1_Initialize(void);
     ECCP1_Initialize();
     ECCP1_SetCompareCount(compare);
     </code>
-*/
+ */
 void ECCP1_SetCompareCount(uint16_t compareCount);
 
 /**
@@ -143,7 +142,7 @@ void ECCP1_SetCompareCount(uint16_t compareCount);
 
   @Param
     None
-*/
+ */
 void ECCP1_CompareISR(void);
 
 /**

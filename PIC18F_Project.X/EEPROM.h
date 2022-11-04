@@ -70,7 +70,7 @@ void EEPROM_erase(uint8_t slaveAddr, uint8_t page, uint8_t byteOffset, uint8_t n
  * 
  * Example: write 0x01 at page 0 offset 3
  * so 12-bit address will be (127*32)+3 = 0x003h
- */ 
+ */
 void EEPROM_write1ByteToPage(uint8_t slaveAddr, uint8_t page, uint8_t byteOffset, uint8_t pData);
 uint8_t EEPROM_read1ByteFromPage(uint8_t slaveAddr, uint8_t page, uint8_t byteOffset);
 
