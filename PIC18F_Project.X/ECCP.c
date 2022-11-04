@@ -6,9 +6,8 @@ void ECCP1_Initialize(void)
 {
     // Set the ECCP1 to the options selected in the User Interface
 
-    // CCP1M Special Event Trigger; DC1B 0; P1M single; 
-    //	CCP1CON = 0x0B;    
-    CCP1CON = 0x00; // reset register
+    // CCP1M Special Event Trigger; DC1B 0; P1M single;     
+    CCP1CON = 0x00;     // reset register
     CCP1CONbits.CCP1M = ECCP1_SPECIAL_EVENT_TRIGGER;
 
     // CCPR1H 39, initial compare value (may set to 0)
@@ -16,7 +15,7 @@ void ECCP1_Initialize(void)
 
     // CCPR1L 16, initial compare value (may set to 0) 
     CCPR1L = 0xC8;
-    
+
     // Interrupt priority
     IPR1bits.CCP1IP = 1;
 
@@ -27,7 +26,6 @@ void ECCP1_Initialize(void)
     PIE1bits.CCP1IE = 1;
 
     // Selecting CCPTMRS0
-    //	CCPTMRS0bits.C1TSEL = 0x0;
     CCPTMRS0bits.C1TSEL = ECCP1_CCP1_TMR1_PWM_TMR2;
 }
 
@@ -43,7 +41,7 @@ void ECCP1_SetCompareCount(uint16_t compareCount)
 
 void ECCP1_CompareISR(void)
 {
-    static uint32_t i = 0;
+//    static uint32_t i = 0;
 
     PIR1bits.CCP1IF = 0;
 
@@ -62,30 +60,26 @@ void ECCP1_CompareISR(void)
     {
         sysFlags.ads1115SampleTask = true;
     }
-    if((timer1.timer1_1msCounter % EEPROM_TASK) == 0)
-    {
-        sysFlags.eepromTask = true;
-    }
     if((timer1.timer1_1msCounter % UART_TX_TASK_TIME) == 0)
     {
         sysFlags.uartTxTask = true;
     }
-    
+
     if((timer1.timer1_1msCounter % LCD_TASK) == 0)
     {
         sysFlags.lcdTask = true;
     }
-    
+
     if((timer1.timer1_1msCounter % PULSE_TASK) == 0)
     {
         sysFlags.pulseTask = true;
     }
-    
+
     if((timer1.timer1_1msCounter % COEF_TASK) == 0)
     {
         sysFlags.coefTask = true;
     }
-    
+
     // Reset timer
     if(timer1.timer1_1msCounter == 1000)
     {

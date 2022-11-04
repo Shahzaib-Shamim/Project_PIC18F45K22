@@ -11,8 +11,6 @@ void uart1_init(void)
     RCSTA1 = 0;
     TXSTA1 = 0;
 
-    //  _delay((FCY / BAUD_RATE)*20); /* wait 20 bit times with UART1 TX output at stop bit state */
-
     TXSTA1bits.SYNC = 0; // use asynchronous mode
     TXSTA1bits.BRGH = 1; // use high speed BRG mode, see errata
     BAUDCON1bits.BRG16 = 1; // use 16-bit baud rate divisor
@@ -31,25 +29,16 @@ void uart1_init(void)
     PIE1bits.TX1IE = 0; // disable transmitter interrupts
 }
 
-//void uart1_putc(char *c)
-
 void uart1_putc(uint8_t c)
 {
-    //    TXREG1 = *c;
     TXREG1 = c;
     while(TXSTA1bits.TRMT1 == 0);
-    //  {
-    //    Nop();
-    //  }
 }
 
 void uart1_puts(char *pStr)
 {
     while(*pStr)
     {
-        //        uart1_putc(pStr);
-        //        pStr++;
-
         uart1_putc(*pStr++);
     }
 }
@@ -59,12 +48,12 @@ void uart1_getc(void)
     if(RCSTA1bits.FERR1)
     {
         uint8_t er = RCREG1;
-    } 
+    }
     else if(RCSTA1bits.OERR1)
     {
         RCSTA1bits.CREN1 = 0;
         RCSTA1bits.CREN1 = 1;
-    } 
+    }
     else
     {
         processIncomingByte(RCREG1);

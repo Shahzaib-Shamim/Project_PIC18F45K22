@@ -20,8 +20,7 @@ void TMR1_Initialize(void)
     // Clearing IF flag.
     PIR1bits.TMR1IF = 0;
 
-//    T1CON = 0x31;
-    T1CONbits.TMR1ON = TMR1_STOP;          // start
+    T1CONbits.TMR1ON = TMR1_STOP;
     T1CONbits.T1RD16 = TMR1_8BIT_OPERATION;
     T1CONbits.T1SYNC = TMR1_SYNC_wFOSC;
     T1CONbits.T1SOSCEN = TMR1_SECONDARY_OSC_CIRCUIT_DISABLE;
@@ -90,5 +89,5 @@ uint8_t TMR1_CheckGateValueStatus(void)
 
 bool TMR1_HasOverflowOccured(void)
 {
-    return(PIR1bits.TMR1IF);
+    return (PIR1bits.TMR1IF);
 }

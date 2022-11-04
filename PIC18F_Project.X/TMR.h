@@ -28,7 +28,7 @@
 // --Macro Declarations---------------------------------------------------------
 #define CLEAR 0
 #define SET   1
-#define TIMER1_PERIOD 0xFFFF  // 65535
+#define TIMER1_PERIOD 0xFFFF                // 65535 (top value to be count)
 
 // T1CON - Timer1 control register
 #define TMR1_START                          1
@@ -38,7 +38,7 @@
 #define TMR1_nSYNC_wFOSC                    1
 #define TMR1_SYNC_wFOSC                     0
 #define TMR1_SECONDARY_OSC_CIRCUIT_ENABLE   1   // clock source from TxCKI pin
-#define TMR1_SECONDARY_OSC_CIRCUIT_DISABLE  0  // clock source from external oscillator
+#define TMR1_SECONDARY_OSC_CIRCUIT_DISABLE  0   // clock source from external oscillator
 #define TMR1_PSC_1_1                        0
 #define TMR1_PSC_1_2                        1
 #define TMR1_PSC_1_4                        2
@@ -73,7 +73,7 @@
     <code>
     TMR1_Initialize();
     </code>
-*/
+ */
 void TMR1_Initialize(void);
 
 /**
@@ -226,7 +226,7 @@ void TMR1_WriteTimer(uint16_t timerVal);
 
     TMR1_Reload();}
     </code>
-*/
+ */
 void TMR1_Reload(void);
 
 /**
@@ -267,7 +267,7 @@ void TMR1_Reload(void);
 
     yVal = TMR1_ReadTimer();
     </code>
-*/
+ */
 void TMR1_StartSinglePulseAcquisition(void);
 
 /**
@@ -308,7 +308,7 @@ void TMR1_StartSinglePulseAcquisition(void);
 
     yVal = TMR1_ReadTimer();
     </code>
-*/
+ */
 uint8_t TMR1_CheckGateValueStatus(void);
 
 /**
@@ -346,7 +346,7 @@ uint8_t TMR1_CheckGateValueStatus(void);
         }
     }
     </code>
-*/
+ */
 bool TMR1_HasOverflowOccured(void);
 
 

@@ -7,19 +7,13 @@ void I2C1_initialize(void)
 
     SSP1CON1bits.SSPM = 0x08;
     SSPCON1bits.SSPEN = 1;
-    
-    SSP1CON2 = 0x00;    // Reset MSSP Control Register
-    
+
+    SSP1CON2 = 0x00; // Reset MSSP Control Register
+
     SSP1ADD = ((_XTAL_FREQ / I2C1_Clock) / 4) - 1;
 
-    // BCLI - low priority
-    //    IPR2bits.BCL1IP = 0;    
-
-    // SSPI - low priority
-    //    IPR1bits.SSP1IP = 0;
-    
-    PIR1bits.SSP1IF = 0;    // clear SSP1 Interrupt flag
-//    PIR2bits.BCL1IF = 0;  // clear bs collision flag
+    PIR1bits.SSP1IF = 0; // clear SSP1 Interrupt flag
+    //    PIR2bits.BCL1IF = 0;  // clear bs collision flag
 }
 
 void I2C1_is_idle(void)
@@ -45,21 +39,19 @@ void I2C1_start(unsigned char stype)
 
 void I2C1_rep_start(void)
 {
-//    I2C1_is_idle();
     SSP1CON2bits.RSEN = 1;
-    while(SSP1CON2bits.RSEN); // added
+    while(SSP1CON2bits.RSEN);
 }
 
 unsigned char I2C1_slave_ack(void)
 {
     // Return: 1 = Acknowledge was not received from slave
     //         0 = Acknowledge was received from slave
-    return(SSP1CON2bits.ACKSTAT);
+    return (SSP1CON2bits.ACKSTAT);
 }
 
 void I2C1_stop(void)
 {
-//    I2C1_is_idle();
     // Stop I2C Transmission
     SSP1CON2bits.PEN = 1;
     while(SSP1CON2bits.PEN);
@@ -67,15 +59,11 @@ void I2C1_stop(void)
 
 void I2C1_write(unsigned char data)
 {
-//    I2C1_is_idle();
     SSP1BUF = data;
     if(SSP1CON1bits.WCOL) // Check for write collision
         return;
     while(SSP1STATbits.BF != 0);
 
-    // added
-//    while(!PIR1bits.SSP1IF && !i2c_checkError());
-//    while(SSP1CON2bits.ACKSTAT != 0);
     I2C1_is_idle();
 }
 
@@ -88,19 +76,14 @@ void I2C1_master_ack(unsigned char ack_type)
 
 unsigned char I2C1_read(void)
 {
-//    uint8_t recieve = 0;
     // Ensure the I2C module is idle
     I2C1_is_idle();
-    
+
     // Enable Receive Mode
     SSP1CON2bits.RCEN = 1;
     while(SSP1STATbits.BF != 1);
-    // added
-//    while(!PIR1bits.SSP1IF && !i2c_checkError());
-//    recieve = SSP1BUF;
-//    SSP1CON2bits.ACKEN = ack;
-//    return recieve;
-    return(SSP1BUF);
+
+    return (SSP1BUF);
 }
 
 void I2C1_writeBlock(unsigned char slaveAddr, unsigned char startRegAddr, unsigned char buflen, const unsigned char * bufptr)
@@ -109,36 +92,25 @@ void I2C1_writeBlock(unsigned char slaveAddr, unsigned char startRegAddr, unsign
     I2C1_write((slaveAddr << 1) & 0xFE);
     I2C1_write(startRegAddr);
     //send the data. buflen might be zero!
-    for (; buflen>0; --buflen)
+    for(; buflen > 0; --buflen)
     {
         I2C1_write(*bufptr++);
     }
     I2C1_stop();
 }
 
-//unsigned char I2C1_readblock(unsigned char slaveAddr, unsigned char startRegAddr, unsigned char buflen, unsigned char * bufptr)
 void I2C1_readblock(unsigned char slaveAddr, unsigned char startRegAddr, unsigned char buflen, unsigned char * bufptr)
 {
     I2C1_start(I2C_START_CMD);
     I2C1_write((slaveAddr << 1) & 0xFE);
     I2C1_write(startRegAddr);
     I2C1_start(I2C_REP_START_CMD);
-    I2C1_write((uint8_t)( (slaveAddr << 1) | 0x01) );
-    
+    I2C1_write((uint8_t) ((slaveAddr << 1) | 0x01));
+
     //send the data. buflen might be zero!
-    for (; buflen>0; --buflen)
+    for(; buflen > 0; --buflen)
     {
-//        if(buflen == 1) // if this is last byte
-//        {
-//            *bufptr++ = I2C1_read();
-//            I2C1_master_ack(I2C_DATA_NOACK);
-//        }
-//        else
-//        {
-//            *bufptr++ = I2C1_read();
-//            I2C1_master_ack(I2C_DATA_ACK);
-//        }
-        unsigned char ackflag = (buflen == 1);  // NACK
+        unsigned char ackflag = (buflen == 1); // NACK
         *bufptr++ = I2C1_read();
         I2C1_master_ack(ackflag);
     }

@@ -13,9 +13,6 @@
 #include "main.h"
 
 // --Global variables-----------------------------------------------------------
-//extern volatile bool int0Flag;
-//extern volatile bool int1Flag;
-//extern volatile bool int2Flag;
 
 // --Macros---------------------------------------------------------------------
 #define EXTI_RISING_EDGE    1

@@ -13,10 +13,10 @@
 #include "main.h"
 
 // --Global variables-----------------------------------------------------------
-typedef struct
-{
-  bool timer1_1msFlag;
-  uint16_t timer1_1msCounter;
+
+typedef struct {
+    bool timer1_1msFlag;
+    uint16_t timer1_1msCounter;
 } TIMER1_t;
 
 extern volatile TIMER1_t timer1;
@@ -25,7 +25,7 @@ extern volatile TIMER1_t timer1;
 // --Task routines macros-------------------------------------------------------
 #define LED_BLINK_TASK_TIME       50
 #define UART_TX_TASK_TIME         250
-#define ADS1115_SAMPLE_TASK_TIME  8
+#define ADS1115_SAMPLE_TASK_TIME  8     // ADC will sample 1 channel after every 8ms. All 4 channels will be converted after 32ms.
 #define DS3231_TIMESTAMP_TASK     900
 #define EEPROM_TASK               400
 #define LCD_TASK                  500
@@ -33,16 +33,16 @@ extern volatile TIMER1_t timer1;
 #define COEF_TASK                 50
 
 // add task routines here
-typedef struct
-{
-  uint8_t ledBlinkTask      : 1;
-  uint8_t ads1115SampleTask : 1;
-  uint8_t uartTxTask        : 1;
-  uint8_t ds3231Task        : 1;
-  uint8_t eepromTask        : 1;  
-  uint8_t lcdTask           : 1;
-  uint8_t pulseTask           : 1;
-  uint8_t coefTask           : 1;
+
+typedef struct {
+    uint8_t ledBlinkTask : 1;
+    uint8_t ads1115SampleTask : 1;
+    uint8_t uartTxTask : 1;
+    uint8_t ds3231Task : 1;
+    uint8_t eepromTask : 1;
+    uint8_t lcdTask : 1;
+    uint8_t pulseTask : 1;
+    uint8_t coefTask : 1;
 } ApplicationFlags_t;
 
 extern volatile ApplicationFlags_t sysFlags;
@@ -54,16 +54,15 @@ extern uint8_t lcdStates;
 #define SER_MSG_FLAG_TIME       1
 #define SER_MSG_FLAG_DATE       2
 #define SER_MSG_FLAG_CAL_COEF   3
-#define SER_MSG_FLAG_EEPROMWr1  4       //7
-#define SER_MSG_FLAG_EEPROMRd1  5       //8
-#define SER_MSG_FLAG_EEPROMWrN  6       //9
-#define SER_MSG_FLAG_EEPROMRdN  7       //10
+#define SER_MSG_FLAG_EEPROMWr1  4
+#define SER_MSG_FLAG_EEPROMRd1  5
+#define SER_MSG_FLAG_EEPROMWrN  6
+#define SER_MSG_FLAG_EEPROMRdN  7
 #define SER_MSG_FLAG_RTC_W      8
 #define SER_MSG_FLAG_RTC_R      9
 #define SER_MSG_FLAG_FW_W       10
 #define SER_MSG_FLAG_FW_R       11
 #define SER_MSG_FLAG_RELAY      12
-
 
 // Data Packet length
 #define timePacketLen       5
@@ -97,14 +96,6 @@ extern uint8_t lcdStates;
 #define LCD_NORMAL_MODE         4
 #define LCD_SHUTDOWN            5
 #define LCD_CAL_MODE_N          6
-//#define LCD_CAL_RTC_T           7
-//#define LCD_CAL_RTC_D           8
-//#define LCD_FW_Wr               9
-//#define LCD_FW_Rd               10
-//#define LCD_Wr_4BYTES_EEPROM    11
-//#define LCD_Rd_4BYTES_EEPROM    12
-//#define LCD_Wr_1BYTE_EEPROM     13
-//#define LCD_Rd_1BYTE_EEPROM     14
 #define LCD_INVALID_INPUT       15
 
 /**
@@ -113,19 +104,14 @@ extern uint8_t lcdStates;
 void initSysVariables(void);
 
 /**
- * Load variables from EEPROm
+ * Load variables from EEPROM
  */
-void loadPres1_Coef(void);
-void loadTemp1_Coef(void);
-void loadPres2_Coef(void);
-void loadTemp2_Coef(void);
 void load_Coef(void);
 
 /**
  * Initialization sequence
  */
 void startInitialization(void);
-
 
 /**
  * Global function to run main application code for different tasks

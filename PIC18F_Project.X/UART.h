@@ -19,7 +19,6 @@
 
 // --Global variables-----------------------------------------------------------
 extern char input_line[MAX_INPUT];
-//extern uint8_t uartRxFlag;
 extern bool uartProcessFlag;
 
 // --UART functions-------------------------------------------------------------
@@ -32,7 +31,6 @@ void uart1_init(void);
  * Send one character
  * @param char
  */
-//void uart_send(char *);
 void uart1_putc(uint8_t);
 
 /**
