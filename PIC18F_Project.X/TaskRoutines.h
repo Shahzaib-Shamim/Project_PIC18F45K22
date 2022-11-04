@@ -157,6 +157,7 @@ char* reverse(char *buffer, int i, int j);
 char* itoa(int value, char* buffer, int numBase);
 char* ltoa(long value, char* buffer, int numBase);
 void FloatToStringNew(char *str, float f, char size);
+void ulongToByte(uint32_t ulongData, uint8_t *pByteData);
 
 #endif	/* TASKROUTINES_H */
 

@@ -23,6 +23,12 @@ bool txEnableFlag = true;
 bool calibrationEnableFlag = false;
 unsigned long errorTimer = 0;
 
+// CRC Variables
+uint8_t crcBuff[35];
+uint16_t crcUART = 0;
+uint8_t crc1UART = 0;
+uint8_t crc2UART = 0;
+
 // ADC variables
 #define FILTER_SIZE     4
 ADS1115_Object_t myADC;
@@ -57,6 +63,7 @@ char *p = str;
 // Pulse timer variables
 uint8_t lowByte, highByte;
 uint16_t pulsetime;
+//uint32_t pulsetime;
 
 union SystemState_u
 {
@@ -213,7 +220,7 @@ void getLastCalibRTC(void)
     uint8_t readBuff[7];
     EEPROM_readMultipleBytes(EEPROM_ADDR, 0, 4, readBuff, 7);
 
-    /*itoa(readBuff[2], txBuffer, 10);
+    itoa(readBuff[2], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_putc(':');
     itoa(readBuff[1], txBuffer, 10);
@@ -223,9 +230,6 @@ void getLastCalibRTC(void)
     uart1_puts(txBuffer);
     uart1_putc(' ');
     
-    itoa(readBuff[3], txBuffer, 10);
-    uart1_puts(txBuffer);     //Day
-    uart1_putc(',');
     itoa(readBuff[4], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_putc('/');
@@ -234,10 +238,10 @@ void getLastCalibRTC(void)
     uart1_putc('/');
     itoa(readBuff[6], txBuffer, 10);
     uart1_puts(txBuffer);
-    uart1_newline();
-    uart1_puts("Last RTC\n");*/
-    sprintf(txBuffer, "%d:%d:%d %d/%d/%d Last RTC\n", readBuff[2], readBuff[1], readBuff[0], readBuff[4], readBuff[5], readBuff[6]);
-    uart1_puts(txBuffer);
+    uart1_puts(" ");
+    uart1_puts("Last RTC\n");
+//    sprintf(txBuffer, "%d:%d:%d %d/%d/%d Last RTC\n", readBuff[2], readBuff[1], readBuff[0], readBuff[4], readBuff[5], readBuff[6]);
+//    uart1_puts(txBuffer);
 }
 
 void getFWInfo(void)
@@ -286,13 +290,35 @@ void runApplication(void)
     // <editor-fold defaultstate="collapsed" desc="UART Task">
     if(sysFlags.uartTxTask == true && txEnableFlag == true)
     {
+        for(uint8_t i = 0; i < 35; i++)
+            crcBuff[i] = 0;
+        
+        EEPROM_floatToByte(&calibData[0], &crcBuff[0]);     //crc0 to crc3
+        EEPROM_floatToByte(&calibData[1], &crcBuff[4]);     //crc4 to crc7
+        EEPROM_floatToByte(&calibData[2], &crcBuff[8]);     //crc8 to crc11
+        EEPROM_floatToByte(&calibData[3], &crcBuff[12]);    //crc12 to crc15
+        
         sysFlags.uartTxTask = false;
 
         if(calibrationEnableFlag == true)
         {
+            EEPROM_floatToByte(&voltageFiltered[0], &crcBuff[16]);     //crc16 to crc19
+            EEPROM_floatToByte(&voltageFiltered[1], &crcBuff[20]);     //crc20 to crc23
+            EEPROM_floatToByte(&voltageFiltered[2], &crcBuff[24]);     //crc24 to crc27
+            EEPROM_floatToByte(&voltageFiltered[3], &crcBuff[28]);     //crc28 to crc31
+//            crcBuff[32] = '\0';
+            crcUART = checksumCalculator(crcBuff, sizeof(crcUART) / sizeof(uint8_t) );
+            crc1UART = (crcUART >> 8) & 0xff; // high byte
+            crc2UART = (crcUART >> 0) & 0xff; // low byte
+            
             sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f----", calibData[0], calibData[1], calibData[2], calibData[3]);
             uart1_puts(txBuffer);
-            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", voltageFiltered[0], voltageFiltered[1], voltageFiltered[2], voltageFiltered[3]);
+            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f  ", voltageFiltered[0], voltageFiltered[1], voltageFiltered[2], voltageFiltered[3]);
+            uart1_puts(txBuffer);
+            itoa(crc1UART, txBuffer, 10);
+            uart1_puts(txBuffer);
+            uart1_puts(",");
+            itoa(crc2UART, txBuffer, 10);
             uart1_puts(txBuffer);
             uart1_newline();
         }
@@ -300,6 +326,19 @@ void runApplication(void)
         else if(calibrationEnableFlag == false)
         {
             static char *monthName = "";
+            crcBuff[16] = ds3231_readBuff[2];
+            crcBuff[17] = ds3231_readBuff[1];
+            crcBuff[18] = ds3231_readBuff[0];
+            crcBuff[19] = ds3231_readBuff[4];
+            crcBuff[20] = ds3231_readBuff[5];
+            crcBuff[21] = ds3231_readBuff[6];
+            crcBuff[22] = relayStatus.relay;
+            ulongToByte((uint16_t)pulsetime, &crcBuff[23]);                // crc23 to crc26
+//            crcBuff[27] = '\0';
+            crcUART = checksumCalculator(crcBuff, sizeof(crcUART) / sizeof(uint8_t));
+            crc1UART = (crcUART >> 8) & 0xff; // high byte
+            crc2UART = (crcUART >> 0) & 0xff; // low byte
+            
             DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
             DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
             itoa(ds3231_readBuff[2], lcdBuff, 10);
@@ -332,7 +371,12 @@ void runApplication(void)
             uart1_puts(txBuffer);
             uart1_puts("  ");
 
-            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f", calibData[0], calibData[1], calibData[2], calibData[3]);
+            sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f  ", calibData[0], calibData[1], calibData[2], calibData[3]);
+            uart1_puts(txBuffer);
+            itoa(crc1UART, txBuffer, 10);
+            uart1_puts(txBuffer);
+            uart1_puts(",");
+            itoa(crc2UART, txBuffer, 10);
             uart1_puts(txBuffer);
             uart1_newline();
         }
@@ -487,11 +531,25 @@ void runApplication(void)
             LCD_Write_Char(0b11011111);         //degree symbol
             LCD_Write_Char('C');
 
-            errorTimer++;
+            /*errorTimer++;
             LCDsetCursor(0, 3);
             LCD_Write_Str("Error->");
             ltoa(errorTimer, lcdBuff2, 10);
-            LCD_Write_Str(lcdBuff2);
+            LCD_Write_Str(lcdBuff2);*/
+            LCDsetCursor(0, 3);
+            LCD_Write_Str("Relay#12345=");
+            LCDsetCursor(15, 3);
+            LCD_Write_Str("     ");
+            LCDsetCursor(19, 3);
+            itoa(relayStatus.button1, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            LCDsetCursor(18, 3);
+            itoa(relayStatus.button2, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            LCDsetCursor(17, 3);
+            itoa(relayStatus.button3, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            LCDsetCursor(16, 3);
+            itoa(relayStatus.button4, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            LCDsetCursor(15, 3);
+            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
         }
         // </editor-fold>
 
@@ -695,7 +753,7 @@ void runApplication(void)
             TMR1_StopTimer();
             systemStatus.systemAllStates = 0;
             relayStatus.relay = 0;
-            pulsetime = 0;      
+//            pulsetime = 0;      
             __delay_ms(1000);
             LCDclear();
         }
@@ -709,7 +767,7 @@ void runApplication(void)
         sysFlags.pulseTask = false;
         lowByte = LCD_i2cRead(0x3B);
         highByte = LCD_i2cRead(0x3D);
-        pulsetime = (uint16_t) ((highByte << 8) | (lowByte & 0xff));
+        pulsetime = ((highByte << 8) | (lowByte & 0xff));
     }
     // </editor-fold>
 
@@ -983,69 +1041,6 @@ void runApplication(void)
         }
     }
     // </editor-fold>
-
-    /*// <editor-fold defaultstate="collapsed" desc="Button reading task (reduce tmr0Flag)">
-    if(int1Flag == true && tmr0Flag == true)
-    {
-        tmr0Flag = false;
-        int1Flag = false;
-        if(PORTBbits.RB1 == PRESSED)
-        {
-            relayStatus.button1 ^= 1;
-            LATAbits.LATA0 = relayStatus.button1;
-        }
-    }
-    else if(int2Flag == true && tmr0Flag == true)
-    {
-        tmr0Flag = false;
-        int2Flag = false;
-        if(PORTBbits.RB2 == PRESSED)
-        {
-            relayStatus.button2 ^= 1;
-            LATAbits.LATA1 = relayStatus.button2;
-        }
-    }
-    else if(rb4Flag == true && tmr0Flag == true)
-    {
-        tmr0Flag = false;
-        rb4Flag = false;
-        if(PORTBbits.RB4 == PRESSED)
-        {
-            relayStatus.button3 ^= 1;
-            LATAbits.LATA2 = relayStatus.button3;
-        }
-    }
-    else if(rb5Flag == true && tmr0Flag == true)
-    {
-        tmr0Flag = false;
-        rb5Flag = false;
-        if(PORTBbits.RB5 == PRESSED)
-        {
-            relayStatus.button4 ^= 1;
-            LATAbits.LATA3 = relayStatus.button4;
-        }
-    }
-    else if(rb6Flag == true && tmr0Flag == true)
-    {
-        tmr0Flag = false;
-        rb6Flag = false;
-        if(PORTBbits.RB6 == PRESSED)
-        {
-            relayStatus.button5 ^= 1;
-            LATAbits.LATA4 = relayStatus.button5;
-        }
-    }
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc="Reset pulse counter">
-    if(tmr0Flag == true && relayStatus.pulsecounter == 1)
-    {
-        tmr0Flag = false;
-        relayStatus.pulsecounter = 0;
-        LATAbits.LATA5 = LOW;
-        uart1_puts("Pulsetime Reset\n");
-    }
-    // </editor-fold>*/
     
     // <editor-fold defaultstate="collapsed" desc="Buttons and PulseReset Task">
     if(tmr0Flag == true)
@@ -1159,7 +1154,8 @@ void ds3232Timestamp(void)
 void process_data(void)
 {
     uint16_t crc = 0;
-    uint8_t crc1, crc2; // crc1 = highbyte, crc2 = lowbyte
+    uint8_t crc1 = 0;   // crc1 = highbyte
+    uint8_t crc2 = 0;   // crc2 = lowbyte
     char parsedStrings[numOfChar][charLen];
     uint8_t dataPosition = 0;
     uint8_t dataCount = 0;
@@ -2265,5 +2261,15 @@ void FloatToStringNew(char *str, float f, char size)
         itoa(value, curr, 10); // convert digit to string
         str[pos++] = *curr; // add digit to result string and increment pointer
     }
+}
+
+void ulongToByte(uint32_t ulongData, uint8_t *pByteData)
+{
+    uint8_t *pointer_to_ulong;
+    pointer_to_ulong = (uint8_t *) &ulongData;
+    pByteData[0] = *pointer_to_ulong++;
+    pByteData[1] = *pointer_to_ulong++;
+    pByteData[2] = *pointer_to_ulong++;
+    pByteData[3] = *pointer_to_ulong;
 }
 // </editor-fold>
