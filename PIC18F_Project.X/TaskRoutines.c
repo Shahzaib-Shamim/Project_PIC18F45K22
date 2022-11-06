@@ -26,8 +26,8 @@ unsigned long errorTimer = 0;
 // CRC Variables
 uint8_t crcBuff[35];
 uint16_t crcUART = 0;
-uint8_t crc1UART = 0;
-uint8_t crc2UART = 0;
+uint8_t crc1UARTHigh = 0;
+uint8_t crc2UARTLow = 0;
 
 // ADC variables
 #define FILTER_SIZE     4
@@ -65,44 +65,41 @@ uint8_t lowByte, highByte;
 uint16_t pulsetime;
 //uint32_t pulsetime;
 
-union SystemState_u
-{
-    struct
-    {
-        unsigned rtcTimeFlag    : 1;
-        unsigned rtcDateFlag    : 1;
-        unsigned eepromWrBytes  : 1;
-        unsigned eepromRdBytes  : 1;
-        unsigned eepromWrByte   : 1;
-        unsigned eepromRdByte   : 1;
-        unsigned fwWr           : 1;
-        unsigned fwRd           : 1;
+union SystemState_u{
+
+    struct{
+        unsigned rtcTimeFlag : 1;
+        unsigned rtcDateFlag : 1;
+        unsigned eepromWrBytes : 1;
+        unsigned eepromRdBytes : 1;
+        unsigned eepromWrByte : 1;
+        unsigned eepromRdByte : 1;
+        unsigned fwWr : 1;
+        unsigned fwRd : 1;
     };
     uint16_t systemAllStates;
 };
 union SystemState_u systemStatus;
 
-union RelayState_u
-{
-    struct
-    {
-        unsigned button1        : 1;
-        unsigned button2        : 1;
-        unsigned button3        : 1;
-        unsigned button4        : 1;
-        unsigned button5        : 1;
-        unsigned pulsecounter   : 1;
-        unsigned                : 1;
-        unsigned                : 1;
+union RelayState_u{
+
+    struct{
+        unsigned button1 : 1;
+        unsigned button2 : 1;
+        unsigned button3 : 1;
+        unsigned button4 : 1;
+        unsigned button5 : 1;
+        unsigned pulsecounter : 1;
+        unsigned : 1;
+        unsigned : 1;
     };
     uint8_t relay;
 };
 union RelayState_u relayStatus;
 
-union sensorCalibrationCoef_u
-{
-    struct
-    {
+union sensorCalibrationCoef_u{
+
+    struct{
         unsigned pres1_a : 1;
         unsigned pres1_b : 1;
         unsigned pres1_c : 1;
@@ -124,8 +121,7 @@ union sensorCalibrationCoef_u
 };
 union sensorCalibrationCoef_u sensorsCoefStates;
 
-typedef struct
-{
+typedef struct{
     float coefA;
     float coefB;
     float coefC;
@@ -154,7 +150,7 @@ void initSysVariables(void)
 
     // ADS1115 configuration
     myADC.address = ADS1115_ADDR;
-    myADC.config.value = 0;         // reset register
+    myADC.config.value = 0; // reset register
     myADC.config.mux = MUX_SINGLE_0;
     myADC.config.pga = PGA_FSR_6_144;
     myADC.config.mode = MODE_SINGLE_SHOT_OR_PWR_DOWN;
@@ -229,19 +225,19 @@ void getLastCalibRTC(void)
     itoa(readBuff[0], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_putc(' ');
-    
+
     itoa(readBuff[4], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_putc('/');
     itoa(readBuff[5], txBuffer, 10);
-    uart1_puts(txBuffer);   //MonthName
+    uart1_puts(txBuffer); //MonthName
     uart1_putc('/');
     itoa(readBuff[6], txBuffer, 10);
     uart1_puts(txBuffer);
     uart1_puts(" ");
     uart1_puts("Last RTC\n");
-//    sprintf(txBuffer, "%d:%d:%d %d/%d/%d Last RTC\n", readBuff[2], readBuff[1], readBuff[0], readBuff[4], readBuff[5], readBuff[6]);
-//    uart1_puts(txBuffer);
+    //    sprintf(txBuffer, "%d:%d:%d %d/%d/%d Last RTC\n", readBuff[2], readBuff[1], readBuff[0], readBuff[4], readBuff[5], readBuff[6]);
+    //    uart1_puts(txBuffer);
 }
 
 void getFWInfo(void)
@@ -290,77 +286,65 @@ void runApplication(void)
     // <editor-fold defaultstate="collapsed" desc="UART Task">
     if(sysFlags.uartTxTask == true && txEnableFlag == true)
     {
+        sysFlags.uartTxTask = false;
+        
+        // reset CRCbuffer to 0
         for(uint8_t i = 0; i < 35; i++)
             crcBuff[i] = 0;
         
-        EEPROM_floatToByte(&calibData[0], &crcBuff[0]);     //crc0 to crc3
-        EEPROM_floatToByte(&calibData[1], &crcBuff[4]);     //crc4 to crc7
-        EEPROM_floatToByte(&calibData[2], &crcBuff[8]);     //crc8 to crc11
-        EEPROM_floatToByte(&calibData[3], &crcBuff[12]);    //crc12 to crc15
-        
-        sysFlags.uartTxTask = false;
-
+        floatToByte(calibData[0], &crcBuff[0]);
+        floatToByte(calibData[1], &crcBuff[4]);
+        floatToByte(calibData[2], &crcBuff[8]);
+        floatToByte(calibData[3], &crcBuff[12]);     
+            
         if(calibrationEnableFlag == true)
         {
-            EEPROM_floatToByte(&voltageFiltered[0], &crcBuff[16]);     //crc16 to crc19
-            EEPROM_floatToByte(&voltageFiltered[1], &crcBuff[20]);     //crc20 to crc23
-            EEPROM_floatToByte(&voltageFiltered[2], &crcBuff[24]);     //crc24 to crc27
-            EEPROM_floatToByte(&voltageFiltered[3], &crcBuff[28]);     //crc28 to crc31
-//            crcBuff[32] = '\0';
-            crcUART = checksumCalculator(crcBuff, sizeof(crcUART) / sizeof(uint8_t) );
-            crc1UART = (crcUART >> 8) & 0xff; // high byte
-            crc2UART = (crcUART >> 0) & 0xff; // low byte
-            
+             floatToByte(voltageFiltered[0], &crcBuff[16]);
+             floatToByte(voltageFiltered[1], &crcBuff[20]);
+             floatToByte(voltageFiltered[2], &crcBuff[24]);
+             floatToByte(voltageFiltered[3], &crcBuff[28]);        
+             crcUART = checksumCalculator(crcBuff, 32);
+             crc1UARTHigh = (crcUART >> 8) & 0xff;
+             crc2UARTLow = (crcUART >> 0) & 0xff;
+
             sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f----", calibData[0], calibData[1], calibData[2], calibData[3]);
             uart1_puts(txBuffer);
             sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f  ", voltageFiltered[0], voltageFiltered[1], voltageFiltered[2], voltageFiltered[3]);
             uart1_puts(txBuffer);
-            itoa(crc1UART, txBuffer, 10);
-            uart1_puts(txBuffer);
+            
+            itoa(crc1UARTHigh, txBuffer, 10); uart1_puts(txBuffer);
             uart1_puts(",");
-            itoa(crc2UART, txBuffer, 10);
-            uart1_puts(txBuffer);
+            itoa(crc2UARTLow, txBuffer, 10); uart1_puts(txBuffer);
             uart1_newline();
         }
 
         else if(calibrationEnableFlag == false)
         {
             static char *monthName = "";
-            crcBuff[16] = ds3231_readBuff[2];
-            crcBuff[17] = ds3231_readBuff[1];
-            crcBuff[18] = ds3231_readBuff[0];
-            crcBuff[19] = ds3231_readBuff[4];
-            crcBuff[20] = ds3231_readBuff[5];
-            crcBuff[21] = ds3231_readBuff[6];
-            crcBuff[22] = relayStatus.relay;
-            ulongToByte((uint16_t)pulsetime, &crcBuff[23]);                // crc23 to crc26
-//            crcBuff[27] = '\0';
-            crcUART = checksumCalculator(crcBuff, sizeof(crcUART) / sizeof(uint8_t));
-            crc1UART = (crcUART >> 8) & 0xff; // high byte
-            crc2UART = (crcUART >> 0) & 0xff; // low byte
-            
+
             DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
             DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
+
             itoa(ds3231_readBuff[2], lcdBuff, 10);
             uart1_puts(lcdBuff);
-            uart1_puts(":");        // hour
+            uart1_puts(":"); // hour
             itoa(ds3231_readBuff[1], lcdBuff, 10);
             uart1_puts(lcdBuff);
-            uart1_puts(":");        // minute
+            uart1_puts(":"); // minute
             itoa(ds3231_readBuff[0], lcdBuff, 10);
             uart1_puts(lcdBuff);
-            uart1_puts(" ");        // second
+            uart1_puts(" "); // second
             itoa(ds3231_readBuff[3], lcdBuff, 10);
             uart1_puts(lcdBuff);
-            uart1_puts(",");        // day of week
+            uart1_puts(","); // day of week
             itoa(ds3231_readBuff[4], lcdBuff, 10);
             uart1_puts(lcdBuff);
-            uart1_puts("/");        // day of month
+            uart1_puts("/"); // day of month
             monthName = setMonthName(ds3231_readBuff[5]);
             uart1_puts(monthName);
-            uart1_puts("/");        // month
+            uart1_puts("/"); // month
             itoa(ds3231_readBuff[6], lcdBuff, 10);
-            uart1_puts(lcdBuff);    // year
+            uart1_puts(lcdBuff); // year
             uart1_puts("  ");
 
             itoa(relayStatus.relay, txBuffer, 10);
@@ -373,16 +357,28 @@ void runApplication(void)
 
             sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f  ", calibData[0], calibData[1], calibData[2], calibData[3]);
             uart1_puts(txBuffer);
-            itoa(crc1UART, txBuffer, 10);
-            uart1_puts(txBuffer);
+
+            crcBuff[16] = ds3231_readBuff[2];
+            crcBuff[17] = ds3231_readBuff[1];
+            crcBuff[18] = ds3231_readBuff[0];
+            crcBuff[19] = ds3231_readBuff[4];
+            crcBuff[20] = ds3231_readBuff[5];
+            crcBuff[21] = ds3231_readBuff[6];
+            crcBuff[22] = relayStatus.relay;
+            ulongToByte(pulsetime, &crcBuff[23]);
+
+            crcUART = checksumCalculator(&crcBuff[0], 27);
+            crc1UARTHigh = (crcUART >> 8) & 0xff;
+            crc2UARTLow = (crcUART >> 0) & 0xff;
+            
+            itoa(crc1UARTHigh, txBuffer, 10); uart1_puts(txBuffer);
             uart1_puts(",");
-            itoa(crc2UART, txBuffer, 10);
-            uart1_puts(txBuffer);
+            itoa(crc2UARTLow, txBuffer, 10); uart1_puts(txBuffer);
             uart1_newline();
-        }
+        }        
     }
     // </editor-fold>
-    
+
     // <editor-fold defaultstate="collapsed" desc="ADS1115 Task">
     if(sysFlags.ads1115SampleTask == true)
     {
@@ -392,12 +388,24 @@ void runApplication(void)
         if(channelNumber++ == 4)
         {
             channelNumber = 0;
-            
+
             voltageFiltered[0] = calculateMovingAverage_f(adc_channel0_pres1, voltage[0]);
             voltageFiltered[1] = calculateMovingAverage_f(adc_channel1_temp1, voltage[1]);
             voltageFiltered[2] = calculateMovingAverage_f(adc_channel2_pres2, voltage[2]);
             voltageFiltered[3] = calculateMovingAverage_f(adc_channel3_temp2, voltage[3]);
-        }        
+
+            calibData[0] = (pres1.coefA * voltageFiltered[0] * voltageFiltered[0] * voltageFiltered[0]) +
+                    (pres1.coefB * voltageFiltered[0] * voltageFiltered[0]) + (pres1.coefC * voltageFiltered[0]) + pres1.coefD;
+
+            calibData[1] = (temp1.coefA * voltageFiltered[1] * voltageFiltered[1] * voltageFiltered[1]) +
+                    (temp1.coefB * voltageFiltered[1] * voltageFiltered[1]) + (temp1.coefC * voltageFiltered[1]) + temp1.coefD;
+
+            calibData[2] = (pres2.coefA * voltageFiltered[2] * voltageFiltered[2] * voltageFiltered[2]) +
+                    (pres2.coefB * voltageFiltered[2] * voltageFiltered[2]) + (pres2.coefC * voltageFiltered[2]) + pres2.coefD;
+
+            calibData[3] = (temp2.coefA * voltageFiltered[3] * voltageFiltered[3] * voltageFiltered[3]) +
+                    (temp2.coefB * voltageFiltered[3] * voltageFiltered[3]) + (temp2.coefC * voltageFiltered[3]) + temp2.coefD;
+        }
         ADS1115_setReadSingleEnded(&myADC, channelNumber);
     }
     // </editor-fold>
@@ -427,7 +435,7 @@ void runApplication(void)
     // </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="Coefficient Task">
-    if(sysFlags.coefTask == true)
+    /*if(sysFlags.coefTask == true)
     {
         sysFlags.coefTask = false;
 
@@ -439,7 +447,8 @@ void runApplication(void)
                         (pres2.coefB * voltageFiltered[2] * voltageFiltered[2]) + (pres2.coefC * voltageFiltered[2]) + pres2.coefD;
         calibData[3] = (temp2.coefA * voltageFiltered[3] * voltageFiltered[3] * voltageFiltered[3]) +
                         (temp2.coefB * voltageFiltered[3] * voltageFiltered[3]) + (temp2.coefC * voltageFiltered[3]) + temp2.coefD;
-    }
+    
+    }*/
     // </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="LCD Task">
@@ -502,33 +511,33 @@ void runApplication(void)
             LCDsetCursor(6, 0);
             LCD_Write_Str("        ");
             LCDsetCursor(6, 0);
-            LCD_Write_Str(lcdBuff);            
+            LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 0);
             LCD_Write_Str("ms");
 
             LCDsetCursor(0, 1);
             LCD_Write_Str("P1=");
-//            FloatToStringNew(p, calibData[0], 3);
+            //            FloatToStringNew(p, calibData[0], 3);
             sprintf(lcdBuff, "%0.3f", calibData[0]);
             LCDsetCursor(3, 1);
             LCD_Write_Str("        ");
             LCDsetCursor(3, 1);
-//            LCD_Write_Str(str);
+            //            LCD_Write_Str(str);
             LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 1);
             LCD_Write_Str("Pa");
 
             LCDsetCursor(0, 2);
             LCD_Write_Str("T1=");
-//            FloatToStringNew(p, calibData[1], 3);
+            //            FloatToStringNew(p, calibData[1], 3);
             sprintf(lcdBuff, "%0.3f", calibData[1]);
             LCDsetCursor(3, 2);
             LCD_Write_Str("        ");
             LCDsetCursor(3, 2);
-//            LCD_Write_Str(str);
+            //            LCD_Write_Str(str);
             LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 2);
-            LCD_Write_Char(0b11011111);         //degree symbol
+            LCD_Write_Char(0b11011111); //degree symbol
             LCD_Write_Char('C');
 
             /*errorTimer++;
@@ -541,15 +550,20 @@ void runApplication(void)
             LCDsetCursor(15, 3);
             LCD_Write_Str("     ");
             LCDsetCursor(19, 3);
-            itoa(relayStatus.button1, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button1, lcdBuff, 2);
+            LCD_Write_Str(lcdBuff);
             LCDsetCursor(18, 3);
-            itoa(relayStatus.button2, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button2, lcdBuff, 2);
+            LCD_Write_Str(lcdBuff);
             LCDsetCursor(17, 3);
-            itoa(relayStatus.button3, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button3, lcdBuff, 2);
+            LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 3);
-            itoa(relayStatus.button4, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button4, lcdBuff, 2);
+            LCD_Write_Str(lcdBuff);
             LCDsetCursor(15, 3);
-            itoa(relayStatus.button5, lcdBuff, 2); LCD_Write_Str(lcdBuff);
+            itoa(relayStatus.button5, lcdBuff, 2);
+            LCD_Write_Str(lcdBuff);
         }
         // </editor-fold>
 
@@ -566,9 +580,9 @@ void runApplication(void)
                 LCDsetCursor(0, 1);
                 LCD_Write_Str("Time set done");
             }
-            // </editor-fold>
+                // </editor-fold>
 
-            // <editor-fold defaultstate="collapsed" desc="RTC Date">
+                // <editor-fold defaultstate="collapsed" desc="RTC Date">
             else if((strncmp(input_line, "C01", 3) == 0))
             {
                 systemStatus.rtcDateFlag = 0;
@@ -577,7 +591,7 @@ void runApplication(void)
             }
                 // </editor-fold>
 
-            // <editor-fold defaultstate="collapsed" desc="RTC Time">
+                // <editor-fold defaultstate="collapsed" desc="RTC Time">
             else if((strncmp(input_line, "C02", 3) == 0))
             {
                 LCDsetCursor(0, 1);
@@ -603,9 +617,9 @@ void runApplication(void)
                     LCD_Write_Str("D");
                 }
             }
-            // </editor-fold>
+                // </editor-fold>
 
-            // <editor-fold defaultstate="collapsed" desc="Pressure1 coef">
+                // <editor-fold defaultstate="collapsed" desc="Pressure1 coef">
             else if((strncmp(input_line, "C02", 3) == 0))
             {
                 LCDsetCursor(0, 1);
@@ -635,9 +649,9 @@ void runApplication(void)
                     LCD_Write_Str("D");
                 }
             }
-            // </editor-fold>
+                // </editor-fold>
 
-            // <editor-fold defaultstate="collapsed" desc="Temperature1 coef">
+                // <editor-fold defaultstate="collapsed" desc="Temperature1 coef">
             else if((strncmp(input_line, "C03", 3) == 0))
             {
                 LCDsetCursor(0, 1);
@@ -668,9 +682,9 @@ void runApplication(void)
                 }
 
             }
-            // </editor-fold>
+                // </editor-fold>
 
-            // <editor-fold defaultstate="collapsed" desc="Pressure2 coef">
+                // <editor-fold defaultstate="collapsed" desc="Pressure2 coef">
             else if((strncmp(input_line, "C04", 3) == 0))
             {
                 LCDsetCursor(0, 1);
@@ -700,9 +714,9 @@ void runApplication(void)
                     LCD_Write_Str("D");
                 }
             }
-            // </editor-fold>
+                // </editor-fold>
 
-            // <editor-fold defaultstate="collapsed" desc="Temperature2 coef">
+                // <editor-fold defaultstate="collapsed" desc="Temperature2 coef">
             else if((strncmp(input_line, "C05", 3) == 0))
             {
                 LCDsetCursor(0, 1);
@@ -742,7 +756,7 @@ void runApplication(void)
             LCDclear();
             LCDsetCursor(0, 0);
             LCD_Write_Str("Shutting down...");
-           
+
             sysFlags.ledBlinkTask = false;
             sysFlags.uartTxTask = false;
             sysFlags.ads1115SampleTask = false;
@@ -753,7 +767,7 @@ void runApplication(void)
             TMR1_StopTimer();
             systemStatus.systemAllStates = 0;
             relayStatus.relay = 0;
-//            pulsetime = 0;      
+            pulsetime = 0;
             __delay_ms(1000);
             LCDclear();
         }
@@ -767,7 +781,7 @@ void runApplication(void)
         sysFlags.pulseTask = false;
         lowByte = LCD_i2cRead(0x3B);
         highByte = LCD_i2cRead(0x3D);
-        pulsetime = ((highByte << 8) | (lowByte & 0xff));
+        pulsetime = (uint16_t) ((highByte << 8) | (lowByte & 0xff));
     }
     // </editor-fold>
 
@@ -782,126 +796,126 @@ void runApplication(void)
             serialMsgFlags = SER_MSG_FLAG_TIME;
         }
 
-        // Date calibration
+            // Date calibration
         else if(strncmp(input_line, "C01", 3) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_DATE;
         }
 
-        // Pressure1 calibration coefA
+            // Pressure1 calibration coefA
         else if(strncmp(input_line, "C02A", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C02A";
         }
-        
-        // Pressure1 calibration coefB
+
+            // Pressure1 calibration coefB
         else if(strncmp(input_line, "C02B", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C02B";
         }
-        
-        // Pressure1 calibration coefA
+
+            // Pressure1 calibration coefA
         else if(strncmp(input_line, "C02C", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C02C";
         }
-        
-        // Pressure1 calibration coefD
+
+            // Pressure1 calibration coefD
         else if(strncmp(input_line, "C02D", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C02D";
         }
 
-        // Temperature1 calibration coefA
+            // Temperature1 calibration coefA
         else if(strncmp(input_line, "C03A", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C03A";
         }
-        
-        // Temperature1 calibration coefB
+
+            // Temperature1 calibration coefB
         else if(strncmp(input_line, "C03B", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C03B";
         }
-        
-        // Temperature1 calibration coefC
+
+            // Temperature1 calibration coefC
         else if(strncmp(input_line, "C03C", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C03C";
         }
-            
-        // Temperature1 calibration coefD
+
+            // Temperature1 calibration coefD
         else if(strncmp(input_line, "C03D", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C03D";
         }
 
-            
-        // Pressure2 calibration coefA
+
+            // Pressure2 calibration coefA
         else if(strncmp(input_line, "C04A", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C04A";
         }
-            
-        // Pressure2 calibration coefB
+
+            // Pressure2 calibration coefB
         else if(strncmp(input_line, "C04B", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C04B";
         }
-            
-        // Pressure2 calibration coefC
+
+            // Pressure2 calibration coefC
         else if(strncmp(input_line, "C04C", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C04C";
         }
-            
-        // Pressure1 calibration coefD
+
+            // Pressure1 calibration coefD
         else if(strncmp(input_line, "C04D", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C04D";
         }
 
-        // Temperature2 calibration coefA
+            // Temperature2 calibration coefA
         else if(strncmp(input_line, "C05A", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C05A";
         }
-            
-        // Temperature1 calibration coefB
+
+            // Temperature1 calibration coefB
         else if(strncmp(input_line, "C05B", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C05B";
         }
-            
-        // Temperature1 calibration coefC
+
+            // Temperature1 calibration coefC
         else if(strncmp(input_line, "C05C", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C05C";
         }
-            
-        // Temperature1 calibration coefD
+
+            // Temperature1 calibration coefD
         else if(strncmp(input_line, "C05D", 4) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_CAL_COEF;
             keyword = "C05D";
         }
 
-        // Calibration mode enable
+            // Calibration mode enable
         else if(strncmp(input_line, "C06CalibrationY", 15) == 0)
         {
             uart1_puts("Calibration mode enabled\n");
@@ -910,7 +924,7 @@ void runApplication(void)
             LCDclear();
         }
 
-        // Calibration mode disable
+            // Calibration mode disable
         else if(strncmp(input_line, "C07CalibrationN", 15) == 0)
         {
             uart1_puts("Calibration mode disabled\n");
@@ -919,13 +933,13 @@ void runApplication(void)
             LCDclear();
         }
 
-        // Start sending data
+            // Start sending data
         else if(strncmp(input_line, "C08StartTX", 10) == 0)
         {
             txEnableFlag = true;
         }
 
-        // Stop sending data
+            // Stop sending data
         else if(strncmp(input_line, "C09StopTX", 9) == 0)
         {
             txEnableFlag = false;
@@ -933,31 +947,31 @@ void runApplication(void)
             LCDclear();
         }
 
-        // Write 1 byte to EEPROM
+            // Write 1 byte to EEPROM
         else if(strncmp(input_line, "C10", 3) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_EEPROMWr1;
         }
 
-        // Read 1 byte from EEPROM
+            // Read 1 byte from EEPROM
         else if(strncmp(input_line, "C11", 3) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_EEPROMRd1;
         }
 
-        // Write 4 bytes to EEPROM
+            // Write 4 bytes to EEPROM
         else if(strncmp(input_line, "C12", 3) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_EEPROMWrN;
         }
 
-        // Read 4 bytes from EEPROM
+            // Read 4 bytes from EEPROM
         else if(strncmp(input_line, "C13", 3) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_EEPROMRdN;
         }
 
-        // Store Time & Date to EEPROM
+            // Store Time & Date to EEPROM
         else if(strncmp(input_line, "C14StoreRTC", 11) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_RTC_W;
@@ -967,33 +981,33 @@ void runApplication(void)
             }
         }
 
-        // Get Time & Date from EEPROM (last calib time and date)
+            // Get Time & Date from EEPROM (last calib time and date)
         else if(strncmp(input_line, "C15GetRTC", 9) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_RTC_R;
             getLastCalibRTC();
         }
 
-        // Store FW info to EEPROM
+            // Store FW info to EEPROM
         else if(strncmp(input_line, "C16", 3) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_FW_W;
         }
 
-        // Get FW info from EEPROM
+            // Get FW info from EEPROM
         else if(strncmp(input_line, "C17GetFW", 8) == 0)
         {
             getFWInfo();
         }
 
-        // Start shutdown process
+            // Start shutdown process
         else if(strncmp(input_line, "C18Shutdown", 11) == 0)
         {
             serialMsgFlags = SER_MSG_FLAG_IDLE;
             lcdStates = LCD_SHUTDOWN;
         }
 
-        // LCD Idle mode
+            // LCD Idle mode
         else if(strncmp(input_line, "C19LCDIdle", 10) == 0)
         {
             uart1_puts("LCD Idle\n");
@@ -1002,7 +1016,7 @@ void runApplication(void)
             LCDclear();
         }
 
-        // LCD Normal mode
+            // LCD Normal mode
         else if(strncmp(input_line, "C20LCDRun", 9) == 0)
         {
             uart1_puts("LCD Run\n");
@@ -1029,7 +1043,7 @@ void runApplication(void)
             process_data();
         }
 
-        // Nothing to be process
+            // Nothing to be process
         else
         {
             serialMsgFlags = SER_MSG_FLAG_IDLE;
@@ -1041,7 +1055,7 @@ void runApplication(void)
         }
     }
     // </editor-fold>
-    
+
     // <editor-fold defaultstate="collapsed" desc="Buttons and PulseReset Task">
     if(tmr0Flag == true)
     {
@@ -1107,7 +1121,7 @@ void ledBlink(void)
     LED_Toggle();
 }
 
-void ads1115SampleData(void)
+/*void ads1115SampleData(void)
 {
     if(myADC.isPresent == 1)
     {
@@ -1128,7 +1142,7 @@ void ads1115SampleData(void)
             voltage[3] = ADS1115_readSingleEnded(&myADC, 3);
         }
     }
-}
+}*/
 
 void ds3232Timestamp(void)
 {
@@ -1154,8 +1168,8 @@ void ds3232Timestamp(void)
 void process_data(void)
 {
     uint16_t crc = 0;
-    uint8_t crc1 = 0;   // crc1 = highbyte
-    uint8_t crc2 = 0;   // crc2 = lowbyte
+    uint8_t crc1 = 0; // crc1 = highbyte
+    uint8_t crc2 = 0; // crc2 = lowbyte
     char parsedStrings[numOfChar][charLen];
     uint8_t dataPosition = 0;
     uint8_t dataCount = 0;
@@ -1430,9 +1444,9 @@ void process_data(void)
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres1_d = 1;
                     }
-                    // </editor-fold>
+                        // </editor-fold>
 
-                    // <editor-fold defaultstate="collapsed" desc="Temperature1 coef">
+                        // <editor-fold defaultstate="collapsed" desc="Temperature1 coef">
                     else if(keyword == "C03A")
                     {
                         temp1.coefA = floatData;
@@ -1465,9 +1479,9 @@ void process_data(void)
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.temp1_d = 1;
                     }
-                    // </editor-fold>
+                        // </editor-fold>
 
-                    // <editor-fold defaultstate="collapsed" desc="Pressure2 coef">
+                        // <editor-fold defaultstate="collapsed" desc="Pressure2 coef">
                     else if(keyword == "C04A")
                     {
                         pres2.coefA = floatData;
@@ -1500,9 +1514,9 @@ void process_data(void)
                         sensorsCoefStates.sensorsCoef = 0;
                         sensorsCoefStates.pres2_d = 1;
                     }
-                    // </editor-fold>
+                        // </editor-fold>
 
-                    // <editor-fold defaultstate="collapsed" desc="Temperature2 coef">
+                        // <editor-fold defaultstate="collapsed" desc="Temperature2 coef">
                     else if(keyword == "C05A")
                     {
                         temp2.coefA = floatData;
@@ -1557,7 +1571,7 @@ void process_data(void)
             uart1_puts("Invalid command\n");
             dataCount = 0;
             serialMsgFlags = 0;
-        }   
+        }
     }
     // </editor-fold>
 
@@ -1969,7 +1983,7 @@ void process_data(void)
             uart1_puts("Invalid command\n");
             dataCount = 0;
             serialMsgFlags = 0;
-             
+
         }
     }
     // </editor-fold>
@@ -2085,7 +2099,7 @@ void process_data(void)
     }
         // </editor-fold>
 
-    // <editor-fold defaultstate="collapsed" desc="No task">
+        // <editor-fold defaultstate="collapsed" desc="No task">
     else
     {
         serialMsgFlags = 0;
@@ -2101,6 +2115,7 @@ void process_data(void)
 }
 
 // <editor-fold defaultstate="collapsed" desc="Functions: CRC, itoa, ltoa, float to string">
+
 uint16_t checksumCalculator(uint8_t *data, uint16_t length)
 {
     uint16_t curr_crc = 0x0000;
@@ -2116,6 +2131,7 @@ uint16_t checksumCalculator(uint8_t *data, uint16_t length)
 }
 
 // Function to swap two numbers
+
 void swap(char *x, char *y)
 {
     char t = *x;
@@ -2124,6 +2140,7 @@ void swap(char *x, char *y)
 }
 
 // Function to reverse `buffer[i?j]`
+
 char* reverse(char *buffer, int i, int j)
 {
     while(i < j)
@@ -2134,6 +2151,7 @@ char* reverse(char *buffer, int i, int j)
 }
 
 // Iterative function to implement `itoa()` function in C
+
 char* itoa(int value, char* buffer, int numBase)
 {
     // invalid input
@@ -2180,6 +2198,7 @@ char* itoa(int value, char* buffer, int numBase)
 }
 
 // Iterative function to implement `itoa()` function in C
+
 char* ltoa(long value, char* buffer, int numBase)
 {
     // invalid input
@@ -2266,10 +2285,20 @@ void FloatToStringNew(char *str, float f, char size)
 void ulongToByte(uint32_t ulongData, uint8_t *pByteData)
 {
     uint8_t *pointer_to_ulong;
-    pointer_to_ulong = (uint8_t *) &ulongData;
+    pointer_to_ulong = (uint8_t *) & ulongData;
     pByteData[0] = *pointer_to_ulong++;
     pByteData[1] = *pointer_to_ulong++;
     pByteData[2] = *pointer_to_ulong++;
     pByteData[3] = *pointer_to_ulong;
+}
+
+void floatToByte(float floatData, uint8_t *pByteData)
+{
+    uint8_t *pointer_to_float;
+    pointer_to_float = (uint8_t *) & floatData;
+    pByteData[0] = *pointer_to_float++;
+    pByteData[1] = *pointer_to_float++;
+    pByteData[2] = *pointer_to_float++;
+    pByteData[3] = *pointer_to_float;
 }
 // </editor-fold>

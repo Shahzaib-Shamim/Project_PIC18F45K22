@@ -30,7 +30,7 @@ extern volatile TIMER1_t timer1;
 #define EEPROM_TASK               400
 #define LCD_TASK                  500
 #define PULSE_TASK                1000
-#define COEF_TASK                 50
+#define COEF_TASK                 500  //50
 
 // add task routines here
 
@@ -158,6 +158,7 @@ char* itoa(int value, char* buffer, int numBase);
 char* ltoa(long value, char* buffer, int numBase);
 void FloatToStringNew(char *str, float f, char size);
 void ulongToByte(uint32_t ulongData, uint8_t *pByteData);
+void floatToByte(float floatData, uint8_t *pByteData);
 
 #endif	/* TASKROUTINES_H */
 
