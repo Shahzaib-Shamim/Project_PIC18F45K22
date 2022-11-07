@@ -434,7 +434,7 @@ void runApplication(void)
     }
     // </editor-fold>
 
-    // <editor-fold defaultstate="collapsed" desc="Coefficient Task">
+    // <editor-fold defaultstate="collapsed" desc="Coefficient Task (commented)">
     /*if(sysFlags.coefTask == true)
     {
         sysFlags.coefTask = false;
