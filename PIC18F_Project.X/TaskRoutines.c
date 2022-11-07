@@ -291,21 +291,24 @@ void runApplication(void)
         // reset CRCbuffer to 0
         for(uint8_t i = 0; i < 35; i++)
             crcBuff[i] = 0;
+        uint8_t dataBytes[4];
         
+        // for ASCII format (no need when using byte format)
         floatToByte(calibData[0], &crcBuff[0]);
         floatToByte(calibData[1], &crcBuff[4]);
         floatToByte(calibData[2], &crcBuff[8]);
-        floatToByte(calibData[3], &crcBuff[12]);     
+        floatToByte(calibData[3], &crcBuff[12]);
             
         if(calibrationEnableFlag == true)
         {
-             floatToByte(voltageFiltered[0], &crcBuff[16]);
-             floatToByte(voltageFiltered[1], &crcBuff[20]);
-             floatToByte(voltageFiltered[2], &crcBuff[24]);
-             floatToByte(voltageFiltered[3], &crcBuff[28]);        
-             crcUART = checksumCalculator(crcBuff, 32);
-             crc1UARTHigh = (crcUART >> 8) & 0xff;
-             crc2UARTLow = (crcUART >> 0) & 0xff;
+            // Data in ASCII format
+            floatToByte(voltageFiltered[0], &crcBuff[16]);
+            floatToByte(voltageFiltered[1], &crcBuff[20]);
+            floatToByte(voltageFiltered[2], &crcBuff[24]);
+            floatToByte(voltageFiltered[3], &crcBuff[28]);        
+           /*crcUART = checksumCalculator(crcBuff, 32);
+            crc1UARTHigh = (crcUART >> 8) & 0xff;
+            crc2UARTLow = (crcUART >> 0) & 0xff;
 
             sprintf(txBuffer, "%0.3f  %0.3f  %0.3f  %0.3f----", calibData[0], calibData[1], calibData[2], calibData[3]);
             uart1_puts(txBuffer);
@@ -315,6 +318,49 @@ void runApplication(void)
             itoa(crc1UARTHigh, txBuffer, 10); uart1_puts(txBuffer);
             uart1_puts(",");
             itoa(crc2UARTLow, txBuffer, 10); uart1_puts(txBuffer);
+            uart1_newline();*/
+            
+            // Data in byte format
+            uart1_putc(crcBuff[0]);     // calibData[0]
+            uart1_putc(crcBuff[1]);
+            uart1_putc(crcBuff[2]);
+            uart1_putc(crcBuff[3]);
+            uart1_putc(crcBuff[4]);     // calibData[1]
+            uart1_putc(crcBuff[5]);
+            uart1_putc(crcBuff[6]);
+            uart1_putc(crcBuff[7]);
+            uart1_putc(crcBuff[8]);     // calibData[2]
+            uart1_putc(crcBuff[9]);
+            uart1_putc(crcBuff[10]);
+            uart1_putc(crcBuff[11]);
+            uart1_putc(crcBuff[12]);    // calibData[3]
+            uart1_putc(crcBuff[13]);
+            uart1_putc(crcBuff[14]);
+            uart1_putc(crcBuff[15]);
+            
+            uart1_putc(crcBuff[16]);    // voltageFiltered[0]
+            uart1_putc(crcBuff[17]);
+            uart1_putc(crcBuff[18]);
+            uart1_putc(crcBuff[19]);
+            uart1_putc(crcBuff[20]);    // voltageFiltered[1]
+            uart1_putc(crcBuff[21]);
+            uart1_putc(crcBuff[22]);
+            uart1_putc(crcBuff[23]);
+            uart1_putc(crcBuff[24]);    // voltageFiltered[2]
+            uart1_putc(crcBuff[25]);
+            uart1_putc(crcBuff[26]);
+            uart1_putc(crcBuff[27]);
+            uart1_putc(crcBuff[28]);    // voltageFiltered[3]
+            uart1_putc(crcBuff[29]);
+            uart1_putc(crcBuff[30]);
+            uart1_putc(crcBuff[31]);
+            
+            crcUART = checksumCalculator(&crcBuff[0], 32);
+            crc1UARTHigh = (crcUART >> 8) & 0xff;
+            crc2UARTLow = (crcUART >> 0) & 0xff;
+            
+            uart1_putc(crc1UARTHigh);
+            uart1_putc(crc2UARTLow);
             uart1_newline();
         }
 
@@ -325,7 +371,8 @@ void runApplication(void)
             DS3231_getTime(&ds3231_readBuff[0], &ds3231_readBuff[1], &ds3231_readBuff[2]);
             DS3231_getDate(&ds3231_readBuff[3], &ds3231_readBuff[4], &ds3231_readBuff[5], &ds3231_readBuff[6]);
 
-            itoa(ds3231_readBuff[2], lcdBuff, 10);
+            // Data in ASCII format
+            /*itoa(ds3231_readBuff[2], lcdBuff, 10);
             uart1_puts(lcdBuff);
             uart1_puts(":"); // hour
             itoa(ds3231_readBuff[1], lcdBuff, 10);
@@ -374,7 +421,74 @@ void runApplication(void)
             itoa(crc1UARTHigh, txBuffer, 10); uart1_puts(txBuffer);
             uart1_puts(",");
             itoa(crc2UARTLow, txBuffer, 10); uart1_puts(txBuffer);
+            uart1_newline();*/
+            
+            
+            // Data in byte format
+//            uint8_t dataBytes[4];
+            uart1_putc(ds3231_readBuff[2]);     // hour
+            uart1_putc(ds3231_readBuff[1]);     // minute
+            uart1_putc(ds3231_readBuff[0]);     // second
+            uart1_putc(ds3231_readBuff[4]);     // date
+            uart1_putc(ds3231_readBuff[5]);     // month
+            uart1_putc(ds3231_readBuff[6]);     // year
+            uart1_putc(relayStatus.relay);
+            uart1_putc(highByte);               // pulse high byte
+            uart1_putc(lowByte);                // pulse low byte
+//            floatToByte(calibData[0], &dataBytes[0]);
+//            uart1_putc(dataBytes[0]);
+//            uart1_putc(dataBytes[1]);
+//            uart1_putc(dataBytes[2]);
+//            uart1_putc(dataBytes[3]);
+//            floatToByte(calibData[1], &dataBytes[0]);
+//            uart1_putc(dataBytes[0]);
+//            uart1_putc(dataBytes[1]);
+//            uart1_putc(dataBytes[2]);
+//            uart1_putc(dataBytes[3]);
+//            floatToByte(calibData[2], &dataBytes[0]);
+//            uart1_putc(dataBytes[0]);
+//            uart1_putc(dataBytes[1]);
+//            uart1_putc(dataBytes[2]);
+//            uart1_putc(dataBytes[3]);
+//            floatToByte(calibData[3], &dataBytes[0]);
+//            uart1_putc(dataBytes[0]);
+//            uart1_putc(dataBytes[1]);
+//            uart1_putc(dataBytes[2]);
+//            uart1_putc(dataBytes[3]);
+            uart1_putc(crcBuff[0]);     // calibData[0]
+            uart1_putc(crcBuff[1]);
+            uart1_putc(crcBuff[2]);
+            uart1_putc(crcBuff[3]);
+            uart1_putc(crcBuff[4]);     // calibData[1]
+            uart1_putc(crcBuff[5]);
+            uart1_putc(crcBuff[6]);
+            uart1_putc(crcBuff[7]);
+            uart1_putc(crcBuff[8]);     // calibData[2]
+            uart1_putc(crcBuff[9]);
+            uart1_putc(crcBuff[10]);
+            uart1_putc(crcBuff[11]);
+            uart1_putc(crcBuff[12]);    // calibData[3]
+            uart1_putc(crcBuff[13]);
+            uart1_putc(crcBuff[14]);
+            uart1_putc(crcBuff[15]);
+            
+            crcBuff[16] = ds3231_readBuff[2];
+            crcBuff[17] = ds3231_readBuff[1];
+            crcBuff[18] = ds3231_readBuff[0];
+            crcBuff[19] = ds3231_readBuff[4];
+            crcBuff[20] = ds3231_readBuff[5];
+            crcBuff[21] = ds3231_readBuff[6];
+            crcBuff[22] = relayStatus.relay;
+            ulongToByte(pulsetime, &crcBuff[23]);
+
+            crcUART = checksumCalculator(&crcBuff[0], 27);
+            crc1UARTHigh = (crcUART >> 8) & 0xff;
+            crc2UARTLow = (crcUART >> 0) & 0xff;
+            
+            uart1_putc(crc1UARTHigh);
+            uart1_putc(crc2UARTLow);
             uart1_newline();
+            
         }        
     }
     // </editor-fold>
