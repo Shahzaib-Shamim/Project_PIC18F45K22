@@ -154,7 +154,7 @@ void initSysVariables(void)
     myADC.config.mux = MUX_SINGLE_0;
     myADC.config.pga = PGA_FSR_6_144;
     myADC.config.mode = MODE_SINGLE_SHOT_OR_PWR_DOWN;
-    myADC.config.dataRate = DR_128_SPS;
+    myADC.config.dataRate = DR_250_SPS;
     myADC.config.compMode = COMP_MODE_TRADITIONAL;
     myADC.config.compPol = COMP_POL_ACT_LOW;
     myADC.config.compLat = COMP_LAT_NONLATCHING;
@@ -236,8 +236,6 @@ void getLastCalibRTC(void)
     uart1_puts(txBuffer);
     uart1_puts(" ");
     uart1_puts("Last RTC\n");
-    //    sprintf(txBuffer, "%d:%d:%d %d/%d/%d Last RTC\n", readBuff[2], readBuff[1], readBuff[0], readBuff[4], readBuff[5], readBuff[6]);
-    //    uart1_puts(txBuffer);
 }
 
 void getFWInfo(void)
@@ -301,12 +299,13 @@ void runApplication(void)
             
         if(calibrationEnableFlag == true)
         {
-            // Data in ASCII format
             floatToByte(voltageFiltered[0], &crcBuff[16]);
             floatToByte(voltageFiltered[1], &crcBuff[20]);
             floatToByte(voltageFiltered[2], &crcBuff[24]);
-            floatToByte(voltageFiltered[3], &crcBuff[28]);        
-           /*crcUART = checksumCalculator(crcBuff, 32);
+            floatToByte(voltageFiltered[3], &crcBuff[28]); 
+            
+            // Data in ASCII format
+            /*crcUART = checksumCalculator(crcBuff, 32);
             crc1UARTHigh = (crcUART >> 8) & 0xff;
             crc2UARTLow = (crcUART >> 0) & 0xff;
 
@@ -509,16 +508,16 @@ void runApplication(void)
             voltageFiltered[3] = calculateMovingAverage_f(adc_channel3_temp2, voltage[3]);
 
             calibData[0] = (pres1.coefA * voltageFiltered[0] * voltageFiltered[0] * voltageFiltered[0]) +
-                    (pres1.coefB * voltageFiltered[0] * voltageFiltered[0]) + (pres1.coefC * voltageFiltered[0]) + pres1.coefD;
+                           (pres1.coefB * voltageFiltered[0] * voltageFiltered[0]) + (pres1.coefC * voltageFiltered[0]) + pres1.coefD;
 
             calibData[1] = (temp1.coefA * voltageFiltered[1] * voltageFiltered[1] * voltageFiltered[1]) +
-                    (temp1.coefB * voltageFiltered[1] * voltageFiltered[1]) + (temp1.coefC * voltageFiltered[1]) + temp1.coefD;
+                           (temp1.coefB * voltageFiltered[1] * voltageFiltered[1]) + (temp1.coefC * voltageFiltered[1]) + temp1.coefD;
 
             calibData[2] = (pres2.coefA * voltageFiltered[2] * voltageFiltered[2] * voltageFiltered[2]) +
-                    (pres2.coefB * voltageFiltered[2] * voltageFiltered[2]) + (pres2.coefC * voltageFiltered[2]) + pres2.coefD;
+                           (pres2.coefB * voltageFiltered[2] * voltageFiltered[2]) + (pres2.coefC * voltageFiltered[2]) + pres2.coefD;
 
             calibData[3] = (temp2.coefA * voltageFiltered[3] * voltageFiltered[3] * voltageFiltered[3]) +
-                    (temp2.coefB * voltageFiltered[3] * voltageFiltered[3]) + (temp2.coefC * voltageFiltered[3]) + temp2.coefD;
+                           (temp2.coefB * voltageFiltered[3] * voltageFiltered[3]) + (temp2.coefC * voltageFiltered[3]) + temp2.coefD;
         }
         ADS1115_setReadSingleEnded(&myADC, channelNumber);
     }
@@ -631,25 +630,25 @@ void runApplication(void)
 
             LCDsetCursor(0, 1);
             LCD_Write_Str("P1=");
-            //            FloatToStringNew(p, calibData[0], 3);
-            sprintf(lcdBuff, "%0.3f", calibData[0]);
+            FloatToStringNew(p, calibData[0], 3);
+            // sprintf(lcdBuff, "%0.3f", calibData[0]);
             LCDsetCursor(3, 1);
             LCD_Write_Str("        ");
             LCDsetCursor(3, 1);
-            //            LCD_Write_Str(str);
-            LCD_Write_Str(lcdBuff);
+            LCD_Write_Str(str);
+            // LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 1);
             LCD_Write_Str("Pa");
 
             LCDsetCursor(0, 2);
             LCD_Write_Str("T1=");
-            //            FloatToStringNew(p, calibData[1], 3);
-            sprintf(lcdBuff, "%0.3f", calibData[1]);
+            FloatToStringNew(p, calibData[1], 3);
+            // sprintf(lcdBuff, "%0.3f", calibData[1]);
             LCDsetCursor(3, 2);
             LCD_Write_Str("        ");
             LCDsetCursor(3, 2);
-            //            LCD_Write_Str(str);
-            LCD_Write_Str(lcdBuff);
+            LCD_Write_Str(str);
+            // LCD_Write_Str(lcdBuff);
             LCDsetCursor(16, 2);
             LCD_Write_Char(0b11011111); //degree symbol
             LCD_Write_Char('C');
@@ -2213,7 +2212,7 @@ void process_data(void)
     }
         // </editor-fold>
 
-        // <editor-fold defaultstate="collapsed" desc="No task">
+    // <editor-fold defaultstate="collapsed" desc="No task">
     else
     {
         serialMsgFlags = 0;
