@@ -82,6 +82,7 @@
 // added for disable warning
 #pragma warning disable 520   // never called functions
 #pragma warning disable 2053  // never called functions
+//#pragma warning disable 1498  // check
 
 #endif	/* DEVICECONFIGURATION_H */
 
