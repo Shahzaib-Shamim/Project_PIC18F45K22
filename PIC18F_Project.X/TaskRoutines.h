@@ -26,23 +26,16 @@ extern volatile TIMER1_t timer1;
 #define LED_BLINK_TASK_TIME       50
 #define UART_TX_TASK_TIME         250
 #define ADS1115_SAMPLE_TASK_TIME  10     // ADC will sample 1 channel after every 8ms. All 4 channels will be converted after 32ms.
-//#define DS3231_TIMESTAMP_TASK     900
-//#define EEPROM_TASK               400
 #define LCD_TASK                  500
 #define PULSE_TASK                400
-//#define COEF_TASK                 500  //50
 
 // add task routines here
-
 typedef struct {
     uint8_t ledBlinkTask : 1;
     uint8_t ads1115SampleTask : 1;
     uint8_t uartTxTask : 1;
-    uint8_t ds3231Task : 1;
-    uint8_t eepromTask : 1;
     uint8_t lcdTask : 1;
     uint8_t pulseTask : 1;
-    uint8_t coefTask : 1;
 } ApplicationFlags_t;
 
 extern volatile ApplicationFlags_t sysFlags;

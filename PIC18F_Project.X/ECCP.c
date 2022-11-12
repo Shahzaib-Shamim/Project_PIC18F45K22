@@ -41,9 +41,6 @@ void ECCP1_SetCompareCount(uint16_t compareCount)
 
 void ECCP1_CompareISR(void)
 {
-//    static uint32_t i = 0;
-
-//    PIR1bits.CCP1IF = 0;
 
     timer1.timer1_1msFlag = true;
     timer1.timer1_1msCounter++;
@@ -52,10 +49,6 @@ void ECCP1_CompareISR(void)
     {
         sysFlags.ledBlinkTask = true;
     }
-//    if((timer1.timer1_1msCounter % DS3231_TIMESTAMP_TASK) == 0)
-//    {
-//        sysFlags.ds3231Task = true;
-//    }
     
     if((timer1.timer1_1msCounter % ADS1115_SAMPLE_TASK_TIME) == 0)
     {
@@ -76,11 +69,6 @@ void ECCP1_CompareISR(void)
     {
         sysFlags.pulseTask = true;
     }
-
-//    if((timer1.timer1_1msCounter % COEF_TASK) == 0)
-//    {
-//        sysFlags.coefTask = true;
-//    }
 
     // Reset timer
     if(timer1.timer1_1msCounter == 1000)

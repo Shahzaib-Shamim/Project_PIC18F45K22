@@ -82,7 +82,9 @@
 // added for disable warning
 #pragma warning disable 520   // never called functions
 #pragma warning disable 2053  // never called functions
-//#pragma warning disable 1498  // check
+#pragma warning disable 1498  // in expressions may have no targets
+#pragma warning disable 766   // degenerate signed comparison
+#pragma warning disable 1257  // local variable is used but never given a value
 
 #endif	/* DEVICECONFIGURATION_H */
 
